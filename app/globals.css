@@ -29,12 +29,12 @@
 
 @layer base {
   html {
-    @apply bg-black;
+    @apply bg-black text-white;
     overscroll-behavior: none;
   }
   
   body {
-    @apply bg-black text-white;
+    @apply min-h-screen;
     overscroll-behavior: none;
   }
 
@@ -183,5 +183,30 @@
   }
   100% {
     transform: translateY(0);
+  }
+}
+
+.silk-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.01) 100%);
+  animation: silk-move 12s ease-in-out infinite alternate;
+  filter: blur(32px) brightness(1.2);
+}
+
+@keyframes silk-move {
+  0% {
+    background-position: 50% 40%;
+    filter: blur(32px) brightness(1.2);
+  }
+  50% {
+    background-position: 60% 60%;
+    filter: blur(40px) brightness(1.3);
+  }
+  100% {
+    background-position: 40% 30%;
+    filter: blur(32px) brightness(1.2);
   }
 }

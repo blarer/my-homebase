@@ -1,7 +1,7 @@
 'use client';
 
 import Navigation from './Navigation';
-import Footer from './Footer';
+// import Footer from './Footer';
 
 export default function Layout({ children }) {
   return (
@@ -13,7 +13,7 @@ export default function Layout({ children }) {
       <main className="flex-grow">
         {children}
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 } 
