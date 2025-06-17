@@ -1,6 +1,16 @@
 import { notFound } from 'next/navigation';
 import Layout from '@/components/Layout';
 
+// Add this function to generate static paths
+export async function generateStaticParams() {
+  // In a real app, you would fetch this data from your CMS or database
+  return [
+    { slug: 'getting-started-with-nextjs' },
+    { slug: 'building-modern-websites' },
+    { slug: 'web-development-tips' }
+  ];
+}
+
 export async function generateMetadata({ params }) {
   // In a real app, fetch the post data here
   const post = {
