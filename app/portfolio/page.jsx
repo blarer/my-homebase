@@ -29,8 +29,7 @@ const projects = [
     description: "Description of your third project goes here.",
     technologies: ["Python", "Django", "PostgreSQL"],
     lastUpdated: "2024-03-10",
-    githubUrl: "https://github.com/yourusername/project-three",
-    demoUrl: "https://project-three.vercel.app"
+    githubUrl: "https://github.com/yourusername/project-three"
   }
 ];
 
