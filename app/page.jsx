@@ -3,6 +3,7 @@ import BlurText from '@/components/BlurText';
 import Layout from '@/components/Layout';
 import ScrollReveal from '@/components/ScrollReveal';
 import Hero from '@/components/Hero';
+import Beams from '@/components/react-bits/Backgrounds/Beams/Beams';
 
 export const metadata = {
   title: 'Blare: Homebase',
@@ -15,8 +16,48 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         {/* Features Section */}
-        <section className="py-8 sm:py-10 md:py-12 px-2 sm:px-4 mt-0">
-          <div className="max-w-7xl mx-auto flex flex-col items-center">
+        <section className="relative py-8 sm:py-10 md:py-12 mt-0 overflow-hidden">
+          {/* Beams Background */}
+          <div className="absolute inset-0 z-0 pointer-events-none">
+            {/* Left Beams */}
+            <div className="absolute inset-0" style={{ transform: 'translateX(-33%)' }}>
+              <Beams
+                beamWidth={1.5}
+                beamNumber={25}
+                lightColor="#f3f4f6"
+                speed={1.5}
+                noiseIntensity={1.2}
+                scale={0.15}
+              />
+            </div>
+            {/* Right Beams */}
+            <div className="absolute inset-0" style={{ transform: 'translateX(33%)' }}>
+              <Beams
+                beamWidth={1.5}
+                beamNumber={25}
+                lightColor="#f3f4f6"
+                speed={1.5}
+                noiseIntensity={1.2}
+                scale={0.15}
+              />
+            </div>
+            {/* Center Beams - Rendered last to be on top */}
+            <div className="absolute inset-0">
+              <Beams
+                beamWidth={1.5}
+                beamNumber={25}
+                lightColor="#f3f4f6"
+                speed={1.5}
+                noiseIntensity={1.2}
+                scale={0.15}
+              />
+            </div>
+          </div>
+          
+          {/* Gradient Fade Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-5 pointer-events-none"></div>
+          
+          <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-center px-2 sm:px-4">
             <div className="text-center mb-8 sm:mb-12">
               <BlurText 
                 text="What's Inside" 

@@ -69,21 +69,21 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/20 rounded-full;
+  @apply bg-gray-100/20 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-white/30;
+  @apply bg-gray-100/30;
 }
 
 /* Text selection */
 ::selection {
-  @apply bg-white/20 text-white;
+  @apply bg-gray-100/20 text-gray-50;
 }
 
 /* Focus styles */
 :focus-visible {
-  @apply outline-none ring-2 ring-white/50 ring-offset-2 ring-offset-black;
+  @apply outline-none ring-2 ring-gray-100/50 ring-offset-2 ring-offset-black;
 }
 
 /* Animation keyframes */
@@ -133,7 +133,7 @@
   @apply fixed pointer-events-none z-50;
   width: 20px;
   height: 20px;
-  background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+  background: radial-gradient(circle, rgba(243,244,246,0.8) 0%, rgba(243,244,246,0) 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.2s, height 0.2s;
@@ -142,7 +142,7 @@
 /* Aurora background effect */
 .aurora-bg {
   @apply fixed inset-0 -z-10;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle at center, rgba(243,244,246,0.1) 0%, transparent 70%);
   filter: blur(100px);
   opacity: 0.5;
 }
@@ -151,8 +151,8 @@
 .grid-motion {
   @apply fixed inset-0 -z-20;
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(243, 244, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(243, 244, 246, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
   animation: grid-motion 20s linear infinite;
 }
@@ -170,7 +170,7 @@
 .waves {
   @apply fixed bottom-0 left-0 w-full -z-10;
   height: 100px;
-  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.05));
+  background: linear-gradient(180deg, transparent, rgba(243,244,246,0.05));
   animation: waves 10s linear infinite;
 }
 
@@ -191,7 +191,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.01) 100%);
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(243,244,246,0.18) 0%, rgba(243,244,246,0.08) 60%, rgba(243,244,246,0.01) 100%);
   animation: silk-move 12s ease-in-out infinite alternate;
   filter: blur(32px) brightness(1.2);
 }
@@ -258,13 +258,13 @@
 }
 
 .animate-float-oval {
-  animation: float-oval 8s ease-in-out infinite;
+  animation: float-oval 16s ease-in-out infinite;
 }
 
 .animate-float-oval-delayed {
-  animation: float-oval-delayed 12s ease-in-out infinite;
+  animation: float-oval-delayed 24s ease-in-out infinite;
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 6s ease-in-out infinite;
+  animation: pulse-slow 12s ease-in-out infinite;
 }

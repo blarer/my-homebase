@@ -13,7 +13,7 @@ export default function Hero() {
         <Silk
           speed={5}
           scale={1}
-          color="#7B7481"
+          color="#1a1a1a"
           noiseIntensity={1.5}
           rotation={0}
           style={{ width: '100%', height: '100%' }}
@@ -23,16 +23,19 @@ export default function Hero() {
         <div className="absolute inset-0">
           <div className="relative w-full h-full">
             {/* Primary oval blur */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/15 to-blue-500/20 rounded-full blur-3xl animate-float-oval"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-100/10 via-gray-50/8 to-gray-100/10 rounded-full blur-3xl animate-float-oval"></div>
             
             {/* Secondary oval blur for depth */}
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-purple-500/10 to-pink-500/15 rounded-full blur-2xl animate-float-oval-delayed"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-200/8 via-gray-100/6 to-gray-200/8 rounded-full blur-2xl animate-float-oval-delayed"></div>
             
             {/* Subtle glow rings */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-purple-500/5 to-white/5 rounded-full blur-xl animate-pulse-slow"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50/3 via-gray-25/3 to-gray-50/3 rounded-full blur-xl animate-pulse-slow"></div>
           </div>
         </div>
       </div>
+      
+      {/* Gradient Fade Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black z-5 pointer-events-none"></div>
       
       {/* Foreground Content */}
       <div className="relative flex flex-col items-center w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 z-10">
