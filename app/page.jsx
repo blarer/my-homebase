@@ -16,7 +16,7 @@ export default function Home() {
         <Hero />
         {/* Features Section */}
         <section className="py-8 sm:py-10 md:py-12 px-2 sm:px-4 mt-0">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto flex flex-col items-center">
             <div className="text-center mb-8 sm:mb-12">
               <BlurText 
                 text="What's Inside" 

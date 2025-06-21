@@ -7,8 +7,9 @@ import Silk from '@/components/react-bits/Backgrounds/Silk/Silk';
 export default function Hero() {
   return (
     <section className="relative min-h-[50vh] flex items-center justify-center px-2 sm:px-4 pb-6 sm:pb-8 overflow-hidden">
-      {/* Silk background - fixed to fill section */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
+      {/* Background Effects Container */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* Silk background */}
         <Silk
           speed={5}
           scale={1}
@@ -17,8 +18,24 @@ export default function Hero() {
           rotation={0}
           style={{ width: '100%', height: '100%' }}
         />
+        
+        {/* Horizontal Oval Blur Effect */}
+        <div className="absolute inset-0">
+          <div className="relative w-full h-full">
+            {/* Primary oval blur */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/15 to-blue-500/20 rounded-full blur-3xl animate-float-oval"></div>
+            
+            {/* Secondary oval blur for depth */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/15 via-purple-500/10 to-pink-500/15 rounded-full blur-2xl animate-float-oval-delayed"></div>
+            
+            {/* Subtle glow rings */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-purple-500/5 to-white/5 rounded-full blur-xl animate-pulse-slow"></div>
+          </div>
+        </div>
       </div>
-      <div className="relative w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 z-10">
+      
+      {/* Foreground Content */}
+      <div className="relative flex flex-col items-center w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 z-10">
         <BlurText 
           text="Welcome to My Digital Homebase" 
           animateBy="words"

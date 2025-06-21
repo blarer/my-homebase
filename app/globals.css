@@ -210,3 +210,61 @@
     filter: blur(32px) brightness(1.2);
   }
 }
+
+/* Horizontal Oval Blur Animations */
+@keyframes float-oval {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(0.9) rotate(-3deg);
+    opacity: 0.7;
+  }
+  75% {
+    transform: scale(1.05) rotate(2deg);
+    opacity: 0.9;
+  }
+}
+
+@keyframes float-oval-delayed {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.4;
+  }
+  33% {
+    transform: scale(1.15) rotate(-8deg);
+    opacity: 0.6;
+  }
+  66% {
+    transform: scale(0.85) rotate(6deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.animate-float-oval {
+  animation: float-oval 8s ease-in-out infinite;
+}
+
+.animate-float-oval-delayed {
+  animation: float-oval-delayed 12s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
