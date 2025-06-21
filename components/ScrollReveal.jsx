@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 const ScrollReveal = ({ 
   children, 
@@ -12,34 +13,13 @@ const ScrollReveal = ({
   className = "",
   direction = "up"
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [ref, setRef] = useState(null);
+  const [ref, isVisible] = useIntersectionObserver({
+    threshold,
+    rootMargin,
+    triggerOnce: true
+  });
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      {
-        threshold,
-        rootMargin,
-      }
-    );
-
-    if (ref) {
-      observer.observe(ref);
-    }
-
-    return () => {
-      if (ref) {
-        observer.unobserve(ref);
-      }
-    };
-  }, [ref, threshold, rootMargin]);
-
-  const getInitialPosition = () => {
+  const initialPosition = useMemo(() => {
     switch (direction) {
       case 'up':
         return { y: 50, opacity: 0 };
@@ -52,17 +32,19 @@ const ScrollReveal = ({
       default:
         return { y: 50, opacity: 0 };
     }
-  };
+  }, [direction]);
+
+  const finalPosition = useMemo(() => ({ 
+    y: 0, 
+    x: 0, 
+    opacity: 1 
+  }), []);
 
   return (
     <motion.div
-      ref={setRef}
-      initial={getInitialPosition()}
-      animate={isVisible ? { 
-        y: 0, 
-        x: 0, 
-        opacity: 1 
-      } : getInitialPosition()}
+      ref={ref}
+      initial={initialPosition}
+      animate={isVisible ? finalPosition : initialPosition}
       transition={{
         duration,
         delay,

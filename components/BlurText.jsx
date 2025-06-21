@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 const BlurText = ({ 
   text, 
@@ -11,37 +12,17 @@ const BlurText = ({
   stepDuration = 0.35,
   threshold = 0.1,
   rootMargin = "0px",
-  onAnimationComplete
+  onAnimationComplete,
+  className = ""
 }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [ref, setRef] = useState(null);
+  const [ref, isVisible] = useIntersectionObserver({
+    threshold,
+    rootMargin,
+    triggerOnce: true
+  });
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      {
-        threshold,
-        rootMargin,
-      }
-    );
-
-    if (ref) {
-      observer.observe(ref);
-    }
-
-    return () => {
-      if (ref) {
-        observer.unobserve(ref);
-      }
-    };
-  }, [ref, threshold, rootMargin]);
-
-  const words = text.split(' ');
-  const letters = text.split('');
+  const words = useMemo(() => text.split(' '), [text]);
+  const letters = useMemo(() => text.split(''), [text]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -78,17 +59,17 @@ const BlurText = ({
 
   return (
     <motion.div
-      ref={setRef}
+      ref={ref}
       variants={container}
       initial="hidden"
       animate={isVisible ? "visible" : "hidden"}
       onAnimationComplete={onAnimationComplete}
-      className="flex flex-wrap justify-center"
+      className={`flex flex-wrap justify-center ${className}`}
     >
       {animateBy === "words"
         ? words.map((word, index) => (
             <motion.span
-              key={index}
+              key={`${word}-${index}`}
               variants={child}
               className="mr-2"
             >
@@ -97,7 +78,7 @@ const BlurText = ({
           ))
         : letters.map((letter, index) => (
             <motion.span
-              key={index}
+              key={`${letter}-${index}`}
               variants={child}
               className="inline-block"
             >

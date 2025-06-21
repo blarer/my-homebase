@@ -46,9 +46,9 @@ export default function Blog() {
             animateBy="words"
             direction="top"
             delay={200}
-            className="text-3xl font-bold text-gray-900 mb-4"
+            className="text-3xl font-bold text-white mb-4"
           />
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-300">
             Welcome to my blog! Here I share my thoughts, tutorials, and insights about web development,
             programming, and technology.
           </p>
