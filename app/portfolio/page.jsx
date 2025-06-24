@@ -8,9 +8,11 @@ export const metadata = {
   description: 'Explore my coding projects',
 };
 
+export const revalidate = 60; // Regenerate this page every 60 seconds (ISR)
+
 export default async function Portfolio() {
   // Fetch GitHub repos and map to project cards
-  const repos = await fetchGitHubRepos();
+  const repos = (await fetchGitHubRepos()).slice(0, 9); // Only show top 9 most recently updated repos
   const projects = repos.map((repo) => ({
     title: repo.name,
     description: repo.description || '',
