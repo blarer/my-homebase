@@ -1,17 +1,11 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import Link from 'next/link';
+import ScrollReveal from './ScrollReveal';
 
 export default function BlogPostCard({ post }) {
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="bg-black/30 backdrop-blur-lg border border-white/10 rounded-lg shadow-lg overflow-hidden hover:shadow-xl hover:border-white/20 transition-all duration-300"
-    >
+    <ScrollReveal className="bg-black/30 backdrop-blur-lg border border-white/10 rounded-lg shadow-lg overflow-hidden hover:shadow-xl hover:border-white/20 transition-all duration-300" direction="up" duration={0.5}>
       <div className="p-6">
         <div className="flex items-center space-x-2 text-sm text-gray-400 mb-3">
           <time dateTime={post.date}>{post.date}</time>
@@ -42,6 +36,6 @@ export default function BlogPostCard({ post }) {
           ))}
         </div>
       </div>
-    </motion.article>
+    </ScrollReveal>
   );
 } 
