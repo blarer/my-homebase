@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import ScrollReveal from './ScrollReveal';
+import ScrollReveal from '@/components/ScrollReveal';
 
 export default function BlogPostCard({ post }) {
   return (
