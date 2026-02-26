@@ -1,6 +1,7 @@
 import BlurText from '@/components/BlurText';
 import ProjectCard from '@/components/ProjectCard';
 import Layout from '@/components/Layout';
+import PortfolioBackground from '@/components/PortfolioBackground';
 import { fetchGitHubRepos } from '@/lib/github';
 
 export const metadata = {
@@ -11,7 +12,6 @@ export const metadata = {
 export const revalidate = 0; // Fetch fresh data on every visit
 
 export default async function Portfolio() {
-  // Fetch GitHub repos and map to project cards
   const repos = await fetchGitHubRepos();
   const projects = repos.map((repo) => ({
     title: repo.name,
@@ -24,8 +24,11 @@ export default async function Portfolio() {
 
   return (
     <Layout>
+      {/* LiquidChrome background */}
+      <PortfolioBackground />
+
       {/* Portfolio Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="mb-12">
           <BlurText
             text="My Portfolio"
@@ -34,9 +37,8 @@ export default async function Portfolio() {
             delay={200}
             className="text-3xl font-bold text-white mb-4"
           />
-          <p className="text-lg text-gray-600">
-            Welcome to my portfolio! Here you'll find a collection of my projects,
-            showcasing my skills and experience in web development.
+          <p className="text-lg text-gray-400">
+            Here you&apos;ll find a collection of my projects. Click any card to read its README.
           </p>
         </div>
 
