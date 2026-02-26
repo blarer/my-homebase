@@ -59,12 +59,7 @@ export default function Hero() {
             >
               View My Work
             </Link>
-            <Link
-              href="/blog"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 border border-white/20 text-base font-medium rounded-md text-white bg-black/30 hover:bg-black/50 backdrop-blur-lg transition-all duration-300"
-            >
-              Read My Blog
-            </Link>
+
           </div>
         </ScrollReveal>
       </div>

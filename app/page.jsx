@@ -27,7 +27,7 @@ export default function Home() {
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 max-w-2xl md:max-w-4xl xl:max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-2xl md:max-w-3xl mx-auto">
               <ScrollReveal direction="left" delay={0.2}>
                 <div className="h-full bg-black/30 backdrop-blur-lg rounded-lg p-6 sm:p-8 border border-white/10 hover:border-white/20 transition-all duration-300 text-center flex flex-col items-center">
                   <div className="text-3xl sm:text-4xl mb-4 sm:mb-6 animate-float">💻</div>
@@ -36,15 +36,7 @@ export default function Home() {
                 </div>
               </ScrollReveal>
 
-              <ScrollReveal direction="up" delay={0.4}>
-                <div className="h-full bg-black/30 backdrop-blur-lg rounded-lg p-6 sm:p-8 border border-white/10 hover:border-white/20 transition-all duration-300 text-center flex flex-col items-center">
-                  <div className="text-3xl sm:text-4xl mb-4 sm:mb-6 animate-float" style={{ animationDelay: '0.2s' }}>📝</div>
-                  <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Blog</h3>
-                  <p className="text-gray-300 leading-relaxed text-sm sm:text-base">Read my thoughts on technology, design, and development.</p>
-                </div>
-              </ScrollReveal>
-
-              <ScrollReveal direction="right" delay={0.6}>
+              <ScrollReveal direction="right" delay={0.4}>
                 <div className="h-full bg-black/30 backdrop-blur-lg rounded-lg p-6 sm:p-8 border border-white/10 hover:border-white/20 transition-all duration-300 text-center flex flex-col items-center">
                   <div className="text-3xl sm:text-4xl mb-4 sm:mb-6 animate-float" style={{ animationDelay: '0.4s' }}>🚀</div>
                   <h3 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">About</h3>
