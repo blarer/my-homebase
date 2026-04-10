@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
+import AuroraBackground from '@/components/AuroraBackground';
 
 const stats = [
   { value: '4+', label: 'Years building' },
@@ -14,19 +15,21 @@ export default function About() {
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section id="about" className="py-32 px-6 border-t" style={{ borderColor: 'var(--border)' }}>
-      <div className="max-w-6xl mx-auto">
-        <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-start">
+    <section id="about" className="relative py-32 px-6 border-t overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+      <AuroraBackground />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div ref={ref} className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
           {/* Left */}
           <div>
-            <motion.p
-              className="label mb-4"
+            <motion.div
+              className="flex items-center gap-3 mb-3"
               initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}}
               transition={{ duration: 0.5 }}
             >
-              About
-            </motion.p>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.14em', fontVariantNumeric: 'tabular-nums' }}>02</span>
+              <span className="label">About</span>
+            </motion.div>
             <motion.h2
               className="text-3xl md:text-4xl font-bold tracking-tight leading-tight text-white"
               initial={{ opacity: 0, y: 20 }}
@@ -38,7 +41,7 @@ export default function About() {
 
             {/* Stats */}
             <motion.div
-              className="grid grid-cols-3 gap-4 mt-12 pt-10 border-t"
+              className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t"
               style={{ borderColor: 'var(--border)' }}
               initial={{ opacity: 0, y: 16 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
@@ -62,13 +65,13 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <p>
-              I&apos;m Blare — a developer with a deep obsession for the craft. I care about the details that most people scroll past: the easing curve on a hover state, the kerning on a heading, the timing of a transition.
+              Hey everyone! I&apos;m diving into machine learning, focusing on Large Language Models, their architecture like transformers and self-attention, and how they differ from other AI methods like diffusion models.
             </p>
             <p>
-              I build with React and Next.js by day, and spend nights exploring the frontier — WebGL shaders, generative art, browser APIs that haven&apos;t been fully mapped yet.
+              I want to explore how LLMs can go beyond their usual capabilities, especially with agents. I&apos;m excited about AI making development easier — but I believe it&apos;s key to understand the code deeply. Syntax, structure, the fundamentals.
             </p>
             <p>
-              This site is a living experiment. Everything you see here is intentional.
+              That way I can use AI as a smart tool and strategist, aligning with machine learning&apos;s core as a universal function approximator.
             </p>
 
             <div className="flex items-center gap-5 pt-4">

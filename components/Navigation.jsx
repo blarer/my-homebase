@@ -52,7 +52,7 @@ export default function Navigation() {
           aria-label="Menu"
         >
           <span className={`block w-5 h-px bg-white/60 transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
-          <span className={`block w-5 h-px bg-white/60 transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} />
+          <span className={`block w-5 h-px bg-white/60 transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-x-0' : ''}`} />
           <span className={`block w-5 h-px bg-white/60 transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
         </button>
       </div>

@@ -92,6 +92,15 @@
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.cursor-ring.on-heading {
+  width: 72px;
+  height: 72px;
+  top: -36px;
+  left: -36px;
+  border-color: rgba(139, 92, 246, 0.45);
+  background: rgba(139, 92, 246, 0.04);
+}
+
 /* Typography utilities */
 .label {
   font-size: 10px;

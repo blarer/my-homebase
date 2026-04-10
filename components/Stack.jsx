@@ -8,7 +8,7 @@ export default function Stack() {
   const doubled = [...skills, ...skills];
 
   return (
-    <section id="stack" className="py-20 overflow-hidden border-t border-b" style={{ borderColor: 'var(--border)' }}>
+    <section id="stack" className="py-8 overflow-hidden border-t border-b" style={{ borderColor: 'var(--border)' }}>
       <div className="relative">
         {/* Fade edges */}
         <div className="absolute left-0 top-0 bottom-0 w-20 z-10 pointer-events-none"
