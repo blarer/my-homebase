@@ -1,5 +1,4 @@
 import './globals.css';
-import SplashCursor from "@/components/SplashCursor";
 
 export const metadata = {
   title: 'Blare: Homebase',
@@ -25,7 +24,6 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <SplashCursor />
         {children}
       </body>
     </html>

@@ -29,31 +29,29 @@
     @apply bg-black text-white;
     overscroll-behavior: none;
   }
-  
+
   body {
     @apply min-h-screen;
     overscroll-behavior: none;
   }
 
-  /* Glass effect for cards */
   .glass-card {
     @apply bg-black/40 backdrop-blur-lg border border-white/10;
   }
 
-  /* Glow effect for interactive elements */
-  .glow-effect {
-    @apply transition-all duration-300;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-  }
-
-  .glow-effect:hover {
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
-  }
-
-  /* Smooth transitions for interactive elements */
   a, button, input, select, textarea {
     @apply transition-colors duration-200;
   }
+}
+
+/* Static dot grid background */
+.static-grid {
+  @apply fixed inset-0 pointer-events-none;
+  z-index: -20;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 /* Custom scrollbar */
@@ -81,208 +79,6 @@
 /* Focus styles */
 :focus-visible {
   @apply outline-none ring-2 ring-gray-100/50 ring-offset-2 ring-offset-black;
-}
-
-/* Animation keyframes */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Blur text animation */
-.blur-text {
-  @apply transition-all duration-500;
-  filter: blur(0);
-}
-
-.blur-text:hover {
-  filter: blur(4px);
-}
-
-/* Magnet effect for buttons */
-.magnet-button {
-  @apply transition-transform duration-200;
-}
-
-.magnet-button:hover {
-  transform: scale(1.05);
-}
-
-/* Pixel transition */
-.pixel-transition {
-  @apply transition-all duration-300;
-  image-rendering: pixelated;
-}
-
-/* Meta balls cursor effect */
-.cursor-meta {
-  @apply fixed pointer-events-none z-50;
-  width: 20px;
-  height: 20px;
-  background: radial-gradient(circle, rgba(243,244,246,0.8) 0%, rgba(243,244,246,0) 70%);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s, height 0.2s;
-}
-
-/* Aurora background effect */
-.aurora-bg {
-  @apply fixed inset-0 -z-10;
-  background: radial-gradient(circle at center, rgba(243,244,246,0.1) 0%, transparent 70%);
-  filter: blur(100px);
-  opacity: 0.5;
-}
-
-/* Grid motion background */
-.grid-motion {
-  @apply fixed inset-0 -z-20;
-  background-image: 
-    linear-gradient(rgba(243, 244, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(243, 244, 246, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-  animation: grid-motion 20s linear infinite;
-}
-
-@keyframes grid-motion {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(20px);
-  }
-}
-
-/* Waves effect */
-.waves {
-  @apply fixed bottom-0 left-0 w-full -z-10;
-  height: 100px;
-  background: linear-gradient(180deg, transparent, rgba(243,244,246,0.05));
-  animation: waves 10s linear infinite;
-}
-
-@keyframes waves {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0);
-  }
-}
-
-.silk-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(243,244,246,0.18) 0%, rgba(243,244,246,0.08) 60%, rgba(243,244,246,0.01) 100%);
-  animation: silk-move 12s ease-in-out infinite alternate;
-  filter: blur(32px) brightness(1.2);
-}
-
-@keyframes silk-move {
-  0% {
-    background-position: 50% 40%;
-    filter: blur(32px) brightness(1.2);
-  }
-  50% {
-    background-position: 60% 60%;
-    filter: blur(40px) brightness(1.3);
-  }
-  100% {
-    background-position: 40% 30%;
-    filter: blur(32px) brightness(1.2);
-  }
-}
-
-/* Horizontal Oval Blur Animations */
-@keyframes float-oval {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.6;
-  }
-  25% {
-    transform: scale(1.1) rotate(5deg);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(0.9) rotate(-3deg);
-    opacity: 0.7;
-  }
-  75% {
-    transform: scale(1.05) rotate(2deg);
-    opacity: 0.9;
-  }
-}
-
-@keyframes float-oval-delayed {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.4;
-  }
-  33% {
-    transform: scale(1.15) rotate(-8deg);
-    opacity: 0.6;
-  }
-  66% {
-    transform: scale(0.85) rotate(6deg);
-    opacity: 0.5;
-  }
-}
-
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.6;
-    transform: scale(1.1);
-  }
-}
-
-.animate-float-oval {
-  animation: float-oval 16s ease-in-out infinite;
-}
-
-.animate-float-oval-delayed {
-  animation: float-oval-delayed 24s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 12s ease-in-out infinite;
-}
-
-/* StarBorder animation keyframes */
-@keyframes star-movement-bottom {
-  0% { transform: translate(0%, 0%); opacity: 1; }
-  100% { transform: translate(-100%, 0%); opacity: 0; }
-}
-
-@keyframes star-movement-top {
-  0% { transform: translate(0%, 0%); opacity: 1; }
-  100% { transform: translate(100%, 0%); opacity: 0; }
-}
-
-.animate-star-movement-bottom {
-  animation: star-movement-bottom linear infinite alternate;
-}
-
-.animate-star-movement-top {
-  animation: star-movement-top linear infinite alternate;
 }
 
 /* Respect user's motion preference */

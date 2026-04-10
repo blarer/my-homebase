@@ -22,15 +22,15 @@ const ScrollReveal = ({
   const initialPosition = useMemo(() => {
     switch (direction) {
       case 'up':
-        return { y: 50, opacity: 0 };
+        return { y: 16, opacity: 0 };
       case 'down':
-        return { y: -50, opacity: 0 };
+        return { y: -16, opacity: 0 };
       case 'left':
-        return { x: 50, opacity: 0 };
+        return { x: 24, opacity: 0 };
       case 'right':
-        return { x: -50, opacity: 0 };
+        return { x: -24, opacity: 0 };
       default:
-        return { y: 50, opacity: 0 };
+        return { y: 16, opacity: 0 };
     }
   }, [direction]);
 

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import FuzzyText from './FuzzyText';
 
 export default function Navigation() {
   const pathname = usePathname();
@@ -18,7 +17,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="text-white font-bold text-xl glow-effect">
+            <Link href="/" className="text-white font-bold text-xl tracking-tight">
               Blare
             </Link>
           </div>
@@ -30,13 +29,15 @@ export default function Navigation() {
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`px-3 py-2 text-sm font-medium transition-colors duration-200 relative
+                    after:absolute after:bottom-0 after:left-3 after:right-3 after:h-px after:bg-white/40
+                    after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-200 ${
                     pathname === link.href
-                      ? 'text-white bg-white/10'
-                      : 'text-gray-300 hover:text-white'
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <FuzzyText text={link.name} />
+                  {link.name}
                 </Link>
               ))}
             </div>
@@ -70,7 +71,7 @@ export default function Navigation() {
               className={`block px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
                 pathname === link.href
                   ? 'text-white bg-white/10'
-                  : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
               {link.name}
@@ -80,4 +81,4 @@ export default function Navigation() {
       </div>
     </nav>
   );
-} 
+}
