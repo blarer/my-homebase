@@ -1,30 +1,81 @@
-import Link from 'next/link';
+'use client';
+
+import { motion } from 'framer-motion';
+
+const fade = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] },
+});
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[60vh] flex items-center justify-center px-4 pb-8 overflow-hidden">
-      <div className="flex flex-col items-center w-full max-w-3xl mx-auto text-center space-y-6">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight text-white">
-          Welcome to My Digital Homebase
-        </h1>
-        <p className="text-base sm:text-lg text-gray-400 max-w-xl leading-relaxed">
-          A place where I share my projects and journey through the digital world.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-4">
-          <Link
-            href="/portfolio"
-            className="px-6 py-2.5 rounded-md border border-white/20 text-white text-sm font-medium hover:bg-white/5 hover:border-white/40 transition-all duration-200"
+    <section className="relative min-h-screen flex flex-col justify-center px-6 overflow-hidden">
+      {/* Gradient orb */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[800px] h-[800px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.10) 0%, rgba(139,92,246,0.03) 50%, transparent 70%)' }}
+      />
+
+      {/* Content */}
+      <div className="max-w-6xl mx-auto w-full pt-24">
+        <motion.p className="label mb-8" {...fade(0.1)}>
+          Available for work · 2025
+        </motion.p>
+
+        <div className="overflow-hidden">
+          <motion.h1
+            className="text-[clamp(56px,10vw,136px)] font-bold tracking-[-0.04em] leading-[0.9] text-white mb-10"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           >
-            View My Work
-          </Link>
-          <Link
-            href="#about"
-            className="px-6 py-2.5 rounded-md text-gray-400 text-sm font-medium hover:text-white transition-colors duration-200"
-          >
-            About Me
-          </Link>
+            Blare
+          </motion.h1>
         </div>
+
+        <motion.p
+          className="text-lg md:text-xl leading-relaxed max-w-md mb-12"
+          style={{ color: 'var(--text-secondary)' }}
+          {...fade(0.4)}
+        >
+          Developer crafting exceptional digital experiences at the intersection of design and code.
+        </motion.p>
+
+        <motion.div className="flex items-center gap-6" {...fade(0.55)}>
+          <a
+            href="#work"
+            className="inline-flex items-center gap-2 text-sm font-medium text-white border border-white/15 rounded-full px-5 py-2.5 hover:bg-white/5 hover:border-white/30 transition-all duration-200"
+          >
+            View Work
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M2 7h10M8 3l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+          <a
+            href="#about"
+            className="text-sm font-medium transition-colors duration-200"
+            style={{ color: 'var(--text-secondary)' }}
+            onMouseEnter={e => e.target.style.color = '#fff'}
+            onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}
+          >
+            About me
+          </a>
+        </motion.div>
       </div>
+
+      {/* Scroll cue */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+        {...fade(1.1)}
+      >
+        <span className="label">Scroll</span>
+        <motion.div
+          className="w-px h-12"
+          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.2), transparent)' }}
+          animate={{ scaleY: [1, 0.4, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </motion.div>
     </section>
   );
 }

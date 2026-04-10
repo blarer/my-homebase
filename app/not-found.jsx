@@ -4,19 +4,20 @@ import Layout from '@/components/Layout';
 export default function NotFound() {
   return (
     <Layout>
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-6">
         <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">
-            404 — Page Not Found
+          <p className="label mb-6">404</p>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
+            Lost in the void.
           </h1>
-          <p className="text-lg text-gray-400 mb-8 max-w-md mx-auto">
-            The page you&apos;re looking for doesn&apos;t exist.
+          <p className="text-base mb-10" style={{ color: 'var(--text-secondary)' }}>
+            This page doesn&apos;t exist.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center px-6 py-2.5 border border-white/20 text-sm font-medium rounded-md text-white hover:bg-white/5 hover:border-white/40 transition-all duration-200"
+            className="inline-flex items-center gap-2 text-sm font-medium text-white border border-white/15 rounded-full px-5 py-2.5 hover:bg-white/5 hover:border-white/30 transition-all duration-200"
           >
-            Go Back Home
+            Back home
           </Link>
         </div>
       </div>
