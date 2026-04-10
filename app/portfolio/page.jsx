@@ -9,7 +9,7 @@ export const metadata = {
   description: 'Explore my coding projects',
 };
 
-export const revalidate = 0; // Fetch fresh data on every visit
+export const revalidate = 3600; // Re-render at most once per hour
 
 export default async function Portfolio() {
   const repos = await fetchGitHubRepos();

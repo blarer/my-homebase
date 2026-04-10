@@ -38,7 +38,7 @@ export default function ProjectCard({ project }) {
                   encryptedClassName="text-gray-500"
                 />
               </h3>
-              <p className="text-gray-300 mb-4">{project.description}</p>
+              <p className="text-gray-300 mb-4 line-clamp-3">{project.description}</p>
               
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.technologies.map((tech, index) => (
@@ -52,8 +52,9 @@ export default function ProjectCard({ project }) {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-sm text-gray-400">
-                  <span>Last updated: {project.lastUpdated}</span>
+                <div className="flex items-center gap-3 text-sm text-gray-400">
+                  <span>{project.lastUpdated}</span>
+                  <span className="text-white/30 border border-white/20 rounded px-1.5 py-0.5 text-xs">README</span>
                 </div>
                 <div className="flex space-x-3">
                   {project.githubUrl && (

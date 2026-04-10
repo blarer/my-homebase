@@ -43,12 +43,12 @@ export default function Hero() {
       
       {/* Foreground Content */}
       <div className="relative flex flex-col items-center w-full max-w-2xl sm:max-w-3xl md:max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 z-10">
-        <BlurText 
-          text="Welcome to My Digital Homebase" 
+        <BlurText
+          text="Welcome to My Digital Homebase"
           animateBy="words"
           direction="top"
           delay={100}
-          className="text-2xl sm:text-3xl md:text-4xl xl:text-5xl font-bold tracking-tight"
+          className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-bold tracking-tight leading-tight"
         />
 
         <ScrollReveal delay={0.5}>
@@ -79,6 +79,13 @@ export default function Hero() {
                 />
               </Link>
             </StarBorder>
+
+            <Link
+              href="#about"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-full border border-white/20 text-gray-400 hover:text-white hover:border-white/40 text-base font-medium text-center transition-all duration-200"
+            >
+              About Me
+            </Link>
           </div>
         </ScrollReveal>
       </div>
