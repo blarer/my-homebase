@@ -37,13 +37,18 @@ export default function Starfield() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    let stars     = [];
+    let stars          = [];
     let raf;
-    let startTime = null;
+    let startTime      = null;
+    let lastTimestamp  = null;
 
     // Smoothed scroll velocity — decays each frame
-    let scrollVel  = 0;
+    let scrollVel   = 0;
     let lastScrollY = window.scrollY;
+
+    // Normalise all movement to a 60 fps baseline.
+    // At 120 fps dt ≈ 0.5 → each frame moves half as far → same visual speed.
+    const FRAME_MS = 1000 / 60;
 
     const resize = () => {
       canvas.width  = window.innerWidth;
@@ -52,22 +57,31 @@ export default function Starfield() {
     };
 
     const draw = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
+      if (!startTime)     startTime    = timestamp;
+      if (!lastTimestamp) lastTimestamp = timestamp;
+
+      const elapsed   = timestamp - startTime;
+      const deltaMs   = timestamp - lastTimestamp;
+      lastTimestamp   = timestamp;
+
+      // dt = 1.0 at 60 fps · 0.5 at 120 fps · 0.42 at 144 fps
+      // Clamp to 4 frames so a backgrounded tab doesn't cause a jump
+      const dt = Math.min(deltaMs / FRAME_MS, 4);
 
       // Compute raw scroll delta this frame, then smooth it
       const currentScrollY = window.scrollY;
       const rawDelta = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
 
-      // Exponential decay: snaps up quickly, winds down gradually
-      scrollVel = scrollVel * 0.82 + rawDelta * 0.18;
+      // Frame-rate-independent exponential decay
+      // pow(0.82, dt) gives the same wind-down curve at any refresh rate
+      scrollVel = scrollVel * Math.pow(0.82, dt) + rawDelta * 0.18;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (const star of stars) {
-        // Base drift + scroll contribution (near layer rushes past faster)
-        star.y += star.speed + scrollVel * star.parallaxFactor;
+        // Scale movement by dt so speed is identical at 60/120/144 Hz
+        star.y += (star.speed + scrollVel * star.parallaxFactor) * dt;
 
         // Wrap — handle both downward and upward scroll
         if (star.y > canvas.height + star.size) {
