@@ -7,10 +7,7 @@ export default function Footer() {
           <a href="https://github.com/blarer" className="label hover:text-white/60 transition-colors duration-200">
             GitHub
           </a>
-          <a href="#" className="label hover:text-white/60 transition-colors duration-200">
-            Twitter
-          </a>
-          <a href="mailto:hi@blare.lol" className="label hover:text-white/60 transition-colors duration-200">
+          <a href="mailto:blare@louds.net" className="label hover:text-white/60 transition-colors duration-200">
             Email
           </a>
         </div>

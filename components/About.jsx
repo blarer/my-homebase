@@ -77,8 +77,7 @@ export default function About() {
             <div className="flex items-center gap-5 pt-4">
               {[
                 { label: 'GitHub', href: 'https://github.com/blarer' },
-                { label: 'Twitter', href: '#' },
-                { label: 'Email', href: 'mailto:hi@blare.lol' },
+                { label: 'Email', href: 'mailto:blare@louds.net' },
               ].map((link) => (
                 <a
                   key={link.label}
