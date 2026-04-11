@@ -7,6 +7,9 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   trailingSlash: true,
-}
+};
 
-module.exports = nextConfig 
+const { initOpenNextCloudflareForDev } = require('@opennextjs/cloudflare');
+initOpenNextCloudflareForDev();
+
+module.exports = nextConfig;
