@@ -1,10 +1,4 @@
 name = "my-homebase"
 compatibility_date = "2025-04-10"
 compatibility_flags = ["nodejs_compat"]
-
-[vars]
-# Add PUBLIC_GITHUB_USERNAME here if you re-add portfolio features later
-# PUBLIC_GITHUB_USERNAME = "blarer"
-
-[[pages]]
-pages_build_output_dir = ".open-next/assets"
+pages_build_output_dir = ".vercel/output/static"
