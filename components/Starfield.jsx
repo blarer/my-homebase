@@ -4,17 +4,24 @@ import { useEffect, useRef } from 'react';
 
 // parallaxFactor: how much of the scroll delta each layer inherits
 // Far stars barely react; near stars rush past
-const LAYERS = [
+const LAYERS_DESKTOP = [
   { count: 180, speed: 0.012, minSize: 0.3, maxSize: 0.8,  opacity: 0.35, parallaxFactor: 0.03 },
   { count: 90,  speed: 0.025, minSize: 0.6, maxSize: 1.2,  opacity: 0.55, parallaxFactor: 0.08 },
   { count: 35,  speed: 0.045, minSize: 1.0, maxSize: 1.8,  opacity: 0.80, parallaxFactor: 0.18 },
 ];
+const LAYERS_MOBILE = [
+  { count: 80,  speed: 0.012, minSize: 0.3, maxSize: 0.8,  opacity: 0.35, parallaxFactor: 0.03 },
+  { count: 40,  speed: 0.025, minSize: 0.6, maxSize: 1.2,  opacity: 0.55, parallaxFactor: 0.08 },
+  { count: 15,  speed: 0.045, minSize: 1.0, maxSize: 1.8,  opacity: 0.80, parallaxFactor: 0.18 },
+];
+const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
 function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
 
 function buildStars(w, h) {
+  const LAYERS = isMobile() ? LAYERS_MOBILE : LAYERS_DESKTOP;
   return LAYERS.flatMap(({ count, speed, minSize, maxSize, opacity, parallaxFactor }) =>
     Array.from({ length: count }, () => ({
       x:              Math.random() * w,
@@ -45,6 +52,10 @@ export default function Starfield() {
     // Smoothed scroll velocity — decays each frame
     let scrollVel   = 0;
     let lastScrollY = window.scrollY;
+    let hidden      = false;
+
+    const onVisibility = () => { hidden = document.hidden; };
+    document.addEventListener('visibilitychange', onVisibility);
 
     // Normalise all movement to a 60 fps baseline.
     // At 120 fps dt ≈ 0.5 → each frame moves half as far → same visual speed.
@@ -56,7 +67,16 @@ export default function Starfield() {
       stars = buildStars(canvas.width, canvas.height);
     };
 
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      const rawDelta = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+      scrollVel = scrollVel * 0.82 + rawDelta * 0.18;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
     const draw = (timestamp) => {
+      if (hidden) { raf = requestAnimationFrame(draw); return; }
       if (!startTime)     startTime    = timestamp;
       if (!lastTimestamp) lastTimestamp = timestamp;
 
@@ -68,14 +88,8 @@ export default function Starfield() {
       // Clamp to 4 frames so a backgrounded tab doesn't cause a jump
       const dt = Math.min(deltaMs / FRAME_MS, 4);
 
-      // Compute raw scroll delta this frame, then smooth it
-      const currentScrollY = window.scrollY;
-      const rawDelta = currentScrollY - lastScrollY;
-      lastScrollY = currentScrollY;
-
       // Frame-rate-independent exponential decay
-      // pow(0.82, dt) gives the same wind-down curve at any refresh rate
-      scrollVel = scrollVel * Math.pow(0.82, dt) + rawDelta * 0.18;
+      scrollVel = scrollVel * Math.pow(0.82, dt);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -114,6 +128,8 @@ export default function Starfield() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
