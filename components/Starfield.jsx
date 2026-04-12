@@ -4,24 +4,17 @@ import { useEffect, useRef } from 'react';
 
 // parallaxFactor: how much of the scroll delta each layer inherits
 // Far stars barely react; near stars rush past
-const LAYERS_DESKTOP = [
+const LAYERS = [
   { count: 180, speed: 0.012, minSize: 0.3, maxSize: 0.8,  opacity: 0.35, parallaxFactor: 0.03 },
   { count: 90,  speed: 0.025, minSize: 0.6, maxSize: 1.2,  opacity: 0.55, parallaxFactor: 0.08 },
   { count: 35,  speed: 0.045, minSize: 1.0, maxSize: 1.8,  opacity: 0.80, parallaxFactor: 0.18 },
 ];
-const LAYERS_MOBILE = [
-  { count: 80,  speed: 0.012, minSize: 0.3, maxSize: 0.8,  opacity: 0.35, parallaxFactor: 0.03 },
-  { count: 40,  speed: 0.025, minSize: 0.6, maxSize: 1.2,  opacity: 0.55, parallaxFactor: 0.08 },
-  { count: 15,  speed: 0.045, minSize: 1.0, maxSize: 1.8,  opacity: 0.80, parallaxFactor: 0.18 },
-];
-const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 768;
 
 function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
 
 function buildStars(w, h) {
-  const LAYERS = isMobile() ? LAYERS_MOBILE : LAYERS_DESKTOP;
   return LAYERS.flatMap(({ count, speed, minSize, maxSize, opacity, parallaxFactor }) =>
     Array.from({ length: count }, () => ({
       x:              Math.random() * w,
@@ -48,18 +41,23 @@ export default function Starfield() {
     let raf;
     let startTime      = null;
     let lastTimestamp  = null;
+    let lastDrawTime   = null;
 
     // Smoothed scroll velocity — decays each frame
     let scrollVel   = 0;
     let lastScrollY = window.scrollY;
     let hidden      = false;
 
-    const onVisibility = () => { hidden = document.hidden; };
-    document.addEventListener('visibilitychange', onVisibility);
+    // On mobile, cap to 60fps regardless of display refresh rate
+    const mobile = window.innerWidth < 768;
+    const MOBILE_FRAME_MS = 1000 / 60;
 
     // Normalise all movement to a 60 fps baseline.
     // At 120 fps dt ≈ 0.5 → each frame moves half as far → same visual speed.
     const FRAME_MS = 1000 / 60;
+
+    const onVisibility = () => { hidden = document.hidden; };
+    document.addEventListener('visibilitychange', onVisibility);
 
     const resize = () => {
       canvas.width  = window.innerWidth;
@@ -76,7 +74,16 @@ export default function Starfield() {
     window.addEventListener('scroll', onScroll, { passive: true });
 
     const draw = (timestamp) => {
-      if (hidden) { raf = requestAnimationFrame(draw); return; }
+      raf = requestAnimationFrame(draw);
+
+      if (hidden) return;
+
+      // On mobile: skip frames to stay at 60fps
+      if (mobile) {
+        if (lastDrawTime !== null && timestamp - lastDrawTime < MOBILE_FRAME_MS) return;
+        lastDrawTime = timestamp;
+      }
+
       if (!startTime)     startTime    = timestamp;
       if (!lastTimestamp) lastTimestamp = timestamp;
 
@@ -115,8 +122,6 @@ export default function Starfield() {
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.fill();
       }
-
-      raf = requestAnimationFrame(draw);
     };
 
     resize();
