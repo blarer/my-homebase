@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useGpu } from '@/lib/useGpu';
 
 // parallaxFactor: how much of the scroll delta each layer inherits
 // Far stars barely react; near stars rush past
@@ -29,10 +30,38 @@ function buildStars(w, h) {
   );
 }
 
+// Static CSS fallback for no-GPU environments
+function StaticStarfield() {
+  return (
+    <div
+      className="fixed inset-0 pointer-events-none"
+      style={{ zIndex: 0 }}
+      aria-hidden
+    >
+      {/* Scattered static dots via radial gradients */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: Array.from({ length: 60 }, () => {
+            const x = Math.random() * 100;
+            const y = Math.random() * 100;
+            const size = 0.5 + Math.random() * 1.2;
+            const opacity = 0.15 + Math.random() * 0.5;
+            return `radial-gradient(${size}px ${size}px at ${x}% ${y}%, rgba(255,255,255,${opacity}) 50%, transparent 50%)`;
+          }).join(', '),
+        }}
+      />
+    </div>
+  );
+}
+
 export default function Starfield() {
   const canvasRef = useRef(null);
+  const { hasGpu, mobile } = useGpu();
 
   useEffect(() => {
+    if (!hasGpu) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -49,7 +78,6 @@ export default function Starfield() {
     let hidden      = false;
 
     // On mobile, cap to 60fps regardless of display refresh rate
-    const mobile = window.innerWidth < 768;
     const MOBILE_FRAME_MS = 1000 / 60;
 
     // Normalise all movement to a 60 fps baseline.
@@ -138,7 +166,9 @@ export default function Starfield() {
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, []);
+  }, [hasGpu, mobile]);
+
+  if (!hasGpu) return <StaticStarfield />;
 
   return (
     <canvas

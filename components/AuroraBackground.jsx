@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useGpu } from '@/lib/useGpu';
 
 const orbs = [
   {
@@ -45,7 +45,6 @@ const orbs = [
       scale: [1, 1.2, 0.85, 1.1, 1],
     },
     duration: 34,
-    mobileOnly: false,
   },
   {
     width: 280,
@@ -60,23 +59,41 @@ const orbs = [
       scale: [1, 1.05, 1.2, 0.9, 1],
     },
     duration: 26,
-    mobileOnly: false,
   },
 ];
 
 export default function AuroraBackground() {
-  const [mobile, setMobile] = useState(false);
+  const { hasGpu, mobile } = useGpu();
 
-  useEffect(() => {
-    setMobile(window.innerWidth < 768);
-  }, []);
+  // No GPU: static gradient, no animations
+  if (!hasGpu) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 60% 50% at 30% 40%, rgba(139,92,246,0.08) 0%, transparent 70%), ' +
+              'radial-gradient(ellipse 50% 40% at 70% 60%, rgba(99,102,241,0.06) 0%, transparent 70%)',
+          }}
+        />
+        <div
+          className="absolute inset-0 z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% 50%, transparent 40%, rgba(8,8,8,0.6) 100%)',
+          }}
+        />
+      </div>
+    );
+  }
 
-  // On mobile, only render first 2 orbs with reduced blur
+  // Mobile with GPU: 2 orbs, reduced blur
+  // Desktop with GPU: all 4 orbs, full blur
   const activeOrbs = mobile ? orbs.slice(0, 2) : orbs;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-      {/* Subtle vignette */}
       <div
         className="absolute inset-0 z-10"
         style={{
