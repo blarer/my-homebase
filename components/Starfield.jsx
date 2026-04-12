@@ -65,11 +65,13 @@ export default function Starfield() {
       stars = buildStars(canvas.width, canvas.height);
     };
 
+    // Mobile touch momentum fires large deltas rapidly — dampen accumulation
+    const scrollAccum = mobile ? 0.06 : 0.18;
     const onScroll = () => {
       const currentScrollY = window.scrollY;
       const rawDelta = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
-      scrollVel = scrollVel * 0.82 + rawDelta * 0.18;
+      scrollVel = scrollVel * 0.82 + rawDelta * scrollAccum;
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
