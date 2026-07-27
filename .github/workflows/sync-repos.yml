@@ -42,6 +42,13 @@ jobs:
       - name: Verify the snapshot publishes shape only
         env:
           GH_TOKEN: ${{ secrets.REPOS_TOKEN }}
+          # This job rewrites the snapshot from private repository data and then
+          # pushes it to a public repository, so the name comparison is the one
+          # check standing between a redaction bug and a published leak. Without
+          # this, an expired or unscoped REPOS_TOKEN would make that comparison
+          # unrunnable and the step would still exit 0, and the pull request it
+          # opens claims "the privacy test ran green" on the strength of it.
+          REQUIRE_NAME_CHECK: '1'
         run: node scripts/test-privacy.mjs
 
       - name: Check the treemap and hover probe still hold
