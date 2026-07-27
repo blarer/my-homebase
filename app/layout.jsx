@@ -1,5 +1,6 @@
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
+import ThemeScript from '@/components/ThemeScript';
 
 // Archivo carries a width axis, so the display type can be stretched to fill a
 // measure exactly rather than being letter-spaced by eye.
@@ -36,12 +37,23 @@ export const metadata = {
 };
 
 export const viewport = {
-  themeColor: '#eceef0',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#eceef0' },
+    { media: '(prefers-color-scheme: dark)', color: '#101317' },
+  ],
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      className={`${archivo.variable} ${plexMono.variable}`}
+      data-theme="light"
+      suppressHydrationWarning
+    >
+      <head>
+        <ThemeScript />
+      </head>
       <body>{children}</body>
     </html>
   );
