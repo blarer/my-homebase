@@ -39,6 +39,25 @@ for (const repo of privateEntries) {
 }
 
 // Content: no real private repo name may appear anywhere in a private entry.
+//
+// This is the assertion that catches the class of bug that has actually
+// happened here (a private name reaching a published artefact through a field
+// nobody was watching), so when it cannot run, that has to be visible.
+//
+// Not to be merged with the superficially identical skip in blarer-profile's
+// check-no-private-names.mjs. That one is sound: without a token the generator
+// refuses to run, so no private repo could have entered the SVGs, and having
+// nothing to check really does mean there is nothing to find. Here the
+// opposite holds. The snapshot is already on disk and already contains
+// private-derived entries, so being unable to look at it proves nothing about
+// what is in it. Same shape, opposite safety.
+//
+// REQUIRE_NAME_CHECK=1 makes an unrunnable comparison a hard failure. The
+// deploy workflow sets it, because publishing on a gate that could not run is
+// exactly the outcome this file exists to prevent.
+const REQUIRE_NAME_CHECK = process.env.REQUIRE_NAME_CHECK === '1';
+let nameCheckRan = false;
+
 try {
   const names = JSON.parse(
     execFileSync(
@@ -51,7 +70,9 @@ try {
         // against the same set the sync actually considers.
         '[.[] | select(.archived == false and .fork == false) | .name]',
       ],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] },
+      // stderr is captured rather than discarded so an expired token can be
+      // told apart from gh being absent.
+      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
     ),
   );
   const emitted = JSON.stringify(privateEntries).toLowerCase();
@@ -63,8 +84,19 @@ try {
     privateEntries.length === names.length,
     `${privateEntries.length} entries for ${names.length} active private repos`,
   );
-} catch {
-  console.log('skip  name comparison needs an authenticated gh');
+  nameCheckRan = true;
+} catch (err) {
+  const reason = String(err.stderr || err.message).trim().split('\n')[0];
+  const missing = err.code === 'ENOENT';
+  const detail = missing ? 'gh is not installed' : `gh failed: ${reason}`;
+
+  if (REQUIRE_NAME_CHECK) {
+    check('name comparison could run', false, detail);
+  } else {
+    // Deliberately not "skip": this is an unchecked assertion, and the summary
+    // below must not read as a clean bill of health.
+    console.log(`UNVERIFIED  name comparison did not run (${detail})`);
+  }
 }
 
 if (failures.length > 0) {
@@ -72,4 +104,15 @@ if (failures.length > 0) {
   for (const f of failures) console.error(`  ${f}`);
   process.exit(1);
 }
-console.log('\nSnapshot publishes shape only.');
+
+// Only claim the snapshot is clean when the check that would have caught a
+// name actually ran. "The assertions I was able to run all passed" and "the
+// snapshot publishes shape only" are different statements, and a gate that
+// cannot tell them apart reports an unknown as an assurance.
+console.log(
+  nameCheckRan
+    ? '\nSnapshot publishes shape only.'
+    : '\nSnapshot NOT fully verified: structural checks passed, but the private\n' +
+      'name comparison did not run, so no claim is made about name leakage.\n' +
+      'Authenticate gh, or set REQUIRE_NAME_CHECK=1 to make this a failure.',
+);

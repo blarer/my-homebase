@@ -38,6 +38,11 @@ jobs:
       - name: Verify the snapshot publishes shape only
         env:
           GH_TOKEN: ${{ secrets.REPOS_TOKEN }}
+          # Fail rather than publish on a gate that could not run. Without
+          # this, an expired or unscoped REPOS_TOKEN makes the name comparison
+          # unrunnable, and the step would exit 0 having verified nothing about
+          # name leakage.
+          REQUIRE_NAME_CHECK: '1'
         run: node scripts/test-privacy.mjs
 
       - name: Check the treemap and hover probe still hold

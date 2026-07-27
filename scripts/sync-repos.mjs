@@ -55,50 +55,74 @@ const list = INCLUDE_PRIVATE
   ? await api("/user/repos?per_page=100&affiliation=owner&sort=pushed")
   : await api(`/users/${USER}/repos?per_page=100&sort=pushed`);
 
-// The placeholder number is derived from each repo's position in the filtered
-// list, which is fixed before any request goes out. Incrementing a shared
-// counter *after* the `await` below would instead number them by whichever
-// /languages response happened to land first, so the same repositories could
-// come back with different placeholders on every sync and produce a diff with
-// no underlying data change.
 const active = list.filter((r) => !r.fork && !r.archived);
-const privateOrdinal = new Map(
-  active.filter((r) => r.private).map((r, i) => [r.full_name, i + 1]),
+
+// Fetch every language breakdown first, so the placeholder numbers can be
+// assigned from the completed data rather than from whichever response
+// happened to land first.
+const measured = await Promise.all(
+  active.map(async (r) => ({
+    repo: r,
+    languages: await api(`/repos/${r.full_name}/languages`),
+  })),
 );
 
-const repos = await Promise.all(
-  active.map(async (r) => {
-    const languages = await api(`/repos/${r.full_name}/languages`);
+/**
+ * Numbers the redacted entries by descending source bytes.
+ *
+ * The ordinal has to be derived from something already published, because
+ * whatever orders it becomes readable through it. Two orderings that look
+ * reasonable are not:
+ *
+ *   - Position in `list`, which is fetched with `sort=pushed`. That makes the
+ *     number a recency rank, so `private-01` would announce the most recently
+ *     active private repository. The entries null out `pushedAt` a few lines
+ *     below precisely to withhold that.
+ *   - Alphabetical by real name, which encodes the names' ordering.
+ *
+ * Byte total is safe because it is already in the file, visible as the size of
+ * every tile, and it is the same key the snapshot is sorted by below. The
+ * number therefore tells a reader nothing the shape did not already show.
+ * Ties break on the language breakdown, also already published, so equal
+ * totals cannot fall through to the push-ordered input.
+ */
+const privateOrdinal = new Map(
+  measured
+    .filter((m) => m.repo.private)
+    .map((m) => ({ key: m.repo.full_name, total: sum(m.languages), langs: JSON.stringify(m.languages) }))
+    .sort((a, b) => b.total - a.total || a.langs.localeCompare(b.langs))
+    .map((m, i) => [m.key, i + 1]),
+);
 
-    // Redact before writing. A private repo becomes an anonymous shape: its
-    // language mix and volume are real, everything identifying is gone.
-    if (r.private) {
-      return {
-        name: `private-${String(privateOrdinal.get(r.full_name)).padStart(2, "0")}`,
-        private: true,
-        description: "",
-        url: null,
-        homepage: null,
-        pushedAt: null,
-        createdAt: null,
-        stars: 0,
-        languages,
-      };
-    }
-
+const repos = measured.map(({ repo: r, languages }) => {
+  // Redact before writing. A private repo becomes an anonymous shape: its
+  // language mix and volume are real, everything identifying is gone.
+  if (r.private) {
     return {
-      name: r.name,
-      private: false,
-      description: r.description ?? "",
-      url: r.html_url,
-      homepage: r.homepage || null,
-      pushedAt: r.pushed_at.slice(0, 10),
-      createdAt: r.created_at.slice(0, 10),
-      stars: r.stargazers_count,
+      name: `private-${String(privateOrdinal.get(r.full_name)).padStart(2, "0")}`,
+      private: true,
+      description: "",
+      url: null,
+      homepage: null,
+      pushedAt: null,
+      createdAt: null,
+      stars: 0,
       languages,
     };
-  }),
-);
+  }
+
+  return {
+    name: r.name,
+    private: false,
+    description: r.description ?? "",
+    url: r.html_url,
+    homepage: r.homepage || null,
+    pushedAt: r.pushed_at.slice(0, 10),
+    createdAt: r.created_at.slice(0, 10),
+    stars: r.stargazers_count,
+    languages,
+  };
+});
 
 repos.sort((a, b) => sum(b.languages) - sum(a.languages));
 
