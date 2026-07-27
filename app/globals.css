@@ -411,13 +411,46 @@
   color: var(--ink-soft);
 }
 
+/* The label sits on whatever language band happens to be behind it, not on the
+   tile background, so its contrast was decided by the data rather than by the
+   palette. Measured worst case: --ink-faint on Shell green scored 2.87 against
+   a 4.5 threshold, and it failed in both themes.
+
+   Raising the ink colour alone cannot fix this, because the two themes need
+   opposite corrections and both still fail once a band goes opaque on hover
+   (light 3.12, dark 2.03). A scrim of the tile's own paper does work, because
+   it makes the label's contrast depend on the palette again instead of on
+   which language a repository happens to be written in.
+
+   Hover is the worst case, not rest: --band-active roughly doubles the band
+   opacity, so any fix evaluated only at rest is not a fix. Raising the ink
+   colour alone cannot work either, because the bands run from near-black Lua
+   navy to bright Shell green and no single colour clears 4.5 against both.
+
+   0.80 is the lowest scrim that passes all four states (both themes, rest and
+   hover) across all 18 languages. Worst case 4.79, on the size line over
+   Batchfile on hover. The band still reads through, so the tile keeps
+   carrying its data. */
 .tile-body {
   position: relative;
   display: grid;
   gap: 2px;
   min-width: 0;
   justify-self: start;
+  /* Hug the text rather than the tile, so the scrim reads as a label plate
+     instead of a band stretched across the tile. */
+  width: fit-content;
   max-width: 100%;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  background: color-mix(in srgb, var(--paper-raised) 80%, transparent);
+  border-radius: 3px;
+}
+
+/* An empty body would otherwise paint a small floating plate on tiles whose
+   label the container query has withdrawn. */
+.tile-body:empty {
+  background: none;
 }
 
 .tile-name {
@@ -432,7 +465,78 @@
 
 .tile-size {
   font-size: 11.5px;
-  color: var(--ink-faint);
+  /* --ink-faint is tuned for text on the page background. Even over the scrim
+     it only reaches 2.06 on a bright band, so the size line uses the same ink
+     as body copy: 6.99 worst case across all 18 languages, both themes, at
+     rest and on hover. It stays visually secondary through size, not colour. */
+  color: var(--ink-soft);
+  /* Without this the size wraps onto a second line in a narrow tile, which is
+     what pushes the label past the bottom of the tile and makes `overflow:
+     hidden` cut through the glyphs. The name above already truncates with an
+     ellipsis rather than wrapping; the size now behaves the same way. */
+  white-space: nowrap;
+}
+
+/* A tile smaller than its own label used to paint the label anyway and let
+   `overflow: hidden` slice it mid-glyph. Below the sizes measured to fit, the
+   label is withdrawn from view instead of being cut.
+
+   The text stays in the accessibility tree. Each tile is a focusable <button>
+   whose accessible name comes only from this text, so removing it with
+   `display: none` would leave an unlabelled control; the clip-rect idiom hides
+   it visually while a screen reader still announces the repository and size.
+   Sighted users lose nothing either: hover and keyboard focus both name the
+   tile in the readout panel below the treemap.
+
+   Querying the tile itself rather than the viewport means the rule follows the
+   tile's real geometry, which squarify decides, not the window width. */
+.tile {
+  container-type: size;
+}
+
+/* The label needs 20px for the name, 2px gap, 18px for the size, 8px of scrim
+   padding and 24px of tile padding: 72px of tile. Under that the size line
+   goes first, because the name is what identifies the tile. Under 52px not
+   even the name and its scrim fit, so the tile reads as shape and colour
+   alone, as the smallest tiles in the SVG treemap already do.
+   Widths are the point at which the size string itself stops fitting. */
+@container (max-height: 71px) or (max-width: 63px) {
+  .tile-size {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@container (max-height: 51px) or (max-width: 47px) {
+  .tile-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Both lines are withdrawn at this size, so the scrim has nothing left to
+     sit behind. The `:empty` guard above cannot catch this: the spans are
+     still in the DOM, deliberately, because that is what keeps the tile's
+     accessible name intact. Without this the plate would paint as a small
+     blank pill on the smallest tiles. */
+  .tile-body {
+    padding: 0;
+    margin: 0;
+    background: none;
+  }
 }
 
 /* ---- Readout panel under the treemap ---- */
