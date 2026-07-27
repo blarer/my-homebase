@@ -3,23 +3,117 @@
   "syncedAt": "2026-07-27",
   "repos": [
     {
+      "name": "private-08",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Go": 211094,
+        "Svelte": 94755,
+        "Shell": 49478,
+        "TypeScript": 15633,
+        "JavaScript": 375,
+        "HTML": 286
+      }
+    },
+    {
+      "name": "private-02",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "C#": 310513,
+        "PowerShell": 39675
+      }
+    },
+    {
+      "name": "private-01",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Nix": 168935,
+        "Just": 32386,
+        "Lua": 22673,
+        "Shell": 15156,
+        "PowerShell": 8007
+      }
+    },
+    {
+      "name": "private-04",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Python": 104293,
+        "PowerShell": 5771,
+        "Batchfile": 2725
+      }
+    },
+    {
       "name": "nix-windows-config",
+      "private": false,
       "description": "Windows (WSL2 + home-manager) counterpart to nix-darwin-config",
       "url": "https://github.com/blarer/nix-windows-config",
       "homepage": null,
-      "pushedAt": "2026-04-11",
+      "pushedAt": "2026-07-27",
       "createdAt": "2026-04-11",
       "stars": 0,
       "languages": {
-        "Nix": 24593,
-        "Lua": 12760,
-        "PowerShell": 7045,
-        "Just": 4996,
-        "Shell": 3251
+        "PowerShell": 26278,
+        "Nix": 23588,
+        "Shell": 9918,
+        "Just": 6238
+      }
+    },
+    {
+      "name": "private-06",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "TypeScript": 50792,
+        "Dockerfile": 341
+      }
+    },
+    {
+      "name": "my-homebase",
+      "private": false,
+      "description": "",
+      "url": "https://github.com/blarer/my-homebase",
+      "homepage": "https://my-homebase.vercel.app",
+      "pushedAt": "2026-07-27",
+      "createdAt": "2025-06-17",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 34013,
+        "CSS": 13791,
+        "TypeScript": 614
       }
     },
     {
       "name": "storage-manager-swift",
+      "private": false,
       "description": "Fast native disk-usage treemap for Apple Silicon — Rust getattrlistbulk scanner + SwiftUI, WizTree-style",
       "url": "https://github.com/blarer/storage-manager-swift",
       "homepage": null,
@@ -34,21 +128,37 @@
       }
     },
     {
-      "name": "my-homebase",
+      "name": "private-03",
+      "private": true,
       "description": "",
-      "url": "https://github.com/blarer/my-homebase",
-      "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-04-12",
-      "createdAt": "2025-06-17",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
       "stars": 0,
       "languages": {
-        "JavaScript": 36323,
-        "CSS": 3136,
-        "TypeScript": 614
+        "JavaScript": 24572,
+        "Python": 8916,
+        "CSS": 4416,
+        "HTML": 2792
+      }
+    },
+    {
+      "name": "private-05",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Rust": 36568
       }
     },
     {
       "name": "mp4trim",
+      "private": false,
       "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
       "url": "https://github.com/blarer/mp4trim",
       "homepage": null,
@@ -57,6 +167,34 @@
       "stars": 0,
       "languages": {
         "Python": 34551
+      }
+    },
+    {
+      "name": "private-07",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Shell": 10916,
+        "CSS": 8317,
+        "Dockerfile": 353
+      }
+    },
+    {
+      "name": "blarer",
+      "private": false,
+      "description": "Profile README",
+      "url": "https://github.com/blarer/blarer",
+      "homepage": null,
+      "pushedAt": "2026-07-27",
+      "createdAt": "2026-07-27",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 17023
       }
     }
   ]

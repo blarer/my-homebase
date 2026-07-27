@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "sync:repos": "node scripts/sync-repos.mjs",
-    "test": "node scripts/test-treemap.mjs"
+    "test": "node scripts/test-treemap.mjs && node scripts/test-band-probe.mjs && node scripts/test-privacy.mjs"
   },
   "dependencies": {
     "next": "^15.3.9",
