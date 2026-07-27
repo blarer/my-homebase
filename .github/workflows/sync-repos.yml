@@ -1,0 +1,73 @@
+name: Refresh repository snapshot
+
+# The site renders from a committed snapshot, so without this the numbers on
+# the page freeze at whenever someone last ran the sync by hand, while the
+# footer keeps publishing a sync date that quietly gets older. This refreshes
+# the snapshot and opens a pull request when the data actually changed.
+#
+# It opens a PR rather than pushing to main because merging is what triggers a
+# deploy, and a data refresh should be something you see before it ships.
+
+on:
+  schedule:
+    - cron: '41 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: sync-repos
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Sync snapshot
+        env:
+          # Needs `repo` scope to see private repositories. Without REPOS_TOKEN
+          # the sync refuses to run rather than rewriting the snapshot without
+          # them, so a missing secret cannot silently shrink the picture.
+          GITHUB_TOKEN: ${{ secrets.REPOS_TOKEN }}
+        run: node scripts/sync-repos.mjs
+
+      - name: Verify the snapshot publishes shape only
+        env:
+          GH_TOKEN: ${{ secrets.REPOS_TOKEN }}
+        run: node scripts/test-privacy.mjs
+
+      - name: Check the treemap and hover probe still hold
+        run: |
+          node scripts/test-treemap.mjs
+          node scripts/test-band-probe.mjs
+
+      - name: Open a pull request if the data changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- lib/repos.json; then
+            echo "Snapshot unchanged."
+            exit 0
+          fi
+
+          BRANCH="data/refresh-$(date -u +%Y-%m-%d)"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add lib/repos.json
+          git commit -m "Refresh repository snapshot"
+          git push -u origin "$BRANCH" --force
+
+          gh pr create \
+            --title "Refresh repository snapshot" \
+            --body "Automated refresh of \`lib/repos.json\` from the GitHub API. Private repositories are redacted to shape at sync time; the privacy test ran green before this was opened. Merge, then deploy to publish." \
+            --head "$BRANCH" \
+            --base main 2>/dev/null || echo "A pull request for this branch already exists."
