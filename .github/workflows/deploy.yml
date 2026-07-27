@@ -1,0 +1,66 @@
+name: Deploy
+
+# The site runs on Cloudflare Workers, but the only thing wired to this repo
+# was a leftover Vercel webhook from an earlier setup, so nothing published the
+# Worker on merge and every deploy had to be run by hand. That made the nightly
+# snapshot refresh a dead end: it could open a pull request, and merging it
+# changed nothing that visitors could see.
+#
+# Deploys main on push, so merging a data refresh publishes it.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # The snapshot is inlined into the build, so the privacy and layout
+      # checks run before anything is published rather than after.
+      - name: Verify the snapshot publishes shape only
+        env:
+          GH_TOKEN: ${{ secrets.REPOS_TOKEN }}
+        run: node scripts/test-privacy.mjs
+
+      - name: Check the treemap and hover probe still hold
+        run: |
+          node scripts/test-treemap.mjs
+          node scripts/test-band-probe.mjs
+
+      # Fail here with an explanation rather than letting wrangler die with a
+      # generic auth error several minutes into a build.
+      - name: Check deploy credentials
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN is not set, so this cannot deploy."
+            echo "Create a token with the 'Edit Cloudflare Workers' template at"
+            echo "https://dash.cloudflare.com/profile/api-tokens then run:"
+            echo "  gh secret set CLOUDFLARE_API_TOKEN --repo blarer/my-homebase"
+            exit 1
+          fi
+
+      - name: Build and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx opennextjs-cloudflare build && npx wrangler deploy
