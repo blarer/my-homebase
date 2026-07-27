@@ -38,6 +38,42 @@ for (const repo of privateEntries) {
   check(`${repo.name} still carries language bytes`, Object.keys(repo.languages).length > 0);
 }
 
+// Ordering: the placeholder number must be derived from source bytes, which are
+// already published in full below it, and from nothing else.
+//
+// This pins a regression that was briefly committed. Numbering the entries by
+// their position in the API listing looks inert, but that listing is fetched
+// with `sort=pushed`, so the ordinal silently became a recency rank and
+// announced the most recently active private repository: the same fact
+// `pushedAt: null` is there to withhold. A race in the old code had been
+// scrambling that correlation, so removing the race is what exposed it.
+//
+// Asserting descending byte order catches that specific mistake without
+// needing a token, because a recency-ordered snapshot cannot also be
+// byte-ordered unless the two happen to coincide. Any future ordering key that
+// is not the published byte totals will trip this.
+const totalBytes = (repo) => Object.values(repo.languages).reduce((sum, n) => sum + n, 0);
+const ordinalOf = (repo) => Number.parseInt(repo.name.slice('private-'.length), 10);
+const byOrdinal = [...privateEntries].sort((a, b) => ordinalOf(a) - ordinalOf(b));
+
+check(
+  'private placeholders are numbered 1..n with no gaps',
+  byOrdinal.every((repo, i) => ordinalOf(repo) === i + 1),
+  byOrdinal.map((r) => r.name).join(', '),
+);
+
+const misordered = byOrdinal.findIndex(
+  (repo, i) => i > 0 && totalBytes(byOrdinal[i - 1]) < totalBytes(repo),
+);
+check(
+  'private placeholders are ordered by descending source bytes, not recency',
+  misordered === -1,
+  misordered === -1
+    ? ''
+    : `${byOrdinal[misordered - 1].name} (${totalBytes(byOrdinal[misordered - 1])} B) ` +
+      `precedes ${byOrdinal[misordered].name} (${totalBytes(byOrdinal[misordered])} B)`,
+);
+
 // Content: no real private repo name may appear anywhere in a private entry.
 //
 // This is the assertion that catches the class of bug that has actually
