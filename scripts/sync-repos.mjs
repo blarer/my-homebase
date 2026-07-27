@@ -55,42 +55,49 @@ const list = INCLUDE_PRIVATE
   ? await api("/user/repos?per_page=100&affiliation=owner&sort=pushed")
   : await api(`/users/${USER}/repos?per_page=100&sort=pushed`);
 
-let privateSeq = 0;
+// The placeholder number is derived from each repo's position in the filtered
+// list, which is fixed before any request goes out. Incrementing a shared
+// counter *after* the `await` below would instead number them by whichever
+// /languages response happened to land first, so the same repositories could
+// come back with different placeholders on every sync and produce a diff with
+// no underlying data change.
+const active = list.filter((r) => !r.fork && !r.archived);
+const privateOrdinal = new Map(
+  active.filter((r) => r.private).map((r, i) => [r.full_name, i + 1]),
+);
+
 const repos = await Promise.all(
-  list
-    .filter((r) => !r.fork && !r.archived)
-    .map(async (r) => {
-      const languages = await api(`/repos/${r.full_name}/languages`);
+  active.map(async (r) => {
+    const languages = await api(`/repos/${r.full_name}/languages`);
 
-      // Redact before writing. A private repo becomes an anonymous shape: its
-      // language mix and volume are real, everything identifying is gone.
-      if (r.private) {
-        privateSeq += 1;
-        return {
-          name: `private-${String(privateSeq).padStart(2, "0")}`,
-          private: true,
-          description: "",
-          url: null,
-          homepage: null,
-          pushedAt: null,
-          createdAt: null,
-          stars: 0,
-          languages,
-        };
-      }
-
+    // Redact before writing. A private repo becomes an anonymous shape: its
+    // language mix and volume are real, everything identifying is gone.
+    if (r.private) {
       return {
-        name: r.name,
-        private: false,
-        description: r.description ?? "",
-        url: r.html_url,
-        homepage: r.homepage || null,
-        pushedAt: r.pushed_at.slice(0, 10),
-        createdAt: r.created_at.slice(0, 10),
-        stars: r.stargazers_count,
+        name: `private-${String(privateOrdinal.get(r.full_name)).padStart(2, "0")}`,
+        private: true,
+        description: "",
+        url: null,
+        homepage: null,
+        pushedAt: null,
+        createdAt: null,
+        stars: 0,
         languages,
       };
-    }),
+    }
+
+    return {
+      name: r.name,
+      private: false,
+      description: r.description ?? "",
+      url: r.html_url,
+      homepage: r.homepage || null,
+      pushedAt: r.pushed_at.slice(0, 10),
+      createdAt: r.created_at.slice(0, 10),
+      stars: r.stargazers_count,
+      languages,
+    };
+  }),
 );
 
 repos.sort((a, b) => sum(b.languages) - sum(a.languages));
