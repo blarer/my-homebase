@@ -69,7 +69,7 @@ export default function Image() {
                   }}
                 />
               </div>
-              <div style={{ fontSize: 19, fontWeight: 600 }}>{run.seconds.toFixed(1)}s</div>
+              <div style={{ fontSize: 19, fontWeight: 600 }}>{`${run.seconds.toFixed(1)}s`}</div>
             </div>
           ))}
         </div>

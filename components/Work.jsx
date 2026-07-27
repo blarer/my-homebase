@@ -92,10 +92,11 @@ export default function Work({ repos }) {
               let offset = 0;
 
               return (
-                <a
+                <button
                   key={tile.key}
+                  type="button"
                   className="tile"
-                  href={tile.repo.url}
+                  aria-pressed={current === tile.key}
                   style={{
                     left: `${(tile.x / size.width) * 100}%`,
                     top: `${(tile.y / size.height) * 100}%`,
@@ -103,6 +104,7 @@ export default function Work({ repos }) {
                     height: `${(tile.height / size.height) * 100}%`,
                   }}
                   data-active={current === tile.key || undefined}
+                  onClick={() => setActive(tile.key)}
                   onMouseEnter={() => setActive(tile.key)}
                   onFocus={() => setActive(tile.key)}
                 >
@@ -129,7 +131,7 @@ export default function Work({ repos }) {
                     <span className="tile-name">{tile.repo.name}</span>
                     <span className="num tile-size">{bytes(tile.value)}</span>
                   </span>
-                </a>
+                </button>
               );
             })}
           </div>
@@ -146,7 +148,10 @@ export default function Work({ repos }) {
 
             <div className="readout-main">
               <h3 className="readout-name">
-                <a href={currentRepo.url}>{currentRepo.name}</a>
+                <a href={currentRepo.url}>
+                  {currentRepo.name}
+                  <span className="readout-name-host"> on GitHub</span>
+                </a>
               </h3>
               <p className="readout-note">{NOTES[currentRepo.name] ?? currentRepo.description}</p>
               <ul className="readout-langs">
