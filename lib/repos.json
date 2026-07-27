@@ -1,0 +1,63 @@
+{
+  "user": "blarer",
+  "syncedAt": "2026-07-27",
+  "repos": [
+    {
+      "name": "nix-windows-config",
+      "description": "Windows (WSL2 + home-manager) counterpart to nix-darwin-config",
+      "url": "https://github.com/blarer/nix-windows-config",
+      "homepage": null,
+      "pushedAt": "2026-04-11",
+      "createdAt": "2026-04-11",
+      "stars": 0,
+      "languages": {
+        "Nix": 24593,
+        "Lua": 12760,
+        "PowerShell": 7045,
+        "Just": 4996,
+        "Shell": 3251
+      }
+    },
+    {
+      "name": "storage-manager-swift",
+      "description": "Fast native disk-usage treemap for Apple Silicon — Rust getattrlistbulk scanner + SwiftUI, WizTree-style",
+      "url": "https://github.com/blarer/storage-manager-swift",
+      "homepage": null,
+      "pushedAt": "2026-07-08",
+      "createdAt": "2026-07-08",
+      "stars": 0,
+      "languages": {
+        "Rust": 26878,
+        "Swift": 15111,
+        "Shell": 1050,
+        "C": 185
+      }
+    },
+    {
+      "name": "my-homebase",
+      "description": "",
+      "url": "https://github.com/blarer/my-homebase",
+      "homepage": "https://my-homebase.vercel.app",
+      "pushedAt": "2026-04-12",
+      "createdAt": "2025-06-17",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 36323,
+        "CSS": 3136,
+        "TypeScript": 614
+      }
+    },
+    {
+      "name": "mp4trim",
+      "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
+      "url": "https://github.com/blarer/mp4trim",
+      "homepage": null,
+      "pushedAt": "2026-07-08",
+      "createdAt": "2026-07-08",
+      "stars": 0,
+      "languages": {
+        "Python": 34551
+      }
+    }
+  ]
+}

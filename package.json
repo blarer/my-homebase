@@ -9,14 +9,14 @@
     "preview:cf": "opennextjs-cloudflare build && wrangler dev",
     "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync:repos": "node scripts/sync-repos.mjs",
+    "test": "node scripts/test-treemap.mjs"
   },
   "dependencies": {
-    "framer-motion": "^12.18.1",
     "next": "^15.3.9",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-icons": "^5.5.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

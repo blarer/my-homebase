@@ -1,17 +1,33 @@
-import { Inter } from 'next/font/google';
+import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
-import Cursor from '@/components/Cursor';
-import ScrollProgress from '@/components/ScrollProgress';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+// Archivo carries a width axis, so the display type can be stretched to fill a
+// measure exactly rather than being letter-spaced by eye.
+const archivo = Archivo({
+  subsets: ['latin'],
+  axes: ['wdth'],
+  variable: '--font-archivo',
+  display: 'swap',
+});
+
+// Every number on this site is set in mono with tabular figures so columns of
+// measurements line up.
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+});
 
 export const metadata = {
   metadataBase: new URL('https://blare.lol'),
-  title: 'Blare',
-  description: 'Developer crafting exceptional digital experiences.',
+  title: 'Blare — systems programming, measured',
+  description:
+    'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
   openGraph: {
-    title: 'Blare',
-    description: 'Developer crafting exceptional digital experiences.',
+    title: 'Blare — systems programming, measured',
+    description:
+      'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
     url: 'https://blare.lol',
     siteName: 'Blare',
     locale: 'en_US',
@@ -19,14 +35,14 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: '#eceef0',
+};
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={inter.className}>
-        <ScrollProgress />
-        <Cursor />
-        {children}
-      </body>
+    <html lang="en" className={`${archivo.variable} ${plexMono.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
