@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 /**
  * About, in his own register.
  *
@@ -5,7 +7,7 @@
  * intersection of design and code", which described nobody, and contradicted
  * the paragraphs directly beneath it. This says what he works on and how.
  */
-export default function About({ syncedAt }) {
+export default function About() {
   return (
     <section id="about" className="section">
       <div className="shell about-grid">
@@ -18,6 +20,18 @@ export default function About({ syncedAt }) {
             <br />
             I don&apos;t claim it.
           </h2>
+
+          <figure className="portrait">
+            <Image
+              src="/avatar.png"
+              alt="Blare"
+              width={256}
+              height={256}
+              sizes="(max-width: 860px) 96px, 132px"
+              priority={false}
+            />
+            <figcaption className="tag portrait-caption">blarer</figcaption>
+          </figure>
         </div>
 
         <div className="about-body">

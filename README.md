@@ -1,7 +1,10 @@
 # my-homebase
 
-Personal site at [blare.lol](https://blare.lol). Next.js App Router, static
+Personal site at [louds.net](https://louds.net). Next.js App Router, static
 export, deployed to Cloudflare Workers via OpenNext.
+
+The canonical origin used for metadata, the sitemap, and robots.txt lives in
+`lib/site.js`. Change it there if the domain moves.
 
 ## The idea
 

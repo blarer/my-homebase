@@ -1,6 +1,7 @@
 import { Archivo, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import ThemeScript from '@/components/ThemeScript';
+import { SITE_URL } from '@/lib/site';
 
 // Archivo carries a width axis, so the display type can be stretched to fill a
 // measure exactly rather than being letter-spaced by eye.
@@ -21,7 +22,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  metadataBase: new URL('https://blare.lol'),
+  metadataBase: new URL(SITE_URL),
   title: 'Blare — systems programming, measured',
   description:
     'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
@@ -29,7 +30,7 @@ export const metadata = {
     title: 'Blare — systems programming, measured',
     description:
       'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
-    url: 'https://blare.lol',
+    url: SITE_URL,
     siteName: 'Blare',
     locale: 'en_US',
     type: 'website',

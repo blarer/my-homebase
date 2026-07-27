@@ -746,3 +746,39 @@
   min-width: 5ch;
   text-align: left;
 }
+
+/* ---- Portrait ---- */
+
+/* Squared to match the site's zero-radius geometry, sized like a plate on a
+   spec sheet rather than a social avatar. */
+.portrait {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin: 34px 0 0;
+}
+
+.portrait img {
+  display: block;
+  width: 132px;
+  height: 132px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
+  filter: grayscale(1) contrast(1.05);
+  transition: filter 260ms ease;
+}
+
+.portrait:hover img {
+  filter: none;
+}
+
+.portrait-caption {
+  padding-bottom: 3px;
+}
+
+@media (max-width: 860px) {
+  .portrait img {
+    width: 96px;
+    height: 96px;
+  }
+}
