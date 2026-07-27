@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)..
+# my-homebase
 
-## Getting Started
+Personal site at [blare.lol](https://blare.lol). Next.js App Router, static
+export, deployed to Cloudflare Workers via OpenNext.
 
-First, run the development server:
+## The idea
+
+The site argues rather than asserts. The hero runs the `storage-manager-swift`
+benchmark as a race on a shared time axis, and the work section is a squarified
+treemap of the real repositories, each tile sized by actual source bytes and
+split into language bands. There is no brand accent colour, so every saturated
+colour on the page is carrying data.
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # treemap property tests
+npm run build      # static production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Repository data
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+The page renders from `lib/repos.json`, a committed snapshot of the GitHub API.
+That keeps the build fully static: no runtime API calls, no rate limits, and a
+deterministic page. Refresh it after pushing new work:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run sync:repos              # add GITHUB_TOKEN=... to raise the rate limit
+```
 
-## Learn More
+Adding a repository needs nothing else. Its treemap tile, language bands, and
+row in the languages table all derive from the snapshot. Optionally add a
+sentence to `NOTES` in `components/Work.jsx` to override the GitHub description
+in the readout, and a colour to `lib/languageColors.js` if the language is new.
 
-To learn more about Next.js, take a look at the following resources:
+## Layout
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Path | Purpose |
+|---|---|
+| `app/page.jsx` | Section order, reads the snapshot |
+| `app/globals.css` | Design tokens and all component styles |
+| `components/Hero.jsx` | Benchmark race |
+| `components/Work.jsx` | Repository treemap and readout |
+| `components/Stack.jsx` | Language ranking |
+| `lib/treemap.js` | Squarified treemap layout |
+| `scripts/sync-repos.mjs` | Writes `lib/repos.json` |
+| `scripts/test-treemap.mjs` | Property tests for the layout |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploying
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run preview:cf   # build and serve the Worker locally
+npm run deploy:cf    # build and deploy
+```
