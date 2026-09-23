@@ -17,8 +17,16 @@
  *
  * prefers-reduced-motion bails out before any class is added: no dimming, no
  * observer, no motion.
+ *
+ * A section that ends up ABOVE the viewport also counts as revealed. The
+ * observer's root is inflated 100000px upward so skipped-past sections still
+ * intersect it: with a plain viewport root, an instant jump (End key, anchor
+ * link, find-in-page) can move a section from below the viewport to above it
+ * without a single intersecting frame, so no callback ever fires and the
+ * section stays dimmed forever. The callback also treats a negative top as
+ * revealed for belt-and-braces.
  */
-const script = `(function(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(!('IntersectionObserver' in window))return;var els=document.querySelectorAll('.section');if(!els.length)return;var io=new IntersectionObserver(function(es){for(var i=0;i<es.length;i++){if(es[i].isIntersecting){es[i].target.classList.add('in-view');io.unobserve(es[i].target)}}},{rootMargin:'0px 0px -10% 0px'});for(var i=0;i<els.length;i++){var el=els[i];if(el.getBoundingClientRect().top<innerHeight*0.9){el.classList.add('in-view')}else{io.observe(el)}}document.documentElement.classList.add('reveal-ready')}catch(e){}})()`;
+const script = `(function(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(!('IntersectionObserver' in window))return;var els=document.querySelectorAll('.section');if(!els.length)return;var io=new IntersectionObserver(function(es){for(var i=0;i<es.length;i++){var e=es[i];if(e.isIntersecting||e.boundingClientRect.top<0){e.target.classList.add('in-view');io.unobserve(e.target)}}},{rootMargin:'100000px 0px -10% 0px'});for(var i=0;i<els.length;i++){var el=els[i];if(el.getBoundingClientRect().top<innerHeight*0.9){el.classList.add('in-view')}else{io.observe(el)}}document.documentElement.classList.add('reveal-ready')}catch(e){}})()`;
 
 export default function RevealScript() {
   return <script dangerouslySetInnerHTML={{ __html: script }} />;
