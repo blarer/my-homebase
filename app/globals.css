@@ -962,19 +962,6 @@ html.reveal-ready .section:not(.in-view) {
   display: block;
 }
 
-/* Each bar ends in an ink needle: the same playhead vocabulary as the
-   benchmark lanes in the hero, because both are measurements on a track. */
-.lang-bar-fill::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  right: -1px;
-  width: 2px;
-  background: var(--ink);
-  opacity: 0.55;
-}
-
 .lang-share {
   font-size: 13px;
   text-align: right;
