@@ -95,30 +95,41 @@ const REQUIRE_NAME_CHECK = process.env.REQUIRE_NAME_CHECK === '1';
 let nameCheckRan = false;
 
 try {
+  const gh = (args) =>
+    // stderr is captured rather than discarded so an expired token can be
+    // told apart from gh being absent.
+    execFileSync('gh', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+
   const names = JSON.parse(
-    execFileSync(
-      'gh',
-      [
-        'api',
-        'user/repos?per_page=100&affiliation=owner&visibility=private',
-        '--jq',
-        // Archived repos are excluded from the snapshot on purpose, so compare
-        // against the same set the sync actually considers.
-        '[.[] | select(.archived == false and .fork == false) | .name]',
-      ],
-      // stderr is captured rather than discarded so an expired token can be
-      // told apart from gh being absent.
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-    ),
+    gh([
+      'api',
+      'user/repos?per_page=100&affiliation=owner&visibility=private',
+      '--jq',
+      // Archived repos are excluded from the snapshot on purpose, so compare
+      // against the same set the sync actually considers.
+      '[.[] | select(.archived == false and .fork == false) | .full_name]',
+    ]),
   );
   const emitted = JSON.stringify(privateEntries).toLowerCase();
-  const leaked = names.filter((n) => emitted.includes(n.toLowerCase()));
+  const leaked = names
+    .map((n) => n.split('/')[1])
+    .filter((n) => emitted.includes(n.toLowerCase()));
   check('no private repo name appears in a private entry', leaked.length === 0, leaked.join(', '));
 
+  // The sync drops repos whose language breakdown is empty (nothing linguist
+  // counts, so nothing to shape), so the representation check has to compare
+  // against the same set or a docs-only private repo makes it fail forever.
+  // The exclusion is recomputed from the API here, not read from the
+  // snapshot, so a sync bug that drops a repo *with* bytes still trips this.
+  const withBytes = names.filter((fullName) => {
+    const languages = JSON.parse(gh(['api', `repos/${fullName}/languages`]));
+    return Object.values(languages).reduce((sum, n) => sum + n, 0) > 0;
+  });
   check(
-    'every active private repo is represented',
-    privateEntries.length === names.length,
-    `${privateEntries.length} entries for ${names.length} active private repos`,
+    'every active private repo with language bytes is represented',
+    privateEntries.length === withBytes.length,
+    `${privateEntries.length} entries for ${withBytes.length} active private repos with bytes ` +
+      `(${names.length} active private repos total)`,
   );
   nameCheckRan = true;
 } catch (err) {

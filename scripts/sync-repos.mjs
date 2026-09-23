@@ -60,12 +60,23 @@ const active = list.filter((r) => !r.fork && !r.archived);
 // Fetch every language breakdown first, so the placeholder numbers can be
 // assigned from the completed data rather than from whichever response
 // happened to land first.
-const measured = await Promise.all(
+const fetched = await Promise.all(
   active.map(async (r) => ({
     repo: r,
     languages: await api(`/repos/${r.full_name}/languages`),
   })),
 );
+
+// A repo whose language breakdown is empty (docs-only, or nothing linguist
+// counts) has no shape to publish: it would be a zero-area tile the treemap
+// cannot render, and for a private repo it would be an entry that reveals
+// "another private repo exists" while carrying none of the byte data that is
+// the entire point of including it. Skipping it here also keeps the invariant
+// the privacy test asserts, that every private entry carries language bytes.
+// This bit the nightly sync for weeks: one byteless private repo made the
+// privacy gate fail after every sync, so no refresh PR could ever open and
+// the committed snapshot silently went stale.
+const measured = fetched.filter((m) => sum(m.languages) > 0);
 
 /**
  * Numbers the redacted entries by descending source bytes.

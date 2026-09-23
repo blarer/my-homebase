@@ -1,9 +1,48 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-07-27",
+  "syncedAt": "2026-09-23",
   "repos": [
     {
+      "name": "outloud",
+      "private": false,
+      "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
+      "url": "https://github.com/blarer/outloud",
+      "homepage": null,
+      "pushedAt": "2026-08-12",
+      "createdAt": "2026-07-28",
+      "stars": 0,
+      "languages": {
+        "Rust": 2233706,
+        "Shell": 211473,
+        "Python": 53877,
+        "PowerShell": 28947,
+        "Nix": 16281,
+        "Swift": 9790,
+        "Batchfile": 3302
+      }
+    },
+    {
       "name": "private-01",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "TypeScript": 1318168,
+        "JavaScript": 21203,
+        "PLpgSQL": 11673,
+        "Python": 10581,
+        "Shell": 4812,
+        "Kotlin": 2431,
+        "Ruby": 2129,
+        "Swift": 1233
+      }
+    },
+    {
+      "name": "private-02",
       "private": true,
       "description": "",
       "url": null,
@@ -21,7 +60,7 @@
       }
     },
     {
-      "name": "private-02",
+      "name": "private-03",
       "private": true,
       "description": "",
       "url": null,
@@ -35,7 +74,7 @@
       }
     },
     {
-      "name": "private-03",
+      "name": "private-04",
       "private": true,
       "description": "",
       "url": null,
@@ -44,15 +83,33 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
-        "Nix": 168935,
-        "Just": 32386,
-        "Lua": 22673,
-        "Shell": 15156,
+        "Nix": 196701,
+        "Just": 39096,
+        "Lua": 33419,
+        "Shell": 18725,
+        "Python": 16729,
         "PowerShell": 8007
       }
     },
     {
-      "name": "private-04",
+      "name": "private-05",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Nix": 202824,
+        "Lua": 33425,
+        "Python": 16825,
+        "Shell": 6674,
+        "Just": 3095
+      }
+    },
+    {
+      "name": "private-06",
       "private": true,
       "description": "",
       "url": null,
@@ -76,8 +133,8 @@
       "createdAt": "2025-06-17",
       "stars": 0,
       "languages": {
-        "JavaScript": 52804,
-        "CSS": 16270,
+        "JavaScript": 58096,
+        "CSS": 20782,
         "TypeScript": 614
       }
     },
@@ -87,7 +144,7 @@
       "description": "Windows (WSL2 + home-manager) counterpart to nix-darwin-config",
       "url": "https://github.com/blarer/nix-windows-config",
       "homepage": null,
-      "pushedAt": "2026-07-27",
+      "pushedAt": "2026-08-07",
       "createdAt": "2026-04-11",
       "stars": 0,
       "languages": {
@@ -98,7 +155,7 @@
       }
     },
     {
-      "name": "private-05",
+      "name": "private-07",
       "private": true,
       "description": "",
       "url": null,
@@ -128,7 +185,7 @@
       }
     },
     {
-      "name": "private-06",
+      "name": "private-08",
       "private": true,
       "description": "",
       "url": null,
@@ -144,7 +201,7 @@
       }
     },
     {
-      "name": "private-07",
+      "name": "private-09",
       "private": true,
       "description": "",
       "url": null,
@@ -154,6 +211,20 @@
       "stars": 0,
       "languages": {
         "Rust": 36568
+      }
+    },
+    {
+      "name": "wattsbar",
+      "private": false,
+      "description": "macOS menu bar battery power meter: real-time watts via direct IOKit reads",
+      "url": "https://github.com/blarer/wattsbar",
+      "homepage": null,
+      "pushedAt": "2026-08-07",
+      "createdAt": "2026-08-05",
+      "stars": 0,
+      "languages": {
+        "Swift": 35009,
+        "Shell": 1462
       }
     },
     {
@@ -170,7 +241,7 @@
       }
     },
     {
-      "name": "private-08",
+      "name": "private-10",
       "private": true,
       "description": "",
       "url": null,
@@ -190,11 +261,24 @@
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-07-27",
+      "pushedAt": "2026-09-23",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
         "JavaScript": 17023
+      }
+    },
+    {
+      "name": "private-11",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Python": 2725
       }
     }
   ]
