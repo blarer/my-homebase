@@ -171,6 +171,15 @@
     outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
+
+  /* Links and buttons all change colour or border on hover; give them one
+     shared flip speed so nothing snaps while its neighbour eases. */
+  a,
+  button {
+    transition:
+      color var(--dur-flip) var(--ease-snap),
+      border-color var(--dur-flip) var(--ease-snap);
+  }
 }
 
 /* ---- Layout primitives ---- */
@@ -747,7 +756,7 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .readout-name a:hover {
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--accent);
 }
 
 .readout-name-host {
@@ -1112,7 +1121,7 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .notfound-link:hover {
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--accent);
 }
 
 /* ---- Theme toggle ---- */
