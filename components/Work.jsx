@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { squarify } from "@/lib/treemap";
 import { languageColor } from "@/lib/languageColors";
+import "@/app/components.css";
 
 /**
  * Work as a treemap of the actual repositories, each tile sized by real source
@@ -221,17 +222,19 @@ export default function Work({ repos }) {
             {probe && (
               <span
                 className="probe"
-                // Positioned in the frame's own coordinates, and flipped to
-                // the other side of the cursor near the right or bottom edge
-                // so the label never leaves the treemap.
+                // Positioned in the frame's own coordinates purely with
+                // transforms (left/top stay 0), so following the cursor
+                // composites instead of relayouting. Flipped to the other
+                // side of the cursor near the right or bottom edge so the
+                // label never leaves the treemap.
                 style={{
-                  left: probe.x,
-                  top: probe.y,
-                  transform: `translate(${probe.x > size.width - 150 ? "-100%" : "0"}, ${
-                    probe.y > size.height - 60 ? "-100%" : "0"
-                  }) translate(${probe.x > size.width - 150 ? "-12px" : "12px"}, ${
-                    probe.y > size.height - 60 ? "-12px" : "12px"
-                  })`,
+                  left: 0,
+                  top: 0,
+                  transform: `translate3d(${probe.x}px, ${probe.y}px, 0) translate(${
+                    probe.x > size.width - 150 ? "-100%" : "0"
+                  }, ${probe.y > size.height - 60 ? "-100%" : "0"}) translate(${
+                    probe.x > size.width - 150 ? "-12px" : "12px"
+                  }, ${probe.y > size.height - 60 ? "-12px" : "12px"})`,
                 }}
                 aria-hidden="true"
               >

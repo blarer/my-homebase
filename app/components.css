@@ -1,0 +1,199 @@
+/*
+ * Lane-scoped styles for Hero / Work / Stack components.
+ *
+ * Imported directly by the components that use it (Next.js app router allows
+ * global CSS imports from any component), so it layers after globals.css
+ * without touching that file. Selectors are prefixed with their section
+ * containers to win ties regardless of chunk order.
+ */
+
+/*
+ * Glow tokens, transplanted from direction C's approach: one pair of tokens,
+ * the same box-shadow recipe everywhere, and the theme decides how much light
+ * actually comes off the page. On vellum (light) the red pencil barely halos;
+ * on cyanotype film (dark) it reads like a lamp on the needle.
+ */
+:root {
+  --glow: rgba(176, 58, 36, 0.1);
+  --glow-strong: rgba(176, 58, 36, 0.16);
+}
+
+[data-theme='dark'] {
+  --glow: rgba(226, 89, 59, 0.3);
+  --glow-strong: rgba(226, 89, 59, 0.55);
+}
+
+/* ---- Hero: winning-lane leading-edge glow ---- */
+
+/* The leading edge is the playhead, so the halo lives on the needle: two
+   blur radii, tight core plus wide falloff, exactly C's lane-head recipe. */
+.race .lane-mine .lane-head {
+  box-shadow:
+    0 0 6px var(--glow-strong),
+    0 0 14px var(--glow);
+}
+
+/* When the lane finishes the needle cools: the stamped red time takes over
+   as the verification mark, so the halo goes out. */
+.race .lane-mine .lane-head[data-finished] {
+  box-shadow: none;
+}
+
+/* Dark only: the fill itself radiates, and the last stretch of the trace
+   brightens toward the leading edge — the red pencil under a lamp. Light
+   mode keeps the quiet accent-soft wash from globals.css. */
+[data-theme='dark'] .race .lane-mine .lane-fill {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--accent) 80%, var(--paper)),
+    var(--accent) 86%,
+    color-mix(in srgb, var(--accent) 72%, #fff)
+  );
+  box-shadow:
+    0 0 12px var(--glow),
+    0 0 26px var(--glow);
+}
+
+/*
+ * No-JS fallback for the race caption: globals.css keeps it at opacity 0
+ * until the JS race sets data-done. This animation reaches the same final
+ * state on a pure-CSS timer matched to RACE_MS (2.4s in Hero.jsx), so the
+ * conclusion is never unreachable without JavaScript. With JS running, both
+ * paths land at the same moment and the same values.
+ */
+@keyframes caption-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.race .race-caption {
+  animation: caption-rise var(--dur-reveal) var(--ease-snap) 2.4s both;
+}
+
+/* ---- Work: physical tiles, red focus, cheap probe ---- */
+
+.treemap .tile {
+  transition:
+    box-shadow var(--dur-move) var(--ease-snap),
+    transform var(--dur-move) var(--ease-snap);
+}
+
+/* The lift is physical: the tile rises a hair off the plate while its shadow
+   deepens. Transform only, so neighbours never reflow. */
+.treemap .tile[data-active],
+.treemap .tile:hover {
+  transform: translateY(-1px);
+}
+
+.treemap .tile:hover {
+  box-shadow: var(--shadow-high);
+}
+
+/* Keyboard focus is the checker's red ring, drawn inset because tiles abut
+   edge-to-edge and an outset ring would be swallowed by neighbours. */
+.treemap .tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  z-index: 3;
+  box-shadow: var(--shadow-low);
+}
+
+/* The probe is positioned entirely by transform (left/top stay 0), so
+   tracking the cursor never invalidates layout. */
+.treemap .probe {
+  will-change: transform;
+  animation: probe-in var(--dur-flip) var(--ease-snap) both;
+}
+
+@keyframes probe-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- Stack: needle playheads on the ranked bars ---- */
+
+/* The run is the moving part: fill and needle travel together as one rigid
+   unit, so entrance motion can never distort the needle. Width is the
+   server-rendered measurement; no JS required to see the data. */
+.lang-row .lang-bar-run {
+  position: absolute;
+  inset: 0 auto 0 0;
+}
+
+.lang-bar-run .lang-bar-fill {
+  inset: 0;
+}
+
+/* Same playhead vocabulary as the hero lanes: a 2px needle standing proud of
+   the track at the leading edge of the measurement. */
+.lang-bar-run .lang-needle {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  right: -1px;
+  width: 2px;
+  background: var(--ink);
+  opacity: 0.55;
+  transition:
+    opacity var(--dur-flip) var(--ease-snap),
+    transform var(--dur-flip) var(--ease-snap);
+}
+
+/* Reading a row sharpens its needle: taller and darker, like a meter being
+   tapped. Transform/opacity only. */
+.lang-row:hover .lang-needle,
+.lang-row:focus-within .lang-needle {
+  opacity: 0.95;
+  transform: scaleY(1.35);
+}
+
+/* Bars settle into place as the section scrolls in: the whole run slides the
+   last 12px to its measured position, riding the same IntersectionObserver
+   reveal as the sections (RevealScript adds .in-view once per .section).
+   Not a view() timeline: environments that parse view() but never advance
+   the timeline would pin the runs at opacity 0 forever, deleting the data.
+   Here the dimmed start only exists under html.reveal-ready, which the
+   script adds last — no JS (or a throw, or reduced motion) means the bars
+   simply render finished. */
+.section .lang-bar-run {
+  transition:
+    opacity var(--dur-reveal) var(--ease-snap),
+    transform var(--dur-reveal) var(--ease-snap);
+}
+
+html.reveal-ready .section:not(.in-view) .lang-bar-run {
+  opacity: 0;
+  transform: translateX(-12px);
+}
+
+/* ---- Reduced motion: snap everything above to its final state ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The caption's no-JS timer would otherwise still wait 2.4s (the global
+     clamp shortens durations, not delays). Show the conclusion immediately. */
+  .race .race-caption {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* RevealScript bails before adding reveal-ready under reduced motion, so
+     the bar runs never dim; this belt-and-braces the final state anyway. */
+  html.reveal-ready .section:not(.in-view) .lang-bar-run {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .lang-row:hover .lang-needle,
+  .lang-row:focus-within .lang-needle {
+    transform: none;
+  }
+
+  .treemap .tile[data-active],
+  .treemap .tile:hover {
+    transform: none;
+  }
+}

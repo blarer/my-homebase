@@ -25,12 +25,12 @@ export default function Image() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: 76,
-          background: '#eceef0',
+          background: '#eae6dc',
           backgroundImage:
-            'linear-gradient(to right, rgba(20,24,28,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(20,24,28,0.06) 1px, transparent 1px)',
+            'linear-gradient(to right, rgba(26,23,18,0.055) 1px, transparent 1px), linear-gradient(to bottom, rgba(26,23,18,0.055) 1px, transparent 1px)',
           backgroundSize: '26px 26px',
           fontFamily: 'monospace',
-          color: '#14181c',
+          color: '#1a1712',
         }}
       >
         <div
@@ -45,31 +45,39 @@ export default function Image() {
           BLARE
         </div>
 
-        <div style={{ fontSize: 23, color: '#4a545e', marginBottom: 46, maxWidth: 760 }}>
+        <div style={{ fontSize: 23, color: '#524c3f', marginBottom: 46, maxWidth: 760 }}>
           I build native tools and measure what they cost.
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {RUNS.map((run) => (
             <div key={run.label} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-              <div style={{ width: 300, fontSize: 18, color: '#14181c' }}>{run.label}</div>
+              <div style={{ width: 300, fontSize: 18, color: run.mine ? '#b03a24' : '#1a1712' }}>
+                {run.label}
+              </div>
               <div
                 style={{
                   display: 'flex',
                   width: 560,
                   height: 12,
-                  borderBottom: '1px solid rgba(20,24,28,0.14)',
+                  borderBottom: '1px solid rgba(26,23,18,0.16)',
                 }}
               >
                 <div
                   style={{
                     width: (run.seconds / SLOWEST) * 560,
                     height: 12,
-                    background: run.mine ? '#14181c' : 'rgba(20,24,28,0.28)',
+                    background: run.mine ? '#b03a24' : 'rgba(26,23,18,0.28)',
                   }}
                 />
               </div>
-              <div style={{ fontSize: 19, fontWeight: 600 }}>{`${run.seconds.toFixed(1)}s`}</div>
+              <div
+                style={{
+                  fontSize: 19,
+                  fontWeight: 600,
+                  color: run.mine ? '#b03a24' : '#1a1712',
+                }}
+              >{`${run.seconds.toFixed(1)}s`}</div>
             </div>
           ))}
         </div>
