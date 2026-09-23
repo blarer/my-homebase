@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import '@/app/components.css';
 
 /**
  * The hero is the benchmark table from storage-manager-swift, run as a race.
@@ -62,6 +63,20 @@ export default function Hero() {
         </header>
 
         <div className="race" aria-label="Disk scan benchmark, seconds to completion">
+          {/* Without JavaScript the rAF loop never advances the inline
+              styles, so this stylesheet draws the finished race instead:
+              full bars, real times, needles resting at the finish. The
+              caption's own no-JS timer lives in components.css. */}
+          <noscript>
+            <style>{`
+              .lane-fill { width: var(--final) !important; }
+              .lane-head { left: var(--final) !important; opacity: 0.28; }
+              .lane-time-live { display: none; }
+              .lane-time::after { content: attr(data-final); }
+              .lane-time { color: var(--ink); }
+              .lane-mine .lane-time { color: var(--accent); font-weight: 600; }
+            `}</style>
+          </noscript>
           {RUNS.map((run) => {
             // Bars share one time axis: a lane's final length is its share of
             // the slowest run. If every bar filled its own track, the gap the
@@ -69,6 +84,10 @@ export default function Hero() {
             const reached = Math.min(elapsed, run.seconds);
             const width = (reached / SLOWEST) * 100;
             const finished = elapsed >= run.seconds;
+            // The lane's final geometry, exposed to CSS so a <noscript>
+            // stylesheet can draw the finished race when the rAF loop that
+            // normally drives these inline styles never runs.
+            const finalWidth = (run.seconds / SLOWEST) * 100;
 
             return (
               <div className={`lane${run.mine ? ' lane-mine' : ''}`} key={run.label}>
@@ -78,16 +97,23 @@ export default function Hero() {
                 </div>
 
                 <div className="lane-track">
-                  <div className="lane-fill" style={{ width: `${width}%` }} />
+                  <div
+                    className="lane-fill"
+                    style={{ width: `${width}%`, '--final': `${finalWidth}%` }}
+                  />
                   <div
                     className="lane-head"
-                    style={{ left: `${width}%` }}
+                    style={{ left: `${width}%`, '--final': `${finalWidth}%` }}
                     data-finished={finished || undefined}
                   />
                 </div>
 
-                <div className="num lane-time" data-finished={finished || undefined}>
-                  {reached.toFixed(1)}s
+                <div
+                  className="num lane-time"
+                  data-finished={finished || undefined}
+                  data-final={`${run.seconds.toFixed(1)}s`}
+                >
+                  <span className="lane-time-live">{reached.toFixed(1)}s</span>
                 </div>
               </div>
             );

@@ -1,5 +1,6 @@
 import { languageColor } from "@/lib/languageColors";
 import LanguageRing from "@/components/LanguageRing";
+import "@/app/components.css";
 
 /**
  * Languages, counted rather than claimed.
@@ -58,13 +59,20 @@ export default function Stack({ repos }) {
                   {name}
                 </span>
                 <span className="lang-bar">
+                  {/* The run (fill + needle) moves as one rigid unit, so the
+                      playhead always sits exactly on the leading edge. The
+                      width is server-rendered: the measurement is visible
+                      with JavaScript disabled. */}
                   <span
-                    className="lang-bar-fill"
-                    style={{
-                      width: `${(value / largest) * 100}%`,
-                      background: languageColor(name),
-                    }}
-                  />
+                    className="lang-bar-run"
+                    style={{ width: `${(value / largest) * 100}%` }}
+                  >
+                    <span
+                      className="lang-bar-fill"
+                      style={{ background: languageColor(name) }}
+                    />
+                    <span className="lang-needle" aria-hidden="true" />
+                  </span>
                 </span>
                 <span className="num lang-share">
                   {((value / grand) * 100).toFixed(1)}%
