@@ -151,21 +151,22 @@
 }
 
 /* Bars settle into place as the section scrolls in: the whole run slides the
-   last 12px to its measured position. Scroll-driven, zero JS, and browsers
-   without timeline support simply render the finished state. */
-@supports (animation-timeline: view()) {
-  .lang-row .lang-bar-run {
-    animation: run-settle var(--dur-reveal) var(--ease-snap) both;
-    animation-timeline: view();
-    animation-range: entry 15% entry 50%;
-  }
+   last 12px to its measured position, riding the same IntersectionObserver
+   reveal as the sections (RevealScript adds .in-view once per .section).
+   Not a view() timeline: environments that parse view() but never advance
+   the timeline would pin the runs at opacity 0 forever, deleting the data.
+   Here the dimmed start only exists under html.reveal-ready, which the
+   script adds last — no JS (or a throw, or reduced motion) means the bars
+   simply render finished. */
+.section .lang-bar-run {
+  transition:
+    opacity var(--dur-reveal) var(--ease-snap),
+    transform var(--dur-reveal) var(--ease-snap);
+}
 
-  @keyframes run-settle {
-    from {
-      opacity: 0;
-      transform: translateX(-12px);
-    }
-  }
+html.reveal-ready .section:not(.in-view) .lang-bar-run {
+  opacity: 0;
+  transform: translateX(-12px);
 }
 
 /* ---- Reduced motion: snap everything above to its final state ---- */
@@ -179,9 +180,11 @@
     transform: none !important;
   }
 
-  /* View-timeline animations have no duration to clamp; detach them. */
-  .lang-row .lang-bar-run {
-    animation: none !important;
+  /* RevealScript bails before adding reveal-ready under reduced motion, so
+     the bar runs never dim; this belt-and-braces the final state anyway. */
+  html.reveal-ready .section:not(.in-view) .lang-bar-run {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .lang-row:hover .lang-needle,
