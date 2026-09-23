@@ -1,57 +1,79 @@
 @import "tailwindcss";
 
 /*
- * Palette: engineering paper. Cool blue-grey ground, near-black ink, one
- * structural rule colour. Deliberately no brand accent — the only saturated
- * colour on the page comes from data (GitHub language colours in the treemap),
- * so hue always means something.
+ * Palette: vellum and redline. Warm drafting vellum, carbon ink, and one
+ * non-ink colour: the checker's red pencil. Red is not a brand accent — it
+ * marks only what has been measured and verified (the winning benchmark lane,
+ * finished times, focus). Every other saturated colour on the page still
+ * comes from data, so hue always means something.
  */
 :root {
   color-scheme: light;
 
-  --paper: #eceef0;
-  --paper-raised: #f6f7f8;
-  --ink: #14181c;
-  --ink-soft: #4a545e;
-  --ink-faint: #79848e;
-  --rule: rgba(20, 24, 28, 0.14);
-  --rule-soft: rgba(20, 24, 28, 0.07);
-  --grid: rgba(20, 24, 28, 0.055);
-  --track: rgba(20, 24, 28, 0.05);
-  --hatch: rgba(20, 24, 28, 0.3);
+  --paper: #eae6dc;
+  --paper-raised: #f6f3ea;
+  --ink: #1a1712;
+  --ink-soft: #524c3f;
+  --ink-faint: #847b68;
+  --accent: #b03a24;
+  --accent-soft: rgba(176, 58, 36, 0.14);
+  --rule: rgba(26, 23, 18, 0.16);
+  --rule-soft: rgba(26, 23, 18, 0.08);
+  --grid: rgba(26, 23, 18, 0.055);
+  --grid-major: rgba(26, 23, 18, 0.1);
+  --track: rgba(26, 23, 18, 0.06);
+  --hatch: rgba(26, 23, 18, 0.32);
   --band-rest: 0.26;
   --band-active: 0.62;
+  --grain-opacity: 0.05;
+  --shadow-low: 0 1px 2px rgba(26, 23, 18, 0.08), 0 4px 14px rgba(26, 23, 18, 0.07);
+  --shadow-high: 0 2px 4px rgba(26, 23, 18, 0.1), 0 14px 40px rgba(26, 23, 18, 0.14);
 
   --grid-size: 26px;
   --gutter: clamp(20px, 5vw, 64px);
   --shell: 1180px;
+
+  /* One easing everywhere: fast attack, long settle, like a spring scale
+     coming to rest. Three duration scales: flip, move, reveal. */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-flip: 160ms;
+  --dur-move: 360ms;
+  --dur-reveal: 700ms;
 }
 
 /*
- * Dark is drafting film rather than an inverted page: a cool near-black ground
- * with light ink. The language bands sit on a dark field, so they are given
- * more presence than they need on paper to survive the lower contrast.
+ * Dark is cyanotype film rather than an inverted page: a blue-black ground
+ * with cream ink, the grid picking up a faint blueprint blue, and the red
+ * pencil brightened to survive the dark field. The language bands sit on a
+ * dark field, so they are given more presence than they need on vellum.
  */
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --paper: #101317;
-  --paper-raised: #171b20;
-  --ink: #e8ecef;
-  --ink-soft: #9aa5af;
-  --ink-faint: #6b757f;
-  --rule: rgba(232, 236, 239, 0.16);
-  --rule-soft: rgba(232, 236, 239, 0.08);
-  --grid: rgba(232, 236, 239, 0.05);
-  --track: rgba(232, 236, 239, 0.07);
-  --hatch: rgba(232, 236, 239, 0.32);
+  --paper: #0f151c;
+  --paper-raised: #161e26;
+  --ink: #ece7da;
+  --ink-soft: #a3a091;
+  --ink-faint: #77776a;
+  --accent: #e2593b;
+  --accent-soft: rgba(226, 89, 59, 0.18);
+  --rule: rgba(236, 231, 218, 0.17);
+  --rule-soft: rgba(236, 231, 218, 0.08);
+  --grid: rgba(151, 179, 204, 0.055);
+  --grid-major: rgba(151, 179, 204, 0.1);
+  --track: rgba(236, 231, 218, 0.07);
+  --hatch: rgba(236, 231, 218, 0.34);
   --band-rest: 0.34;
-  --band-active: 0.72;
+  --band-active: 0.74;
+  --grain-opacity: 0.07;
+  --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --shadow-high: 0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 40px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
   --font-display: var(--font-archivo);
   --font-mono: var(--font-plex-mono);
+  --font-serif: var(--font-plex-serif);
 }
 
 @layer base {
@@ -71,12 +93,56 @@
     font-family: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 15px;
     line-height: 1.55;
-    /* Graph paper: the ground the whole site is measured against. */
+    /* Real graph paper has two scales: a minor line every cell and a heavier
+       major line every fourth. The ground the whole site is measured against. */
     background-image:
+      linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
       linear-gradient(to right, var(--grid) 1px, transparent 1px),
       linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-    background-size: var(--grid-size) var(--grid-size);
+    background-size:
+      calc(var(--grid-size) * 4) calc(var(--grid-size) * 4),
+      calc(var(--grid-size) * 4) calc(var(--grid-size) * 4),
+      var(--grid-size) var(--grid-size),
+      var(--grid-size) var(--grid-size);
     background-position: center top;
+  }
+
+  /* Film grain over everything: an SVG turbulence tile, so the sheet reads as
+     material rather than as a flat hex value. Fixed, non-interactive, and
+     cheap — one compositing layer, no dependencies. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 160px 160px;
+  }
+
+  /* A soft vignette settles the sheet onto the desk: barely-there darkening
+     toward the edges of the viewport. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 90% at 50% 40%,
+      transparent 60%,
+      rgba(26, 23, 18, 0.06) 100%
+    );
+  }
+
+  [data-theme='dark'] body::after {
+    background: radial-gradient(
+      120% 90% at 50% 40%,
+      transparent 55%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
   }
 
   h1,
@@ -98,12 +164,12 @@
   }
 
   ::selection {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: var(--paper-raised);
   }
 
   :focus-visible {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
   }
 }
@@ -126,6 +192,13 @@
   letter-spacing: -0.03em;
   line-height: 0.92;
   text-transform: uppercase;
+}
+
+/* Running text — the explaining register. Measured things stay mono; prose
+   is set in Plex Serif, drawn on the same grid as Plex Mono, so the pairing
+   reads as one family in two voices. */
+.prose {
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
 }
 
 .tag {
@@ -165,6 +238,29 @@
 
 /* ---- Motion ---- */
 
+/* Sections rise onto the sheet as they enter the viewport. Scroll-driven
+   animation is pure progressive enhancement: browsers without support render
+   everything static, and the reduced-motion block below flattens it to
+   nothing for everyone who asked. */
+@supports (animation-timeline: view()) {
+  .section {
+    animation: section-rise var(--dur-reveal) var(--ease-snap) both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 32%;
+  }
+
+  @keyframes section-rise {
+    from {
+      opacity: 0.2;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -173,6 +269,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* A view()-timeline animation has no duration to clamp; detach the
+     timeline so sections simply sit still. */
+  .section {
+    animation: none !important;
   }
 }
 
@@ -197,8 +299,9 @@
 
 .hero-thesis {
   max-width: 46ch;
-  font-size: clamp(15px, 1.5vw, 17px);
-  line-height: 1.6;
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
+  font-size: clamp(16px, 1.6vw, 18px);
+  line-height: 1.65;
   color: var(--ink-soft);
 }
 
@@ -239,6 +342,14 @@
   position: relative;
   height: 12px;
   border-bottom: 1px solid var(--rule);
+  /* A faint time axis under each lane: the track is an instrument, not a
+     progress bar. Ticks every half grid cell. */
+  background-image: linear-gradient(
+    to right,
+    var(--rule-soft) 1px,
+    transparent 1px
+  );
+  background-size: calc(var(--grid-size) / 2) 100%;
 }
 
 .lane-fill {
@@ -251,8 +362,16 @@
   );
 }
 
+/* The verified run is drawn in the checker's red: solid fill with a soft
+   glow, because this is the lane whose number the page is staking its claim
+   on. */
 .lane-mine .lane-fill {
-  background: var(--ink);
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--accent) 78%, var(--ink)),
+    var(--accent)
+  );
+  box-shadow: 0 0 14px var(--accent-soft);
 }
 
 .lane-head {
@@ -262,6 +381,12 @@
   width: 2px;
   background: var(--ink);
   transform: translateX(-1px);
+}
+
+/* The winning lane's playhead is a red needle. */
+.lane-mine .lane-head {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-soft);
 }
 
 .lane-head[data-finished] {
@@ -274,24 +399,36 @@
   min-width: 5.5ch;
   text-align: right;
   color: var(--ink-faint);
+  transition: color var(--dur-flip) var(--ease-snap);
 }
 
 .lane-time[data-finished] {
   color: var(--ink);
 }
 
+/* The verified time stamps in red when it lands. */
+.lane-mine .lane-time[data-finished] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .race-caption {
   margin-top: 18px;
   max-width: 60ch;
-  font-size: 12.5px;
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
+  font-size: 13px;
   line-height: 1.7;
   color: var(--ink-faint);
   opacity: 0;
-  transition: opacity 600ms ease;
+  transform: translateY(6px);
+  transition:
+    opacity var(--dur-reveal) var(--ease-snap),
+    transform var(--dur-reveal) var(--ease-snap);
 }
 
 .race-caption[data-done] {
   opacity: 1;
+  transform: none;
 }
 
 @media (max-width: 640px) {
@@ -313,15 +450,45 @@
 .section-lede {
   max-width: 56ch;
   margin-bottom: 32px;
-  font-size: 14px;
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
+  font-size: 14.5px;
   line-height: 1.7;
   color: var(--ink-soft);
 }
 
 .treemap-frame {
+  position: relative;
   padding: 10px;
   background: var(--paper-raised);
   border: 1px solid var(--rule);
+  box-shadow: var(--shadow-low);
+}
+
+/* Drafting corner ticks: the plate is registered to the sheet like a taped
+   drawing. Drawn with gradients so they cost nothing. */
+.treemap-frame::before,
+.treemap-frame::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+}
+
+.treemap-frame::before {
+  top: -7px;
+  left: -7px;
+  background:
+    linear-gradient(var(--ink-faint), var(--ink-faint)) 50% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--ink-faint), var(--ink-faint)) 0 50% / 100% 1px no-repeat;
+}
+
+.treemap-frame::after {
+  bottom: -7px;
+  right: -7px;
+  background:
+    linear-gradient(var(--ink-faint), var(--ink-faint)) 50% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--ink-faint), var(--ink-faint)) 0 50% / 100% 1px no-repeat;
 }
 
 .treemap {
@@ -344,6 +511,15 @@
   padding: 12px;
   border: 1px solid var(--paper-raised);
   overflow: hidden;
+  transition: box-shadow var(--dur-move) var(--ease-snap);
+}
+
+/* The tile under the pointer lifts off the plate. z-index keeps its shadow
+   above the neighbouring tiles; position is already absolute. */
+.tile[data-active],
+.tile:hover {
+  z-index: 2;
+  box-shadow: var(--shadow-low);
 }
 
 /* Language bands fill the tile the way file blocks fill a disk map, so the
@@ -352,7 +528,7 @@
   position: absolute;
   inset: 0;
   opacity: var(--band-rest);
-  transition: opacity 180ms ease;
+  transition: opacity var(--dur-move) var(--ease-snap);
 }
 
 .tile[data-active] .tile-bands,
@@ -364,7 +540,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--dur-flip) var(--ease-snap);
 }
 
 /* Pointing at a band names it. The other bands in the same tile drop back so
@@ -381,7 +557,7 @@
   padding: 6px 10px;
   background: var(--paper);
   border: 1px solid var(--rule);
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  box-shadow: var(--shadow-high);
   font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
@@ -587,7 +763,8 @@
 
 .readout-note {
   max-width: 62ch;
-  font-size: 13.5px;
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--ink-soft);
 }
@@ -675,7 +852,9 @@
 }
 
 .ring-seg {
-  transition: opacity 140ms ease, stroke-width 140ms ease;
+  transition:
+    opacity var(--dur-flip) var(--ease-snap),
+    stroke-width var(--dur-move) var(--ease-snap);
   cursor: pointer;
 }
 
@@ -740,6 +919,17 @@
   gap: clamp(12px, 2vw, 24px);
   padding-block: 13px;
   border-bottom: 1px solid var(--rule-soft);
+  transition: background var(--dur-flip) var(--ease-snap);
+}
+
+.lang-row:hover {
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--track) 12%,
+    var(--track) 88%,
+    transparent
+  );
 }
 
 .lang-rank {
@@ -765,6 +955,19 @@
   position: absolute;
   inset: 0 auto 0 0;
   display: block;
+}
+
+/* Each bar ends in an ink needle: the same playhead vocabulary as the
+   benchmark lanes in the hero, because both are measurements on a track. */
+.lang-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  right: -1px;
+  width: 2px;
+  background: var(--ink);
+  opacity: 0.55;
 }
 
 .lang-share {
@@ -818,8 +1021,9 @@
   display: grid;
   gap: 18px;
   max-width: 62ch;
-  font-size: 14.5px;
-  line-height: 1.8;
+  font-family: var(--font-plex-serif), Georgia, 'Times New Roman', serif;
+  font-size: 15px;
+  line-height: 1.85;
   color: var(--ink-soft);
 }
 
@@ -837,10 +1041,11 @@
   color: var(--ink);
   border-bottom: 1px solid var(--rule);
   padding-bottom: 2px;
+  transition: border-color var(--dur-flip) var(--ease-snap);
 }
 
 .about-links a:hover {
-  border-bottom-color: var(--ink);
+  border-bottom-color: var(--accent);
 }
 
 @media (max-width: 860px) {
@@ -959,7 +1164,7 @@
   width: 12px;
   height: 8px;
   background: var(--ink);
-  transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform var(--dur-move) var(--ease-snap);
 }
 
 .theme-toggle[aria-pressed='true'] .theme-toggle-knob {
@@ -988,8 +1193,9 @@
   height: 132px;
   object-fit: cover;
   border: 1px solid var(--rule);
+  box-shadow: var(--shadow-low);
   filter: grayscale(1) contrast(1.05);
-  transition: filter 260ms ease;
+  transition: filter var(--dur-move) var(--ease-snap);
 }
 
 .portrait:hover img {
