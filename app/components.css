@@ -127,11 +127,6 @@
   inset: 0;
 }
 
-/* The needle is its own element now; retire the ::after stand-in. */
-.lang-bar-run .lang-bar-fill::after {
-  content: none;
-}
-
 /* Same playhead vocabulary as the hero lanes: a 2px needle standing proud of
    the track at the leading edge of the measurement. */
 .lang-bar-run .lang-needle {
