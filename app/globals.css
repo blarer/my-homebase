@@ -19,15 +19,20 @@
   --accent-soft: rgba(176, 58, 36, 0.14);
   --rule: rgba(26, 23, 18, 0.16);
   --rule-soft: rgba(26, 23, 18, 0.08);
-  --grid: rgba(26, 23, 18, 0.055);
-  --grid-major: rgba(26, 23, 18, 0.1);
+  /* Texture intensities sit at roughly half the mockup's values across the
+     board (grid, grain, vignette, shadows): the critique read the full-strength
+     versions as heavy. The material should register subliminally, not compete
+     with the data. */
+  --grid: rgba(26, 23, 18, 0.028);
+  --grid-major: rgba(26, 23, 18, 0.05);
   --track: rgba(26, 23, 18, 0.06);
   --hatch: rgba(26, 23, 18, 0.32);
   --band-rest: 0.26;
   --band-active: 0.62;
-  --grain-opacity: 0.05;
-  --shadow-low: 0 1px 2px rgba(26, 23, 18, 0.08), 0 4px 14px rgba(26, 23, 18, 0.07);
-  --shadow-high: 0 2px 4px rgba(26, 23, 18, 0.1), 0 14px 40px rgba(26, 23, 18, 0.14);
+  --grain-opacity: 0.025;
+  --vignette: rgba(26, 23, 18, 0.03);
+  --shadow-low: 0 1px 2px rgba(26, 23, 18, 0.04), 0 4px 14px rgba(26, 23, 18, 0.035);
+  --shadow-high: 0 2px 4px rgba(26, 23, 18, 0.05), 0 14px 40px rgba(26, 23, 18, 0.07);
 
   --grid-size: 26px;
   --gutter: clamp(20px, 5vw, 64px);
@@ -59,15 +64,16 @@
   --accent-soft: rgba(226, 89, 59, 0.18);
   --rule: rgba(236, 231, 218, 0.17);
   --rule-soft: rgba(236, 231, 218, 0.08);
-  --grid: rgba(151, 179, 204, 0.055);
-  --grid-major: rgba(151, 179, 204, 0.1);
+  --grid: rgba(151, 179, 204, 0.028);
+  --grid-major: rgba(151, 179, 204, 0.05);
   --track: rgba(236, 231, 218, 0.07);
   --hatch: rgba(236, 231, 218, 0.34);
   --band-rest: 0.34;
   --band-active: 0.74;
-  --grain-opacity: 0.07;
-  --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
-  --shadow-high: 0 2px 4px rgba(0, 0, 0, 0.45), 0 14px 40px rgba(0, 0, 0, 0.5);
+  --grain-opacity: 0.035;
+  --vignette: rgba(0, 0, 0, 0.15);
+  --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.18);
+  --shadow-high: 0 2px 4px rgba(0, 0, 0, 0.22), 0 14px 40px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
@@ -123,7 +129,8 @@
   }
 
   /* A soft vignette settles the sheet onto the desk: barely-there darkening
-     toward the edges of the viewport. */
+     toward the edges of the viewport. Strength lives in --vignette so both
+     themes tune it in one place. */
   body::after {
     content: '';
     position: fixed;
@@ -132,16 +139,8 @@
     pointer-events: none;
     background: radial-gradient(
       120% 90% at 50% 40%,
-      transparent 60%,
-      rgba(26, 23, 18, 0.06) 100%
-    );
-  }
-
-  [data-theme='dark'] body::after {
-    background: radial-gradient(
-      120% 90% at 50% 40%,
-      transparent 55%,
-      rgba(0, 0, 0, 0.3) 100%
+      transparent 62%,
+      var(--vignette) 100%
     );
   }
 
@@ -238,27 +237,23 @@
 
 /* ---- Motion ---- */
 
-/* Sections rise onto the sheet as they enter the viewport. Scroll-driven
-   animation is pure progressive enhancement: browsers without support render
-   everything static, and the reduced-motion block below flattens it to
-   nothing for everyone who asked. */
-@supports (animation-timeline: view()) {
-  .section {
-    animation: section-rise var(--dur-reveal) var(--ease-snap) both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 32%;
-  }
+/* Sections rise onto the sheet as they enter the viewport, driven by an
+   IntersectionObserver in RevealScript that adds `.in-view` once per section.
+   The mockup used `animation-timeline: view()`, which never fires in some
+   browsers and headless capture, leaving sections stuck ghosted at their
+   keyframe start. This version is progressive enhancement in the safe
+   direction: the dimmed starting state only exists under `html.reveal-ready`,
+   a class the script adds *after* wiring the observer, so no JS (or a script
+   failure) means fully visible static content. */
+.section {
+  transition:
+    opacity var(--dur-reveal) var(--ease-snap),
+    transform var(--dur-reveal) var(--ease-snap);
+}
 
-  @keyframes section-rise {
-    from {
-      opacity: 0.2;
-      transform: translateY(24px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
-  }
+html.reveal-ready .section:not(.in-view) {
+  opacity: 0.2;
+  transform: translateY(24px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -271,10 +266,11 @@
     scroll-behavior: auto !important;
   }
 
-  /* A view()-timeline animation has no duration to clamp; detach the
-     timeline so sections simply sit still. */
-  .section {
-    animation: none !important;
+  /* RevealScript already bails out under reduced motion, but belt and braces:
+     never dim a section for anyone who asked for stillness. */
+  html.reveal-ready .section:not(.in-view) {
+    opacity: 1;
+    transform: none;
   }
 }
 

@@ -1,6 +1,7 @@
 import { Archivo, IBM_Plex_Mono, IBM_Plex_Serif } from 'next/font/google';
 import './globals.css';
 import ThemeScript from '@/components/ThemeScript';
+import RevealScript from '@/components/RevealScript';
 import { SITE_URL } from '@/lib/site';
 
 // Archivo carries a width axis, so the display type can be stretched to fill a
@@ -66,7 +67,12 @@ export default function RootLayout({ children }) {
       <head>
         <ThemeScript />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Runs after the sections exist; see RevealScript for why it lives
+            at the end of <body> rather than in <head>. */}
+        <RevealScript />
+      </body>
     </html>
   );
 }
