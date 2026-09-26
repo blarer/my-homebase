@@ -1,6 +1,6 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-09-23",
+  "syncedAt": "2026-09-26",
   "repos": [
     {
       "name": "outloud",
@@ -8,7 +8,7 @@
       "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
       "url": "https://github.com/blarer/outloud",
       "homepage": null,
-      "pushedAt": "2026-08-12",
+      "pushedAt": "2026-09-23",
       "createdAt": "2026-07-28",
       "stars": 0,
       "languages": {
@@ -129,12 +129,13 @@
       "description": "",
       "url": "https://github.com/blarer/my-homebase",
       "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-07-27",
+      "pushedAt": "2026-09-25",
       "createdAt": "2025-06-17",
       "stars": 0,
       "languages": {
-        "JavaScript": 58096,
-        "CSS": 20782,
+        "JavaScript": 64637,
+        "CSS": 34398,
+        "Shell": 2490,
         "TypeScript": 614
       }
     },
@@ -261,7 +262,7 @@
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-09-23",
+      "pushedAt": "2026-09-26",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
