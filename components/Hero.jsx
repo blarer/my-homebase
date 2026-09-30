@@ -63,6 +63,25 @@ export default function Hero() {
         </header>
 
         <div className="race" aria-label="Disk scan benchmark, seconds to completion">
+          {/* The time axis the lanes are plotted against: second ticks in the
+              track column, labelled every 5s, matching the visible page grid
+              vocabulary. Decorative for screen readers; the lanes carry the
+              numbers. */}
+          <div className="race-axis" aria-hidden="true">
+            <span className="race-axis-label tag">t / seconds</span>
+            <span className="race-axis-track">
+              {[0, 5, 10, 15, 20].map((s) => (
+                <span
+                  key={s}
+                  className="num race-axis-tick"
+                  style={{ left: `${(s / SLOWEST) * 100}%` }}
+                >
+                  {s}
+                </span>
+              ))}
+            </span>
+            <span />
+          </div>
           {/* Without JavaScript the rAF loop never advances the inline
               styles, so this stylesheet draws the finished race instead:
               full bars, real times, needles resting at the finish. The

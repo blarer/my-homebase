@@ -8,19 +8,18 @@
  */
 
 /*
- * Glow tokens, transplanted from direction C's approach: one pair of tokens,
- * the same box-shadow recipe everywhere, and the theme decides how much light
- * actually comes off the page. On vellum (light) the red pencil barely halos;
- * on cyanotype film (dark) it reads like a lamp on the needle.
+ * Glow tokens: one pair, the same box-shadow recipe everywhere, the theme
+ * decides how much light comes off the page. On chart paper the pen trace
+ * barely halos; on the night panel the amber lamp actually glows.
  */
 :root {
-  --glow: rgba(176, 58, 36, 0.1);
-  --glow-strong: rgba(176, 58, 36, 0.16);
+  --glow: rgba(32, 56, 221, 0.1);
+  --glow-strong: rgba(32, 56, 221, 0.16);
 }
 
 [data-theme='dark'] {
-  --glow: rgba(226, 89, 59, 0.3);
-  --glow-strong: rgba(226, 89, 59, 0.55);
+  --glow: rgba(255, 180, 84, 0.3);
+  --glow-strong: rgba(255, 180, 84, 0.55);
 }
 
 /* ---- Hero: winning-lane leading-edge glow ---- */
@@ -40,8 +39,8 @@
 }
 
 /* Dark only: the fill itself radiates, and the last stretch of the trace
-   brightens toward the leading edge — the red pencil under a lamp. Light
-   mode keeps the quiet accent-soft wash from globals.css. */
+   brightens toward the leading edge — the amber lamp behind the needle.
+   Light mode keeps the quiet accent-soft wash from globals.css. */
 [data-theme='dark'] .race .lane-mine .lane-fill {
   background: linear-gradient(
     to right,

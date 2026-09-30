@@ -11,8 +11,10 @@ The canonical origin used for metadata, the sitemap, and robots.txt lives in
 The site argues rather than asserts. The hero runs the `storage-manager-swift`
 benchmark as a race on a shared time axis, and the work section is a squarified
 treemap of the real repositories, each tile sized by actual source bytes and
-split into language bands. There is no brand accent colour, so every saturated
-colour on the page is carrying data.
+split into language bands. One signal colour per theme (pen-trace ultramarine
+by day, panel-lamp amber by night) marks only what has been measured; every
+other saturated colour on the page is carrying data. The full design direction
+lives in `design/DIRECTION.md`.
 
 ## Running it
 

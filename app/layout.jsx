@@ -1,35 +1,26 @@
-import { Archivo, IBM_Plex_Mono, IBM_Plex_Serif } from 'next/font/google';
+import { Space_Mono, Instrument_Sans } from 'next/font/google';
 import './globals.css';
 import ThemeScript from '@/components/ThemeScript';
 import RevealScript from '@/components/RevealScript';
 import { SITE_URL } from '@/lib/site';
 
-// Archivo carries a width axis, so the display type can be stretched to fill a
-// measure exactly rather than being letter-spaced by eye.
-const archivo = Archivo({
+// One face for everything measured: headings at 700 are the engraved
+// nameplate, numbers and labels at 400 are the recorder's own print. A
+// monospace display face aligns every column of figures by construction.
+const spaceMono = Space_Mono({
   subsets: ['latin'],
-  axes: ['wdth'],
-  variable: '--font-archivo',
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-space-mono',
   display: 'swap',
 });
 
-// Every number on this site is set in mono with tabular figures so columns of
-// measurements line up.
-const plexMono = IBM_Plex_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-plex-mono',
-  display: 'swap',
-});
-
-// Running text is set in Plex Serif — drawn on the same grid as Plex Mono, so
-// prose and data read as one family in two registers: measured things stay
-// mono, explained things become bookish.
-const plexSerif = IBM_Plex_Serif({
+// Running text is Instrument Sans: the operator's voice between the plots.
+const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
   weight: ['400', '500'],
   style: ['normal', 'italic'],
-  variable: '--font-plex-serif',
+  variable: '--font-instrument',
   display: 'swap',
 });
 
@@ -51,8 +42,8 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#eae6dc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f151c' },
+    { media: '(prefers-color-scheme: light)', color: '#f3f5ef' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b100d' },
   ],
 };
 
@@ -60,7 +51,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${archivo.variable} ${plexMono.variable} ${plexSerif.variable}`}
+      className={`${spaceMono.variable} ${instrumentSans.variable}`}
       data-theme="light"
       suppressHydrationWarning
     >
