@@ -55,7 +55,7 @@ export default function Hero() {
     <section className="hero">
       <div className="shell hero-inner">
         <header className="hero-head">
-          <h1 className="display hero-name">Blare</h1>
+          <h1 className="display hero-name">JL</h1>
           <p className="hero-thesis">
             I build native tools and measure what they cost. Below: the same
             296&nbsp;GB scan, 956k files, three implementations.

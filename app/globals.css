@@ -295,9 +295,12 @@ html.reveal-ready .section:not(.in-view) {
 /* The nameplate: name engraved in a machined plate, a double rule below it
    like the stamped edge of an instrument face. */
 .hero-name {
-  font-size: clamp(48px, 10.5vw, 118px);
-  line-height: 0.95;
-  margin-left: -0.06em;
+  /* Two glyphs of mono need more size than five did to hold the header. */
+  font-size: clamp(72px, 16vw, 176px);
+  line-height: 0.9;
+  /* Space Mono's J sits close to its advance edge: a small negative margin
+     optically aligns it with the thesis below without clipping the hook. */
+  margin-left: -0.03em;
 }
 
 .hero-head::after {

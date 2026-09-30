@@ -42,7 +42,7 @@ export default function Image() {
             marginBottom: 18,
           }}
         >
-          BLARE
+          JL
         </div>
 
         <div style={{ fontSize: 23, color: '#46544a', marginBottom: 46, maxWidth: 760 }}>
