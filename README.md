@@ -21,8 +21,17 @@ lives in `design/DIRECTION.md`.
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # treemap property tests
+npm test           # treemap, band-probe, and privacy tests
 npm run build      # static production build
+```
+
+Two browser-driven scripts need a server running and Chrome installed
+(they load Playwright from the npx cache, no install step):
+
+```bash
+npx next start -p 3778 &
+npm run test:acceptance          # 32 checks: fonts, palette, theme toggle, avatar, OG, mobile
+URL=http://localhost:3000/ npm run screens   # regenerate design/screens/review/
 ```
 
 ## Repository data
@@ -52,6 +61,8 @@ in the readout, and a colour to `lib/languageColors.js` if the language is new.
 | `lib/treemap.js` | Squarified treemap layout |
 | `scripts/sync-repos.mjs` | Writes `lib/repos.json` |
 | `scripts/test-treemap.mjs` | Property tests for the layout |
+| `scripts/test-acceptance.mjs` | Browser acceptance checks against a running server |
+| `scripts/capture-screens.mjs` | Full-page screenshots, both themes, desktop and mobile |
 
 ## Deploying
 

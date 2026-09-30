@@ -3,7 +3,7 @@ const require = createRequire(import.meta.url);
 const pwPath = '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
-const url = 'http://localhost:3777/';
+const url = process.env.URL ?? 'http://localhost:3777/';
 const outDir = 'design/screens/review';
 
 const viewports = [

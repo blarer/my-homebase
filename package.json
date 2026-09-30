@@ -11,7 +11,9 @@
     "start": "next start",
     "lint": "next lint",
     "sync:repos": "node scripts/sync-repos.mjs",
-    "test": "node scripts/test-treemap.mjs && node scripts/test-band-probe.mjs && node scripts/test-privacy.mjs"
+    "test": "node scripts/test-treemap.mjs && node scripts/test-band-probe.mjs && node scripts/test-privacy.mjs",
+    "test:acceptance": "node scripts/test-acceptance.mjs",
+    "screens": "node scripts/capture-screens.mjs"
   },
   "dependencies": {
     "next": "^15.3.9",
