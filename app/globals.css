@@ -1,82 +1,70 @@
 @import "tailwindcss";
 
 /*
- * Palette: strip chart. Light is K&E-style green-grid chart paper with
- * green-black recorder ink; the one signal colour is the ultramarine pen
- * trace. Dark is the night instrument panel: green-black glass, phosphor
- * grid, amber signal lamp. Signal colour means "measured": winning lane,
- * finished times, needles, focus. Every other saturated colour is data.
+ * Palette: offprint. A scientific monograph, printed. Light is book paper
+ * with iron-gall ink and one spot colour, the fountain-pen blue of a
+ * corrected proof. Dark is the same page read by lamplight: lampblack
+ * ground, aged cream ink, old gold where the proof was marked. The spot
+ * colour means "measured": winning lane, finished times, needles, focus.
+ * Every other saturated colour is data.
  */
 :root {
   color-scheme: light;
 
-  --paper: #f3f5ef;
-  --paper-raised: #fbfcf8;
-  --ink: #131c16;
-  --ink-soft: #46544a;
-  --ink-faint: #75837a;
-  --accent: #2038dd;
-  --accent-soft: rgba(32, 56, 221, 0.1);
-  --rule: rgba(19, 28, 22, 0.22);
-  --rule-soft: rgba(19, 28, 22, 0.1);
-  /* Chart paper's grid is readable, not subliminal: the data is plotted
-     against it. Minor every cell, major every 5th, the 5:1 rhythm of
-     engineering pads. */
-  --grid: rgba(58, 125, 88, 0.16);
-  --grid-major: rgba(58, 125, 88, 0.3);
-  --track: rgba(19, 28, 22, 0.07);
-  --hatch: rgba(19, 28, 22, 0.32);
+  --paper: #f3f1ec;
+  --paper-raised: #faf9f6;
+  --ink: #1c1a17;
+  --ink-soft: #4d4840;
+  --ink-faint: #7d766a;
+  --accent: #23408e;
+  --accent-soft: rgba(35, 64, 142, 0.1);
+  --rule: rgba(28, 26, 23, 0.2);
+  --rule-soft: rgba(28, 26, 23, 0.09);
+  --track: rgba(28, 26, 23, 0.06);
+  --hatch: rgba(28, 26, 23, 0.32);
   --band-rest: 0.26;
   --band-active: 0.62;
-  --grain-opacity: 0.02;
-  --vignette: rgba(19, 28, 22, 0.03);
-  --shadow-low: 0 1px 2px rgba(19, 28, 22, 0.04), 0 4px 14px rgba(19, 28, 22, 0.035);
-  --shadow-high: 0 2px 4px rgba(19, 28, 22, 0.05), 0 14px 40px rgba(19, 28, 22, 0.07);
+  --shadow-low: 0 1px 2px rgba(28, 26, 23, 0.04), 0 4px 14px rgba(28, 26, 23, 0.035);
+  --shadow-high: 0 2px 4px rgba(28, 26, 23, 0.05), 0 14px 40px rgba(28, 26, 23, 0.07);
 
-  --grid-size: 24px;
   --gutter: clamp(20px, 5vw, 64px);
-  --shell: 1180px;
+  --shell: 1120px;
 
-  /* Pen flick: fast attack, quick settle. Three duration scales. */
-  --ease-snap: cubic-bezier(0.3, 0.9, 0.2, 1);
+  /* One easing everywhere: a page settling. Three duration scales. */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-flip: 140ms;
   --dur-move: 320ms;
   --dur-reveal: 600ms;
 }
 
 /*
- * Dark is the night panel rather than an inverted page: green-black glass,
- * the grid gone phosphor-faint, and the signal colour switched from pen ink
- * to amber lamp — at night you read instruments by their lamps, not by ink.
+ * Dark is lamplight, not an inverted page: a lampblack ground with the warmth
+ * of the paper still in it, cream ink, and the proof marks in old gold.
  */
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --paper: #0b100d;
-  --paper-raised: #121a15;
-  --ink: #e9f0e6;
-  --ink-soft: #9fae9f;
-  --ink-faint: #6d7a6e;
-  --accent: #ffb454;
-  --accent-soft: rgba(255, 180, 84, 0.14);
-  --rule: rgba(233, 240, 230, 0.18);
-  --rule-soft: rgba(233, 240, 230, 0.08);
-  --grid: rgba(120, 190, 150, 0.07);
-  --grid-major: rgba(120, 190, 150, 0.14);
-  --track: rgba(233, 240, 230, 0.07);
-  --hatch: rgba(233, 240, 230, 0.34);
+  --paper: #17140f;
+  --paper-raised: #1f1b15;
+  --ink: #ece4d2;
+  --ink-soft: #b3a88f;
+  --ink-faint: #7f7562;
+  --accent: #d4a94c;
+  --accent-soft: rgba(212, 169, 76, 0.16);
+  --rule: rgba(236, 228, 210, 0.18);
+  --rule-soft: rgba(236, 228, 210, 0.08);
+  --track: rgba(236, 228, 210, 0.07);
+  --hatch: rgba(236, 228, 210, 0.34);
   --band-rest: 0.34;
   --band-active: 0.74;
-  --grain-opacity: 0.03;
-  --vignette: rgba(0, 0, 0, 0.15);
   --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.18);
   --shadow-high: 0 2px 4px rgba(0, 0, 0, 0.22), 0 14px 40px rgba(0, 0, 0, 0.25);
 }
 
 @theme inline {
-  --font-display: var(--font-space-mono);
-  --font-mono: var(--font-space-mono);
-  --font-sans: var(--font-instrument);
+  --font-display: var(--font-old-serif);
+  --font-serif: var(--font-old-serif);
+  --font-mono: var(--font-typewriter);
 }
 
 @layer base {
@@ -93,58 +81,15 @@
   body {
     margin: 0;
     min-height: 100vh;
-    font-family: var(--font-space-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: var(--font-typewriter), 'Courier New', Courier, monospace;
     font-size: 15px;
     line-height: 1.55;
-    /* Real graph paper has two scales: a minor line every cell and a heavier
-       major line every fourth. The ground the whole site is measured against. */
-    background-image:
-      linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
-      linear-gradient(to right, var(--grid) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
-    background-size:
-      calc(var(--grid-size) * 5) calc(var(--grid-size) * 5),
-      calc(var(--grid-size) * 5) calc(var(--grid-size) * 5),
-      var(--grid-size) var(--grid-size),
-      var(--grid-size) var(--grid-size);
-    background-position: center top;
-  }
-
-  /* Film grain over everything: an SVG turbulence tile, so the sheet reads as
-     material rather than as a flat hex value. Fixed, non-interactive, and
-     cheap — one compositing layer, no dependencies. */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 160px 160px;
-  }
-
-  /* A soft vignette settles the sheet onto the desk: barely-there darkening
-     toward the edges of the viewport. Strength lives in --vignette so both
-     themes tune it in one place. */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    pointer-events: none;
-    background: radial-gradient(
-      120% 90% at 50% 40%,
-      transparent 62%,
-      var(--vignette) 100%
-    );
   }
 
   h1,
   h2,
   h3 {
-    font-family: var(--font-space-mono), ui-monospace, monospace;
+    font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
     font-weight: 700;
     margin: 0;
     text-wrap: balance;
@@ -191,31 +136,32 @@
 /* ---- Type roles ---- */
 
 .display {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-weight: 700;
-  letter-spacing: -0.04em;
+  /* A modern-face serif wants air between its capitals, not the crush a
+     grotesque takes. */
+  letter-spacing: 0.02em;
   line-height: 0.95;
   text-transform: uppercase;
 }
 
-/* Running text — the operator's voice between the plots. Measured things
-   stay in Space Mono; explanation is set in Instrument Sans. */
+/* Running text — the journal's own typesetting. Measured things are
+   typewritten; explanation is set in the period serif. */
 .prose {
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
 }
 
 .tag {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
-  font-size: 11px;
+  font-family: var(--font-typewriter), 'Courier New', monospace;
+  font-size: 11.5px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
 
 .num {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
+  font-family: var(--font-typewriter), 'Courier New', monospace;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'zero' 1;
 }
 
 /* ---- Section framing ---- */
@@ -236,7 +182,7 @@
 
 .section-head h2 {
   font-size: clamp(24px, 3.4vw, 38px);
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 /* ---- Motion ---- */
@@ -257,9 +203,7 @@
 
 html.reveal-ready .section:not(.in-view) {
   opacity: 0.2;
-  /* Paper feeding through the recorder: sections arrive along the time
-     axis, not up from the floor. */
-  transform: translateX(-16px);
+  transform: translateY(18px);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -292,28 +236,29 @@ html.reveal-ready .section:not(.in-view) {
   margin-bottom: clamp(48px, 7vw, 76px);
 }
 
-/* The nameplate: name engraved in a machined plate, a double rule below it
-   like the stamped edge of an instrument face. */
+/* The title page. The name is set like the title of a monograph, and the
+   thick-thin Oxford rule under the head is the one every journal of the
+   period drew between its masthead and its first column. */
 .hero-name {
-  /* Two glyphs of mono need more size than five did to hold the header. */
-  font-size: clamp(72px, 16vw, 176px);
-  line-height: 0.9;
-  /* Space Mono's J sits close to its advance edge: a small negative margin
-     optically aligns it with the thesis below without clipping the hook. */
-  margin-left: -0.03em;
+  font-size: clamp(80px, 17vw, 190px);
+  line-height: 0.85;
+  /* Old Standard's J descends below the baseline and its serif reaches
+     left of the advance edge: a touch of negative margin aligns the stem
+     optically with the thesis below. */
+  margin-left: -0.02em;
 }
 
 .hero-head::after {
   content: '';
   display: block;
   height: 5px;
-  border-top: 2px solid var(--ink);
+  border-top: 3px solid var(--ink);
   border-bottom: 1px solid var(--ink);
 }
 
 .hero-thesis {
   max-width: 46ch;
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: clamp(16px, 1.6vw, 18px);
   line-height: 1.65;
   color: var(--ink-soft);
@@ -325,8 +270,9 @@ html.reveal-ready .section:not(.in-view) {
   border-top: 1px solid var(--rule);
 }
 
-/* The time axis above the lanes: same three-column grid as a lane so the
-   tick strip aligns exactly with the tracks below it. */
+/* The figure's time axis, set above the lanes as a table's column head:
+   same three-column grid as a lane so the scale sits exactly over the
+   plotted tracks. */
 .race-axis {
   display: grid;
   grid-template-columns: minmax(150px, 15.5rem) 1fr auto;
@@ -410,14 +356,6 @@ html.reveal-ready .section:not(.in-view) {
   position: relative;
   height: 12px;
   border-bottom: 1px solid var(--rule);
-  /* A faint time axis under each lane: the track is an instrument, not a
-     progress bar. Ticks every half grid cell. */
-  background-image: linear-gradient(
-    to right,
-    var(--rule-soft) 1px,
-    transparent 1px
-  );
-  background-size: calc(var(--grid-size) / 2) 100%;
 }
 
 .lane-fill {
@@ -483,7 +421,7 @@ html.reveal-ready .section:not(.in-view) {
 .race-caption {
   margin-top: 18px;
   max-width: 60ch;
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: 13px;
   line-height: 1.7;
   color: var(--ink-faint);
@@ -518,7 +456,7 @@ html.reveal-ready .section:not(.in-view) {
 .section-lede {
   max-width: 56ch;
   margin-bottom: 32px;
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: 14.5px;
   line-height: 1.7;
   color: var(--ink-soft);
@@ -532,32 +470,11 @@ html.reveal-ready .section:not(.in-view) {
   box-shadow: var(--shadow-low);
 }
 
-/* The plate is an instrument bezel: a screw head in each corner, drawn with
-   radial gradients so they cost nothing. The slot angles differ, because
-   screws tightened by hand never line up. */
+/* A figure plate: the treemap sits on raised paper inside a single rule,
+   the way a printed plate is tipped into a book. */
 .treemap-frame::before,
 .treemap-frame::after {
-  content: '';
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--paper-raised), var(--paper-raised)) 50% 50% / 100% 1px no-repeat,
-    radial-gradient(circle at 35% 35%, var(--ink-soft), var(--ink) 70%);
-}
-
-.treemap-frame::before {
-  top: 3px;
-  left: 3px;
-  transform: rotate(20deg);
-}
-
-.treemap-frame::after {
-  bottom: 3px;
-  right: 3px;
-  transform: rotate(-55deg);
+  content: none;
 }
 
 .treemap {
@@ -699,10 +616,10 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .tile-name {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
+  font-family: var(--font-typewriter), 'Courier New', monospace;
   font-weight: 700;
   font-size: clamp(13px, 1.5vw, 17px);
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -824,7 +741,7 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .readout-name-host {
-  font-family: var(--font-space-mono), monospace;
+  font-family: var(--font-typewriter), 'Courier New', monospace;
   font-size: 12px;
   font-weight: 400;
   color: var(--ink-faint);
@@ -832,7 +749,7 @@ html.reveal-ready .section:not(.in-view) {
 
 .readout-note {
   max-width: 62ch;
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: 14px;
   line-height: 1.7;
   color: var(--ink-soft);
@@ -914,23 +831,6 @@ html.reveal-ready .section:not(.in-view) {
   justify-self: center;
 }
 
-/* The gauge's bezel: a tick ring outside the donut, drawn with a repeating
-   conic gradient — 60 graduations, like the rim of a meter. */
-.ring-wrap::before {
-  content: '';
-  position: absolute;
-  inset: -14px;
-  border-radius: 50%;
-  pointer-events: none;
-  background: repeating-conic-gradient(
-    var(--rule) 0deg 0.5deg,
-    transparent 0.5deg 6deg
-  );
-  /* Only the outer 6px of the disc survives: the ring of ticks. */
-  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
-  mask: radial-gradient(closest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
-}
-
 .ring {
   width: 100%;
   height: 100%;
@@ -962,10 +862,10 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .ring-pct {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
+  font-family: var(--font-typewriter), 'Courier New', monospace;
   font-weight: 700;
   font-size: 25px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
 }
@@ -1083,17 +983,17 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .about-title {
-  font-family: var(--font-space-mono), ui-monospace, monospace;
-  font-size: clamp(24px, 3.6vw, 42px);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
+  font-size: clamp(26px, 3.8vw, 46px);
+  line-height: 1.12;
+  letter-spacing: 0;
 }
 
 .about-body {
   display: grid;
   gap: 18px;
   max-width: 62ch;
-  font-family: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: 15px;
   line-height: 1.85;
   color: var(--ink-soft);
@@ -1255,7 +1155,7 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .theme-toggle-label {
-  min-width: 5ch;
+  min-width: 9ch;
   text-align: left;
 }
 

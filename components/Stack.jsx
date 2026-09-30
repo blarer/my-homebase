@@ -37,7 +37,7 @@ export default function Stack({ repos }) {
     <section id="languages" className="section">
       <div className="shell">
         <div className="section-head">
-          <span className="tag">Languages</span>
+          <span className="tag">Fig. 2 — Languages</span>
           <h2>What the work is actually written in</h2>
         </div>
 

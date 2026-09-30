@@ -1,26 +1,28 @@
-import { Space_Mono, Instrument_Sans } from 'next/font/google';
+import { Old_Standard_TT, Courier_Prime } from 'next/font/google';
 import './globals.css';
 import ThemeScript from '@/components/ThemeScript';
 import RevealScript from '@/components/RevealScript';
 import { SITE_URL } from '@/lib/site';
 
-// One face for everything measured: headings at 700 are the engraved
-// nameplate, numbers and labels at 400 are the recorder's own print. A
-// monospace display face aligns every column of figures by construction.
-const spaceMono = Space_Mono({
+// The voice of a turn-of-the-century scientific journal: Old Standard is a
+// revival of the modern-face serifs those journals were set in. It carries
+// the nameplate, the headings, and the running text.
+const oldSerif = Old_Standard_TT({
   subsets: ['latin'],
   weight: ['400', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-space-mono',
+  variable: '--font-old-serif',
   display: 'swap',
 });
 
-// Running text is Instrument Sans: the operator's voice between the plots.
-const instrumentSans = Instrument_Sans({
+// Every number, label, and identifier is typewritten: Courier Prime is
+// monospaced, so columns of figures align by construction, and it reads as
+// the lab report's own print rather than the journal's typesetting.
+const typewriter = Courier_Prime({
   subsets: ['latin'],
-  weight: ['400', '500'],
+  weight: ['400', '700'],
   style: ['normal', 'italic'],
-  variable: '--font-instrument',
+  variable: '--font-typewriter',
   display: 'swap',
 });
 
@@ -42,8 +44,8 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f3f5ef' },
-    { media: '(prefers-color-scheme: dark)', color: '#0b100d' },
+    { media: '(prefers-color-scheme: light)', color: '#f3f1ec' },
+    { media: '(prefers-color-scheme: dark)', color: '#17140f' },
   ],
 };
 
@@ -51,7 +53,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${spaceMono.variable} ${instrumentSans.variable}`}
+      className={`${oldSerif.variable} ${typewriter.variable}`}
       data-theme="light"
       suppressHydrationWarning
     >

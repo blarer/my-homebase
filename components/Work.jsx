@@ -124,7 +124,7 @@ export default function Work({ repos }) {
     <section id="work" className="section">
       <div className="shell">
         <div className="section-head">
-          <span className="tag">Work</span>
+          <span className="tag">Fig. 1 — Work</span>
           <h2>{items.length} repositories, drawn to scale</h2>
         </div>
 

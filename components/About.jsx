@@ -13,7 +13,7 @@ export default function About() {
       <div className="shell about-grid">
         <div className="about-head">
           <div className="section-head about-section-head">
-            <span className="tag">About</span>
+            <span className="tag">Notes — About</span>
           </div>
           <h2 className="about-title">
             If I can&apos;t measure it,

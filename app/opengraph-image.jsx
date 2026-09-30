@@ -25,12 +25,9 @@ export default function Image() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: 76,
-          background: '#f3f5ef',
-          backgroundImage:
-            'linear-gradient(to right, rgba(58,125,88,0.16) 1px, transparent 1px), linear-gradient(to bottom, rgba(58,125,88,0.16) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-          fontFamily: 'monospace',
-          color: '#131c16',
+          background: '#f3f1ec',
+          fontFamily: 'serif',
+          color: '#1c1a17',
         }}
       >
         <div
@@ -45,14 +42,14 @@ export default function Image() {
           JL
         </div>
 
-        <div style={{ fontSize: 23, color: '#46544a', marginBottom: 46, maxWidth: 760 }}>
+        <div style={{ fontSize: 23, color: '#4d4840', marginBottom: 46, maxWidth: 760 }}>
           I build native tools and measure what they cost.
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {RUNS.map((run) => (
             <div key={run.label} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-              <div style={{ width: 300, fontSize: 18, color: run.mine ? '#2038dd' : '#131c16' }}>
+              <div style={{ width: 300, fontSize: 18, color: run.mine ? '#23408e' : '#1c1a17' }}>
                 {run.label}
               </div>
               <div
@@ -60,14 +57,14 @@ export default function Image() {
                   display: 'flex',
                   width: 560,
                   height: 12,
-                  borderBottom: '1px solid rgba(19,28,22,0.22)',
+                  borderBottom: '1px solid rgba(28,26,23,0.2)',
                 }}
               >
                 <div
                   style={{
                     width: (run.seconds / SLOWEST) * 560,
                     height: 12,
-                    background: run.mine ? '#2038dd' : 'rgba(19,28,22,0.28)',
+                    background: run.mine ? '#23408e' : 'rgba(28,26,23,0.28)',
                   }}
                 />
               </div>
@@ -75,7 +72,7 @@ export default function Image() {
                 style={{
                   fontSize: 19,
                   fontWeight: 600,
-                  color: run.mine ? '#2038dd' : '#131c16',
+                  color: run.mine ? '#23408e' : '#1c1a17',
                 }}
               >{`${run.seconds.toFixed(1)}s`}</div>
             </div>

@@ -51,14 +51,14 @@ export default function ThemeToggle() {
       className="theme-toggle"
       onClick={toggle}
       aria-pressed={dark}
-      aria-label={dark ? 'Switch to day theme' : 'Switch to night theme'}
-      title={dark ? 'Switch to day theme' : 'Switch to night theme'}
+      aria-label={dark ? 'Switch to daylight theme' : 'Switch to lamplight theme'}
+      title={dark ? 'Switch to daylight theme' : 'Switch to lamplight theme'}
     >
       <span className="theme-toggle-track" aria-hidden="true">
         <span className="theme-toggle-knob" />
       </span>
       <span className="theme-toggle-label" aria-hidden="true">
-        {theme === null ? '\u00a0' : dark ? 'Night' : 'Day'}
+        {theme === null ? '\u00a0' : dark ? 'Lamplight' : 'Daylight'}
       </span>
     </button>
   );
