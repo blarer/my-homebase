@@ -89,7 +89,7 @@ export default function LanguageRing({ repos }) {
         </g>
       </svg>
 
-      <div className="ring-centre" aria-live="polite">
+      <div className="ring-centre" aria-live="polite" key={current ? current.name : 'total'}>
         {current ? (
           <>
             <span className="num ring-pct">

@@ -1,8 +1,20 @@
 import { Old_Standard_TT, Courier_Prime } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import ThemeScript from '@/components/ThemeScript';
 import RevealScript from '@/components/RevealScript';
 import { SITE_URL } from '@/lib/site';
+
+// The title page's two letters are set in Headbang, the display face from
+// Discord's client. Self-hosted so the nameplate never depends on a
+// third-party CDN; used for the hero name only.
+const headbang = localFont({
+  src: '../public/fonts/headbang.woff2',
+  weight: '400',
+  style: 'normal',
+  variable: '--font-headbang',
+  display: 'swap',
+});
 
 // The voice of a turn-of-the-century scientific journal: Old Standard is a
 // revival of the modern-face serifs those journals were set in. It carries
@@ -53,7 +65,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${oldSerif.variable} ${typewriter.variable}`}
+      className={`${oldSerif.variable} ${typewriter.variable} ${headbang.variable}`}
       data-theme="light"
       suppressHydrationWarning
     >

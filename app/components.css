@@ -56,9 +56,9 @@
 /*
  * No-JS fallback for the race caption: globals.css keeps it at opacity 0
  * until the JS race sets data-done. This animation reaches the same final
- * state on a pure-CSS timer matched to RACE_MS (2.4s in Hero.jsx), so the
- * conclusion is never unreachable without JavaScript. With JS running, both
- * paths land at the same moment and the same values.
+ * state on a pure-CSS timer. The delay here is the bare race length
+ * (RACE_MS, 2.4s); motion.css overrides it to RACE_DELAY_MS + RACE_MS so
+ * the caption still lands exactly when the JS race finishes.
  */
 @keyframes caption-rise {
   to {

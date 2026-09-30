@@ -114,6 +114,111 @@ check('mobile hero name fits', h1Mob);
 // 13. No JS errors
 check('no console/page errors', consoleErrors.length === 0, consoleErrors.join(' | '));
 
+// ---- Motion ----
+const mo = await browser.newPage({ viewport: { width: 1200, height: 720 } });
+
+// 14. Headbang on the hero, and its glyph box clears the thesis line.
+await mo.goto(url, { waitUntil: 'networkidle' });
+const hb = await mo.evaluate(async () => {
+  await document.fonts.ready;
+  const name = document.querySelector('.hero-name');
+  const thesis = document.querySelector('.hero-thesis');
+  return {
+    fam: getComputedStyle(name).fontFamily,
+    loaded: [...document.fonts].some((f) => /headbang/i.test(f.family) && f.status === 'loaded'),
+    nameBottom: name.getBoundingClientRect().bottom,
+    thesisTop: thesis.getBoundingClientRect().top,
+  };
+});
+check('Headbang loaded on hero', hb.loaded && /headbang/i.test(hb.fam), hb.fam);
+check('hero name clears thesis', hb.nameBottom <= hb.thesisTop + 1, `${hb.nameBottom} vs ${hb.thesisTop}`);
+
+// 15. Load sequence: name settles before the race starts. At 300ms the name
+//     should be mid-animation; the race should not have moved until >1.4s.
+await mo.goto(url, { waitUntil: 'commit' });
+await mo.waitForTimeout(300);
+const early = await mo.evaluate(() => ({
+  nameAnim: document.querySelector('.hero-name')?.getAnimations().map((a) => `${a.animationName}:${a.playState}`).join(',') ?? 'none',
+  fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
+}));
+check('hero name animating at 300ms', /ink-settle:running/.test(early.nameAnim), early.nameAnim);
+check('race not started at 300ms', early.fill === '0%', String(early.fill));
+await mo.waitForTimeout(1500);
+const later = await mo.evaluate(() => parseFloat(document.querySelector('.lane-mine .lane-fill')?.style.width));
+check('race running by 1.8s', later > 0, String(later));
+
+// 16. Idle animations are live after the race lands.
+await mo.waitForTimeout(2800);
+const idle = await mo.evaluate(() => {
+  const running = (el) => (el ? el.getAnimations().filter((a) => a.playState === 'running').map((a) => a.animationName) : []);
+  const pseudoRunning = (el, ps) => (el ? el.getAnimations({ subtree: true }).filter((a) => a.effect?.pseudoElement === ps && a.playState === 'running').map((a) => a.animationName) : []);
+  return {
+    stamp: running(document.querySelector('.lane-mine .lane-time')),
+    cursor: pseudoRunning(document.querySelector('.race-caption'), '::after'),
+    ring: running(document.querySelector('.ring')),
+    portrait: running(document.querySelector('.portrait img')),
+    bands: running(document.querySelector('.tile[data-active] .tile-bands')),
+    done: !!document.querySelector('.race-caption[data-done]'),
+  };
+});
+check('race finished', idle.done);
+check('idle: stamp breathes', idle.stamp.includes('stamp-breathe'), idle.stamp.join(','));
+check('idle: caption cursor blinks', idle.cursor.includes('cursor-blink'), idle.cursor.join(','));
+check('idle: ring drifts', idle.ring.includes('ring-drift'), idle.ring.join(','));
+check('idle: portrait drifts', idle.portrait.includes('portrait-drift'), idle.portrait.join(','));
+check('idle: active tile bands pulse', idle.bands.includes('bands-pulse'), idle.bands.join(','));
+
+// 17. Ring has no Tailwind `.ring` box-shadow.
+const ringShadow = await mo.$eval('.ring', (el) => getComputedStyle(el).boxShadow);
+check('ring has no utility box-shadow', ringShadow === 'none', ringShadow);
+
+// 18. Scroll reveal: Work section stagger actually transitions.
+await mo.evaluate(() => document.querySelector('#work').scrollIntoView({ block: 'start', behavior: 'instant' }));
+await mo.waitForTimeout(80);
+const revealStart = await mo.evaluate(() => ({
+  inView: document.querySelector('#work').classList.contains('in-view'),
+  frameOpacity: parseFloat(getComputedStyle(document.querySelector('#work .treemap-frame')).opacity),
+}));
+await mo.waitForTimeout(1600);
+const revealEnd = await mo.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#work .treemap-frame')).opacity));
+check('work section marked in-view', revealStart.inView);
+check('treemap frame fades in (start < 1, end ≈ 1)', revealStart.frameOpacity < 1 && revealEnd > 0.99, `${revealStart.frameOpacity} → ${revealEnd}`);
+
+// 19. Theme flip crossfades: background is mid-way between palettes ~150ms in.
+await mo.evaluate(() => window.scrollTo(0, 0));
+const flip = await mo.evaluate(async () => {
+  const html = document.documentElement;
+  const bg = () => getComputedStyle(html).backgroundColor;
+  document.querySelector('.theme-toggle').click();
+  const t0 = performance.now();
+  await new Promise((r) => setTimeout(r, 150 - (performance.now() - t0)));
+  const mid = bg();
+  const midFlipping = html.classList.contains('theme-flipping');
+  await new Promise((r) => setTimeout(r, 700));
+  return { mid, midFlipping, end: bg(), endFlipping: html.classList.contains('theme-flipping') };
+});
+const midRgb = flip.mid.match(/\d+/g).map(Number);
+check('theme flip mid-transition at 150ms', flip.midFlipping && midRgb[0] > 23 && midRgb[0] < 243, `${flip.mid} flipping=${flip.midFlipping}`);
+check('theme flip settles dark, class removed', flip.end === 'rgb(23, 20, 15)' && !flip.endFlipping, `${flip.end} flipping=${flip.endFlipping}`);
+
+// 20. Reduced motion: no idle animations, everything visible, race at final state.
+const rm = await browser.newPage({ viewport: { width: 1200, height: 720 }, reducedMotion: 'reduce' });
+await rm.goto(url, { waitUntil: 'networkidle' });
+await rm.waitForTimeout(400);
+const reduced = await rm.evaluate(() => {
+  const anims = document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity);
+  return {
+    infinite: anims.map((a) => a.animationName),
+    fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
+    done: !!document.querySelector('.race-caption[data-done]'),
+    revealReady: document.documentElement.classList.contains('reveal-ready'),
+    sectionOpacity: [...document.querySelectorAll('.section')].map((s) => getComputedStyle(s).opacity),
+  };
+});
+check('reduced motion: no infinite animations', reduced.infinite.length === 0, reduced.infinite.join(','));
+check('reduced motion: race at final state immediately', reduced.done && reduced.fill !== '0%', `done=${reduced.done} fill=${reduced.fill}`);
+check('reduced motion: no reveal dimming', !reduced.revealReady && reduced.sectionOpacity.every((o) => o === '1'), `ready=${reduced.revealReady} ${reduced.sectionOpacity.join(',')}`);
+
 await browser.close();
 
 let fails = 0;

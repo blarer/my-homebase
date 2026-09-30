@@ -1,4 +1,5 @@
 import ThemeToggle from '@/components/ThemeToggle';
+import '@/app/motion.css';
 
 export default function Footer({ syncedAt }) {
   return (

@@ -16,6 +16,21 @@ function apply(theme) {
   document.documentElement.dataset.theme = theme;
 }
 
+/**
+ * Paper and ink crossfade on a manual flip. The class is added just before
+ * the theme changes and removed after the transition, so first paint and
+ * the system-preference listener never animate (a page should not fade in
+ * when it opens, only when you turn the lamp on).
+ */
+let flipTimer = 0;
+function flip(theme) {
+  const root = document.documentElement;
+  root.classList.add('theme-flipping');
+  apply(theme);
+  clearTimeout(flipTimer);
+  flipTimer = setTimeout(() => root.classList.remove('theme-flipping'), 560);
+}
+
 export default function ThemeToggle() {
   const [theme, setTheme] = useState(null);
 
@@ -38,7 +53,7 @@ export default function ThemeToggle() {
 
   const toggle = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
-    apply(next);
+    flip(next);
     localStorage.setItem(STORAGE_KEY, next);
     setTheme(next);
   };

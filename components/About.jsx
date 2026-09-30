@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import '@/app/motion.css';
 
 /**
  * About, in his own register.

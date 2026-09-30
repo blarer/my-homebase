@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { squarify } from "@/lib/treemap";
 import { languageColor } from "@/lib/languageColors";
 import "@/app/components.css";
+import "@/app/motion.css";
 
 /**
  * Work as a treemap of the actual repositories, each tile sized by real source
@@ -254,7 +255,7 @@ export default function Work({ repos }) {
 
         {currentRepo && (
           <div className="readout" aria-live="polite">
-            <div className="readout-key">
+            <div className="readout-key" key={`key-${current}`}>
               <span className="num readout-pct">
                 {(
                   (items.find((i) => i.key === current).value / total) *
@@ -265,7 +266,7 @@ export default function Work({ repos }) {
               <span className="tag">of all source</span>
             </div>
 
-            <div className="readout-main">
+            <div className="readout-main" key={`main-${current}`}>
               <h3 className="readout-name">
                 {currentRepo.private ? (
                   <span className="readout-private">

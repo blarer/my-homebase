@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import '@/app/components.css';
+import '@/app/motion.css';
 
 /**
  * The hero is the benchmark table from storage-manager-swift, run as a race.
@@ -9,6 +10,10 @@ import '@/app/components.css';
  * Each bar advances in real time, scaled so the slowest run (du -sk, 22.7s)
  * takes 2.4 seconds of wall clock. The point lands before you finish reading
  * the headline: the same work, three ways, and the gap is the whole argument.
+ *
+ * The race waits RACE_DELAY_MS before its first frame so the title page can
+ * compose itself first (motion.css staggers the name, thesis, rule, axis and
+ * lanes over ~1.1s). Keep this constant in step with the --load-* tokens.
  */
 const RUNS = [
   { label: 'du -sk', seconds: 22.7, note: 'one lstat per file' },
@@ -18,6 +23,7 @@ const RUNS = [
 
 const SLOWEST = Math.max(...RUNS.map((run) => run.seconds));
 const RACE_MS = 2400;
+const RACE_DELAY_MS = 1400;
 
 export default function Hero() {
   const [elapsed, setElapsed] = useState(0);
@@ -47,8 +53,13 @@ export default function Hero() {
       }
     };
 
-    frame.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame.current);
+    const timer = setTimeout(() => {
+      frame.current = requestAnimationFrame(tick);
+    }, RACE_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      cancelAnimationFrame(frame.current);
+    };
   }, []);
 
   return (
@@ -96,7 +107,7 @@ export default function Hero() {
               .lane-mine .lane-time { color: var(--accent); font-weight: 600; }
             `}</style>
           </noscript>
-          {RUNS.map((run) => {
+          {RUNS.map((run, index) => {
             // Bars share one time axis: a lane's final length is its share of
             // the slowest run. If every bar filled its own track, the gap the
             // chart exists to show would disappear at the finish.
@@ -109,7 +120,11 @@ export default function Hero() {
             const finalWidth = (run.seconds / SLOWEST) * 100;
 
             return (
-              <div className={`lane${run.mine ? ' lane-mine' : ''}`} key={run.label}>
+              <div
+                className={`lane${run.mine ? ' lane-mine' : ''}`}
+                key={run.label}
+                data-lane={index}
+              >
                 <div className="lane-label">
                   <span className="lane-name">{run.label}</span>
                   <span className="lane-note">{run.note}</span>

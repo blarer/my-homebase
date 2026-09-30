@@ -1,6 +1,7 @@
 import { languageColor } from "@/lib/languageColors";
 import LanguageRing from "@/components/LanguageRing";
 import "@/app/components.css";
+import "@/app/motion.css";
 
 /**
  * Languages, counted rather than claimed.

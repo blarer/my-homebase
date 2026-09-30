@@ -187,24 +187,12 @@
 
 /* ---- Motion ---- */
 
-/* Sections rise onto the sheet as they enter the viewport, driven by an
-   IntersectionObserver in RevealScript that adds `.in-view` once per section.
-   The mockup used `animation-timeline: view()`, which never fires in some
-   browsers and headless capture, leaving sections stuck ghosted at their
-   keyframe start. This version is progressive enhancement in the safe
-   direction: the dimmed starting state only exists under `html.reveal-ready`,
-   a class the script adds *after* wiring the observer, so no JS (or a script
-   failure) means fully visible static content. */
-.section {
-  transition:
-    opacity var(--dur-reveal) var(--ease-snap),
-    transform var(--dur-reveal) var(--ease-snap);
-}
-
-html.reveal-ready .section:not(.in-view) {
-  opacity: 0.2;
-  transform: translateY(18px);
-}
+/* Section reveals are driven by an IntersectionObserver in RevealScript that
+   adds `.in-view` once per section. The dimmed starting state only exists
+   under `html.reveal-ready`, a class the script adds *after* wiring the
+   observer, so no JS (or a script failure) means fully visible static
+   content. The transitions themselves, the stagger, and everything idle
+   live in motion.css. */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -214,13 +202,6 @@ html.reveal-ready .section:not(.in-view) {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-
-  /* RevealScript already bails out under reduced motion, but belt and braces:
-     never dim a section for anyone who asked for stillness. */
-  html.reveal-ready .section:not(.in-view) {
-    opacity: 1;
-    transform: none;
   }
 }
 
@@ -236,16 +217,20 @@ html.reveal-ready .section:not(.in-view) {
   margin-bottom: clamp(48px, 7vw, 76px);
 }
 
-/* The title page. The name is set like the title of a monograph, and the
-   thick-thin Oxford rule under the head is the one every journal of the
-   period drew between its masthead and its first column. */
+/* The title page. The name is set in Headbang, and the thick-thin Oxford
+   rule under the head is the one every journal of the period drew between
+   its masthead and its first column. */
 .hero-name {
-  font-size: clamp(80px, 17vw, 190px);
-  line-height: 0.85;
-  /* Old Standard's J descends below the baseline and its serif reaches
-     left of the advance edge: a touch of negative margin aligns the stem
-     optically with the thesis below. */
+  font-family: var(--font-headbang), var(--font-old-serif), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(72px, 15vw, 168px);
+  /* Headbang is blackletter: the J's tail and the L's foot swing well below
+     the baseline. Give the line room so the tail never crosses the thesis. */
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
   margin-left: -0.02em;
+  margin-bottom: 0.05em;
 }
 
 .hero-head::after {
@@ -732,12 +717,7 @@ html.reveal-ready .section:not(.in-view) {
 }
 
 .readout-name a {
-  border-bottom: 1px solid var(--rule);
   padding-bottom: 1px;
-}
-
-.readout-name a:hover {
-  border-bottom-color: var(--accent);
 }
 
 .readout-name-host {
@@ -835,6 +815,12 @@ html.reveal-ready .section:not(.in-view) {
   width: 100%;
   height: 100%;
   display: block;
+  overflow: visible;
+  /* Tailwind ships a `.ring` utility that paints a 1px box-shadow; this
+     component class shares the name, so undo it here. */
+  box-shadow: none;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 #0000;
 }
 
 .ring-seg {
@@ -1011,13 +997,7 @@ html.reveal-ready .section:not(.in-view) {
 
 .about-links a {
   color: var(--ink);
-  border-bottom: 1px solid var(--rule);
   padding-bottom: 2px;
-  transition: border-color var(--dur-flip) var(--ease-snap);
-}
-
-.about-links a:hover {
-  border-bottom-color: var(--accent);
 }
 
 @media (max-width: 860px) {
@@ -1094,12 +1074,7 @@ html.reveal-ready .section:not(.in-view) {
 .notfound-link {
   margin-top: 8px;
   font-size: 13px;
-  border-bottom: 1px solid var(--rule);
   padding-bottom: 2px;
-}
-
-.notfound-link:hover {
-  border-bottom-color: var(--accent);
 }
 
 /* ---- Theme toggle ---- */
@@ -1178,7 +1153,7 @@ html.reveal-ready .section:not(.in-view) {
   border: 1px solid var(--rule);
   box-shadow: var(--shadow-low);
   filter: grayscale(1) contrast(1.05);
-  transition: filter var(--dur-move) var(--ease-snap);
+  transition: filter 600ms var(--ease-settle, var(--ease-snap));
 }
 
 .portrait:hover img {
