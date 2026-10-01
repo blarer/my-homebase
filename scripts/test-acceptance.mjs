@@ -93,11 +93,14 @@ check('front: light paper', (await page.$eval('html', (el) => getComputedStyle(e
 
 // ---- Atlas ----
 // Pixel reads must work on both renderers: getImageData on the 2D fallback,
-// readPixels on WebGL (preserveDrawingBuffer is on so the last frame stays).
+// readPixels on WebGL. The GL context no longer uses preserveDrawingBuffer
+// (it costs a copy per frame), so the backbuffer is undefined once a frame
+// is presented: redraw via the component's hook and read in the same task.
 // Registered as an init script so it survives reloads on this page.
 const ATLAS_PIXELS = () => {
   window.__atlasPixels = (c, step = 1) => {
     if (c.dataset.renderer === 'webgl') {
+      c.__atlasRedraw?.();
       const gl = c.getContext('webgl');
       const buf = new Uint8Array(c.width * c.height * 4);
       gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
@@ -159,7 +162,7 @@ const atlas = await page.evaluate(async () => {
 check('atlas: seeded', /^\d+$/.test(atlas.seed), atlas.seed);
 check('atlas: WebGL renderer in Chrome', atlas.renderer === 'webgl', atlas.renderer);
 check('atlas: running', atlas.running === 'true');
-check('atlas: ~30fps on GL (>=12 frames in 600ms)', atlas.frames >= 12, String(atlas.frames));
+check('atlas: ~60fps on GL (>=25 frames in 600ms)', atlas.frames >= 25, String(atlas.frames));
 check('atlas: pixels change between frames', atlas.diff / atlas.samples > 1, `${(atlas.diff / atlas.samples).toFixed(2)} per sample`);
 check('atlas: rich field (>500 colours in subsample)', atlas.colours > 500, String(atlas.colours));
 check('atlas: no long frames (worst rAF gap < 60ms)', atlas.worstGap < 60, `${atlas.worstGap}ms`);

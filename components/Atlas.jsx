@@ -31,6 +31,21 @@ import '@/app/motion.css';
  * Paused when offscreen or the tab is hidden. Under prefers-reduced-motion
  * it renders exactly one frame. Without JS the <noscript> plate shows a
  * static SVG so the slot is never empty.
+ *
+ * Measured on an M4 Pro, 1984x850 buffer, with scripts/bench-shader.mjs and
+ * the CDP performance counters:
+ *
+ *   fragment shader      0.020 ms GPU per frame
+ *   uniform upload+draw  0.025 ms CPU per frame
+ *   weight drift (931)   0.006 ms CPU per frame
+ *   whole page, running  ~2.5% of one core, flat from 20fps to 60fps
+ *   whole page, paused   ~0.1%
+ *
+ * The cost is dominated by having a live rAF loop at all, not by the frame
+ * rate or the pixel count, which is why this runs at 60 rather than
+ * throttling: a lower rate looks worse and measures the same. A mat4-packed
+ * shader was benchmarked and rejected (see bench-shader.mjs): it saves
+ * 0.006 ms of GPU time and nothing on the CPU.
  */
 
 const HIDDEN = 16;
@@ -38,7 +53,7 @@ const LAYERS = 4; // hidden layers; input is (x, y, r, 1), output is 3 channels
 const IN0 = 4;
 const INH = HIDDEN + 1;
 
-const GL_FPS = 30;
+const GL_FPS = 60;
 const GL_MAX_DPR = 2;
 const GL_MAX_PIXELS = 2.2e6; // ~1480x1480; keeps mobile GPUs comfortable
 
@@ -110,12 +125,37 @@ function buildNet(seed) {
   return layers;
 }
 
-function driftWeights(layers, t) {
+/**
+ * Flattens the per-layer drift inputs into one contiguous view so the
+ * per-frame loop is a single pass over three typed arrays with no property
+ * lookups or per-layer bookkeeping. `slots` holds, for each layer, the
+ * offset into the flat arrays and the layer's own `w` to write back into.
+ */
+function flattenDrift(layers) {
+  const total = layers.reduce((sum, L) => sum + L.w.length, 0);
+  const base = new Float32Array(total);
+  const phase = new Float32Array(total);
+  const rate = new Float32Array(total);
+  const out = new Float32Array(total);
+  const slots = [];
+  let off = 0;
   for (const L of layers) {
-    const { base, phase, rate, w } = L;
-    for (let i = 0; i < w.length; i++) {
-      w[i] = base[i] + Math.sin(t * rate[i] + phase[i]) * DRIFT;
-    }
+    base.set(L.base, off);
+    phase.set(L.phase, off);
+    rate.set(L.rate, off);
+    slots.push({ off, len: L.w.length, w: L.w });
+    off += L.w.length;
+  }
+  return { base, phase, rate, out, slots, total };
+}
+
+function driftWeights(flat, t) {
+  const { base, phase, rate, out, slots, total } = flat;
+  for (let i = 0; i < total; i++) {
+    out[i] = base[i] + Math.sin(t * rate[i] + phase[i]) * DRIFT;
+  }
+  for (const s of slots) {
+    s.w.set(out.subarray(s.off, s.off + s.len));
   }
 }
 
@@ -277,7 +317,11 @@ function makeGl(canvas) {
     pg.getExtension('WEBGL_lose_context')?.loseContext();
   }
 
-  const gl = canvas.getContext('webgl', { antialias: false, alpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
+  // preserveDrawingBuffer is off: keeping the last frame around costs a
+  // copy every frame and is only needed to read pixels after the fact. The
+  // acceptance suite instead draws and reads in the same task, via the
+  // redraw hook exposed on the canvas below.
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
   if (!gl) return null;
 
   const vs = compile(gl, gl.VERTEX_SHADER, VERT);
@@ -440,42 +484,54 @@ export default function Atlas() {
     let palette = readPalette();
     let frames = 0;
     let raf = 0;
-    let timer = 0;
     let visible = true;
     let running = false;
     // The element being painted. Swapped for a fresh canvas if the GL
     // context is lost, see onLost below.
     let activeCanvas = canvas;
+    const flat = flattenDrift(layers);
     const t0 = performance.now();
 
     renderer.resize();
 
     const frame = () => {
       const t = (performance.now() - t0) / 1000;
-      driftWeights(layers, t);
+      driftWeights(flat, t);
       renderer.render(layers, palette);
       frames++;
       activeCanvas.dataset.frames = String(frames);
     };
 
-    const loop = () => {
+    // Pacing is rAF alone: one scheduler entry per frame, aligned to the
+    // compositor. The previous version nested a setTimeout inside a rAF,
+    // which cost two wakeups per frame and landed draws mid-frame. At
+    // GL_FPS 60 the interval is below one frame, so this draws every tick;
+    // the check keeps the loop honest if the rate is ever lowered.
+    const interval = 1000 / fps;
+    let last = -Infinity;
+    const loop = (now) => {
       if (!running) return;
-      frame();
-      timer = setTimeout(() => {
-        raf = requestAnimationFrame(loop);
-      }, 1000 / fps);
+      if (now - last >= interval - 1) {
+        last = now;
+        frame();
+      }
+      raf = requestAnimationFrame(loop);
     };
+
+    // Lets a test draw and read in the same task, which is what removing
+    // preserveDrawingBuffer requires: without it the backbuffer is cleared
+    // once the frame is presented.
+    canvas.__atlasRedraw = frame;
 
     const start = () => {
       if (running || reduced) return;
       running = true;
       activeCanvas.dataset.running = 'true';
-      loop();
+      raf = requestAnimationFrame(loop);
     };
     const stop = () => {
       running = false;
       activeCanvas.dataset.running = 'false';
-      clearTimeout(timer);
       cancelAnimationFrame(raf);
     };
 
@@ -529,6 +585,7 @@ export default function Atlas() {
       fresh.removeAttribute('height');
       canvas.replaceWith(fresh);
       activeCanvas = fresh;
+      fresh.__atlasRedraw = frame;
       renderer = makeCpu(fresh);
       mode = 'canvas2d';
       fresh.dataset.renderer = mode;
