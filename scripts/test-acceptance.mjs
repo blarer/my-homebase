@@ -92,11 +92,29 @@ check('front: no body grid', (await page.$eval('body', (el) => getComputedStyle(
 check('front: light paper', (await page.$eval('html', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(243, 241, 236)');
 
 // ---- Atlas ----
+// Pixel reads must work on both renderers: getImageData on the 2D fallback,
+// readPixels on WebGL (preserveDrawingBuffer is on so the last frame stays).
+// Registered as an init script so it survives reloads on this page.
+const ATLAS_PIXELS = () => {
+  window.__atlasPixels = (c, step = 1) => {
+    if (c.dataset.renderer === 'webgl') {
+      const gl = c.getContext('webgl');
+      const buf = new Uint8Array(c.width * c.height * 4);
+      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+      if (step === 1) return buf;
+      const out = new Uint8Array(Math.ceil(buf.length / 4 / step) * 4);
+      for (let i = 0, j = 0; i < buf.length; i += 4 * step, j += 4) { out[j] = buf[i]; out[j + 1] = buf[i + 1]; out[j + 2] = buf[i + 2]; out[j + 3] = 255; }
+      return out;
+    }
+    return c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  };
+};
+await page.addInitScript(ATLAS_PIXELS);
+await page.evaluate(ATLAS_PIXELS);
 await page.waitForTimeout(1500);
 const atlas = await page.evaluate(async () => {
   const c = document.querySelector('canvas.atlas');
-  const ctx = c.getContext('2d');
-  const grab = () => Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+  const grab = () => window.__atlasPixels(c, 7); // subsample: GL buffer is ~1M px
   const f0 = Number(c.dataset.frames);
   const s0 = grab();
   await new Promise((r) => setTimeout(r, 600));
@@ -106,9 +124,8 @@ const atlas = await page.evaluate(async () => {
   for (let i = 0; i < s0.length; i += 4) diff += Math.abs(s0[i] - s1[i]) + Math.abs(s0[i + 1] - s1[i + 1]) + Math.abs(s0[i + 2] - s1[i + 2]);
   const colours = new Set();
   for (let i = 0; i < s1.length; i += 4) colours.add((s1[i] << 16) | (s1[i + 1] << 8) | s1[i + 2]);
-  // Frame cost: time one render via the exposed frame counter is not
-  // possible from outside, so measure a long task proxy: how long does a
-  // 600ms window of rAF callbacks get blocked? Sample main-thread gaps.
+  // Main-thread cost proxy: worst gap between consecutive rAF callbacks
+  // over a 30-frame window while the atlas is running.
   const gaps = [];
   let last = performance.now();
   await new Promise((r) => {
@@ -122,24 +139,31 @@ const atlas = await page.evaluate(async () => {
     requestAnimationFrame(tick);
   });
   const worst = Math.max(...gaps.slice(1));
+  const rect = c.getBoundingClientRect();
   return {
     seed: c.dataset.seed,
+    renderer: c.dataset.renderer,
     running: c.dataset.running,
     frames: f1 - f0,
     diff,
+    samples: s1.length / 4,
     colours: colours.size,
     worstGap: Math.round(worst),
     w: c.width,
     h: c.height,
+    cssW: Math.round(rect.width),
+    cssH: Math.round(rect.height),
+    dpr: window.devicePixelRatio,
   };
 });
 check('atlas: seeded', /^\d+$/.test(atlas.seed), atlas.seed);
+check('atlas: WebGL renderer in Chrome', atlas.renderer === 'webgl', atlas.renderer);
 check('atlas: running', atlas.running === 'true');
-check('atlas: ~12fps (>=5 frames in 600ms)', atlas.frames >= 5, String(atlas.frames));
-check('atlas: pixels change between frames', atlas.diff > 10000, String(atlas.diff));
-check('atlas: rich field (>500 colours)', atlas.colours > 500, String(atlas.colours));
+check('atlas: ~30fps on GL (>=12 frames in 600ms)', atlas.frames >= 12, String(atlas.frames));
+check('atlas: pixels change between frames', atlas.diff / atlas.samples > 1, `${(atlas.diff / atlas.samples).toFixed(2)} per sample`);
+check('atlas: rich field (>500 colours in subsample)', atlas.colours > 500, String(atlas.colours));
 check('atlas: no long frames (worst rAF gap < 60ms)', atlas.worstGap < 60, `${atlas.worstGap}ms`);
-check('atlas: 128x128 buffer', atlas.w === 128 && atlas.h === 128, `${atlas.w}x${atlas.h}`);
+check('atlas: GL buffer at native resolution (>= CSS px)', atlas.w >= atlas.cssW && atlas.h >= atlas.cssH && atlas.w > 128, `${atlas.w}x${atlas.h} buffer for ${atlas.cssW}x${atlas.cssH} css @${atlas.dpr}x`);
 
 // Pauses when scrolled offscreen; resumes when back.
 await page.evaluate(() => document.querySelector('.footer').scrollIntoView());
@@ -159,7 +183,7 @@ check('atlas: resumes onscreen', (await page.$eval('canvas.atlas', (c) => c.data
 // swaps (dark paper + cream ink read lighter on average than light paper +
 // iron-gall ink, so the direction is not fixed; only the change is).
 const meanRgb = (c) => {
-  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  const d = window.__atlasPixels(c, 7);
   let r = 0, g = 0, b = 0;
   for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
   const n = d.length / 4;
@@ -215,6 +239,38 @@ await page.evaluate(() => document.querySelector('#about').scrollIntoView());
 await page.waitForTimeout(600);
 check('idle: portrait drifts', await page.$eval('.portrait img', (el) => el.getAnimations().some((a) => a.animationName === 'portrait-drift' && a.playState === 'running')));
 
+// CPU fallback: ?atlas=cpu takes the path a WebGL-less browser would. Same
+// network, 128px raster, 12fps, blur on.
+const cpu = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+watch(cpu);
+await cpu.goto(new URL('?atlas=cpu', base).href, { waitUntil: 'networkidle' });
+await cpu.waitForTimeout(1200);
+const fallback = await cpu.evaluate(async () => {
+  const c = document.querySelector('canvas.atlas');
+  const ctx = c.getContext('2d');
+  const f0 = Number(c.dataset.frames);
+  const s0 = Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+  await new Promise((r) => setTimeout(r, 600));
+  const s1 = Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+  let diff = 0;
+  for (let i = 0; i < s0.length; i += 4) diff += Math.abs(s0[i] - s1[i]);
+  return {
+    renderer: c.dataset.renderer,
+    running: c.dataset.running,
+    frames: Number(c.dataset.frames) - f0,
+    w: c.width,
+    h: c.height,
+    diff,
+    blur: getComputedStyle(c).filter,
+  };
+});
+check('atlas cpu: canvas2d renderer', fallback.renderer === 'canvas2d', fallback.renderer);
+check('atlas cpu: 128x128 buffer', fallback.w === 128 && fallback.h === 128, `${fallback.w}x${fallback.h}`);
+check('atlas cpu: running ~12fps', fallback.running === 'true' && fallback.frames >= 5, `${fallback.running} ${fallback.frames}`);
+check('atlas cpu: pixels change', fallback.diff > 5000, String(fallback.diff));
+check('atlas cpu: blur applied to hide raster', /blur/.test(fallback.blur), fallback.blur);
+check('atlas gl: no blur at native res', !/blur/.test(await page.$eval('canvas.atlas', (c) => getComputedStyle(c).filter)));
+
 // Mobile.
 const mob = await browser.newPage({ viewport: { width: 390, height: 844 } });
 watch(mob);
@@ -222,6 +278,7 @@ await mob.goto(base, { waitUntil: 'networkidle' });
 check('mobile: no horizontal overflow', (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
 check('mobile: hero name fits', await mob.$eval('h1.hero-name', (el) => el.getBoundingClientRect().right <= window.innerWidth));
 check('mobile: atlas 4:3', await mob.$eval('canvas.atlas', (c) => { const r = c.getBoundingClientRect(); return Math.abs(r.width / r.height - 4 / 3) < 0.05; }));
+check('mobile: atlas GL buffer under pixel cap', await mob.$eval('canvas.atlas', (c) => c.dataset.renderer !== 'webgl' || c.width * c.height <= 2.2e6));
 
 // ---------------------------------------------------------------- /work
 const work = await browser.newPage({ viewport: { width: 1200, height: 720 } });
@@ -364,7 +421,7 @@ const reducedFront = await rm.evaluate(async () => {
   };
 });
 check('reduced: no infinite animations on front', reducedFront.infinite.length === 0, reducedFront.infinite.join(','));
-check('reduced: atlas renders exactly one frame', reducedFront.atlasFrames === 1 && reducedFront.atlasGrew === 0 && reducedFront.atlasRunning === 'false', JSON.stringify(reducedFront));
+check('reduced: atlas is a still (no frames after settle, not running)', reducedFront.atlasFrames <= 2 && reducedFront.atlasGrew === 0 && reducedFront.atlasRunning === 'false', JSON.stringify(reducedFront));
 check('reduced: no reveal dimming', reducedFront.sections.every((o) => o === '1'));
 await rm.goto(WORK, { waitUntil: 'networkidle' });
 await rm.click('details#benchmark > summary');

@@ -484,8 +484,11 @@
   height: auto;
   object-fit: cover;
   image-rendering: auto;
-  /* A touch of blur on the upscaled raster so the 128px grid never shows
-     as cells, only as a soft field. */
+}
+
+/* The CPU fallback paints a 128px raster and upscales it; a touch of blur
+   hides the grid. The WebGL path renders at native pixels and needs none. */
+.atlas[data-renderer='canvas2d'] {
   filter: blur(1.5px);
 }
 

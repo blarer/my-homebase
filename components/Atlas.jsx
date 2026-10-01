@@ -6,29 +6,49 @@ import '@/app/motion.css';
 /**
  * A small neural network, drifting.
  *
- * This is a CPPN (compositional pattern-producing network): a 4-layer MLP
- * that maps a pixel's coordinates to a colour. Run over every pixel it paints
- * a continuous field; nudge the weights a little each frame and the field
- * flows. Activation atlases and "neural art" demos are the same object. The
- * whole model is ~900 floats seeded from the visit time, so no two visits
- * see the same plate and nothing is downloaded.
+ * This is a CPPN (compositional pattern-producing network): a 4-hidden-layer
+ * MLP that maps a pixel's coordinates to a colour. Run over every pixel it
+ * paints a continuous field; nudge the weights a little each frame and the
+ * field flows. The whole model is ~1.2k floats seeded from the visit time,
+ * so no two visits see the same plate and nothing is downloaded.
+ *
+ * Two renderers share one network:
+ *
+ *   webgl    The MLP runs as a fragment shader, one invocation per pixel in
+ *            parallel. The canvas is sized to its CSS box at device pixel
+ *            ratio (capped), so the field is sharp at native resolution and
+ *            a frame costs almost nothing. Weights are uploaded as uniforms
+ *            each frame after drifting on the CPU.
+ *   canvas2d Fallback when WebGL is unavailable or the context is lost: the
+ *            same network evaluated in a typed-array loop over a 128x128
+ *            buffer and upscaled. Identical maths, lower resolution.
  *
  * Output is mapped into the page's own palette (paper, soft ink, accent)
  * read from computed styles, so the plate re-inks itself on a theme flip
- * and its quiet regions are the page's exact paper: with the CSS feather
+ * and its quiet regions are the page's exact paper; with the CSS feather
  * mask on the frame, the field dissolves into the page with no edge.
  *
- * Cost: a 128x128 field, ~1.2k MACs per pixel, ~20M ops per frame, at 12
- * fps. Paused when offscreen or the tab is hidden. Under
- * prefers-reduced-motion it renders exactly one frame. Without JS the
- * <noscript> plate shows a static SVG so the slot is never empty.
+ * Paused when offscreen or the tab is hidden. Under prefers-reduced-motion
+ * it renders exactly one frame. Without JS the <noscript> plate shows a
+ * static SVG so the slot is never empty.
  */
 
-const W = 128;
-const H = 128;
-const FPS = 12;
 const HIDDEN = 16;
 const LAYERS = 4; // hidden layers; input is (x, y, r, 1), output is 3 channels
+const IN0 = 4;
+const INH = HIDDEN + 1;
+
+const GL_FPS = 30;
+const GL_MAX_DPR = 2;
+const GL_MAX_PIXELS = 2.2e6; // ~1480x1480; keeps mobile GPUs comfortable
+
+const CPU_W = 128;
+const CPU_H = 128;
+const CPU_FPS = 12;
+
+const DRIFT = 0.3;
+
+// ---------------------------------------------------------------- network
 
 // Mulberry32: tiny, deterministic, good enough for weights.
 function rng(seed) {
@@ -43,44 +63,39 @@ function rng(seed) {
 }
 
 function gaussian(rand) {
-  // Box-Muller, one sample.
   const u = 1 - rand();
   const v = rand();
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
 /**
- * Builds the weight tensors. Layer shapes:
- *   W0: HIDDEN x 4   (x, y, r, bias)
- *   Wk: HIDDEN x (HIDDEN + 1)   for k in 1..LAYERS-1
- *   Wout: 3 x (HIDDEN + 1)
- * Each weight also gets a drift phase and rate, so the field evolves on a
+ * Layer shapes, row-major (out x in):
+ *   W0:    HIDDEN x 4          (x, y, r, bias)
+ *   W1..3: HIDDEN x (HIDDEN+1)
+ *   Wout:  3 x (HIDDEN+1)
+ * Each weight carries a drift phase and rate, so the field evolves on a
  * superposition of slow sines rather than a random walk (which would wander
- * off into saturation).
+ * into saturation).
  */
 function buildNet(seed) {
   const rand = rng(seed);
   const layers = [];
-  let inSize = 4;
+  let inSize = IN0;
   for (let k = 0; k < LAYERS; k++) {
-    const outSize = HIDDEN;
-    const n = outSize * inSize;
+    const n = HIDDEN * inSize;
     const base = new Float32Array(n);
     const phase = new Float32Array(n);
     const rate = new Float32Array(n);
-    // The first layer sets the spatial frequency: a wider spread of weights
-    // on (x, y, r) means more oscillations across the plate, so the field
-    // reads as cells and filaments rather than one soft gradient. Deeper
-    // layers use a gain slightly above 1/sqrt(n) so sin() stays in its
-    // non-linear range and keeps folding the pattern.
+    // The first layer sets the spatial frequency; deeper layers use a gain
+    // slightly above 1/sqrt(n) so sin() stays in its non-linear range.
     const scale = k === 0 ? 3.2 : 1.35 / Math.sqrt(inSize);
     for (let i = 0; i < n; i++) {
       base[i] = gaussian(rand) * scale;
       phase[i] = rand() * Math.PI * 2;
       rate[i] = 0.05 + rand() * 0.25;
     }
-    layers.push({ inSize, outSize, base, phase, rate, w: new Float32Array(n) });
-    inSize = outSize + 1;
+    layers.push({ inSize, outSize: HIDDEN, base, phase, rate, w: new Float32Array(n) });
+    inSize = INH;
   }
   const n = 3 * inSize;
   const base = new Float32Array(n);
@@ -95,14 +110,16 @@ function buildNet(seed) {
   return layers;
 }
 
-function driftWeights(layers, t, amount) {
+function driftWeights(layers, t) {
   for (const L of layers) {
     const { base, phase, rate, w } = L;
     for (let i = 0; i < w.length; i++) {
-      w[i] = base[i] + Math.sin(t * rate[i] + phase[i]) * amount;
+      w[i] = base[i] + Math.sin(t * rate[i] + phase[i]) * DRIFT;
     }
   }
 }
+
+// ---------------------------------------------------------------- palette
 
 function parseRgb(s) {
   const m = s.match(/[\d.]+/g);
@@ -110,122 +127,315 @@ function parseRgb(s) {
   return [Number(m[0]), Number(m[1]), Number(m[2])];
 }
 
-/**
- * Renders one frame into `img` (ImageData for a W x H canvas), then paints
- * it. The inner loop is plain typed-array arithmetic; no allocation.
- */
-function render(ctx, img, layers, coords, palette, bufs) {
-  const data = img.data;
-  const [paper, ink, accent] = palette;
-  const { a, b } = bufs;
-
-  for (let p = 0; p < W * H; p++) {
-    const ci = p * 3;
-    // Input vector (x, y, r, 1)
-    a[0] = coords[ci];
-    a[1] = coords[ci + 1];
-    a[2] = coords[ci + 2];
-    a[3] = 1;
-    let inp = a;
-    let out = b;
-    let inSize = 4;
-
-    for (let k = 0; k < layers.length; k++) {
-      const L = layers[k];
-      const w = L.w;
-      const outSize = L.outSize;
-      const last = k === layers.length - 1;
-      for (let o = 0; o < outSize; o++) {
-        let s = 0;
-        const row = o * inSize;
-        for (let i = 0; i < inSize; i++) s += w[row + i] * inp[i];
-        // sin on the early layers folds space into periodic, cellular
-        // structure; tanh on the last hidden layer and the output keeps it
-        // bounded and smooth.
-        out[o] = last || k === layers.length - 2 ? Math.tanh(s) : Math.sin(s);
-      }
-      if (!last) out[outSize] = 1; // bias input for next layer
-      const tmp = inp;
-      inp = out;
-      out = tmp;
-      inSize = outSize + 1;
-    }
-
-    // inp now holds 3 outputs in [-1, 1]. Channel 0 drives paper↔ink with a
-    // gentle S-curve so midtones spread; channel 1 gates the accent where it
-    // is strongly positive; channel 2 adds a little tonal variation so the
-    // plate has depth rather than a flat two-tone.
-    const u = (inp[0] + 1) * 0.5;
-    const t0 = u * u * (3 - 2 * u);
-    const g = Math.max(0, inp[1]) ** 2.2;
-    const v = inp[2] * 0.06;
-
-    let r = paper[0] + (ink[0] - paper[0]) * t0;
-    let gg = paper[1] + (ink[1] - paper[1]) * t0;
-    let bb = paper[2] + (ink[2] - paper[2]) * t0;
-    r += (accent[0] - r) * g;
-    gg += (accent[1] - gg) * g;
-    bb += (accent[2] - bb) * g;
-    const shade = 1 + v;
-    const di = p * 4;
-    data[di] = r * shade;
-    data[di + 1] = gg * shade;
-    data[di + 2] = bb * shade;
-    data[di + 3] = 255;
-  }
-  ctx.putImageData(img, 0, 0);
+function readPalette() {
+  const cs = getComputedStyle(document.documentElement);
+  const probe = document.createElement('span');
+  probe.style.display = 'none';
+  document.body.appendChild(probe);
+  const resolve = (v) => {
+    probe.style.color = v;
+    return parseRgb(getComputedStyle(probe).color);
+  };
+  const pal = [
+    resolve(cs.getPropertyValue('--paper').trim() || '#fff'),
+    resolve(cs.getPropertyValue('--ink-soft').trim() || '#444'),
+    resolve(cs.getPropertyValue('--accent').trim() || '#23408e'),
+  ];
+  probe.remove();
+  return pal;
 }
+
+// ---------------------------------------------------------------- webgl
+
+const VERT = `
+attribute vec2 a;
+varying vec2 v;
+void main() {
+  v = a;
+  gl_Position = vec4(a, 0.0, 1.0);
+}`;
+
+// The MLP, unrolled per layer. Uniform float arrays hold the row-major
+// weights; GLSL ES 1.0 needs constant loop bounds, which HIDDEN provides.
+// The palette mapping at the end matches the CPU path exactly.
+const FRAG = `
+precision highp float;
+varying vec2 v;
+uniform float w0[${HIDDEN * IN0}];
+uniform float w1[${HIDDEN * INH}];
+uniform float w2[${HIDDEN * INH}];
+uniform float w3[${HIDDEN * INH}];
+uniform float wo[${3 * INH}];
+uniform vec3 paper;
+uniform vec3 ink;
+uniform vec3 accent;
+
+float tanh_(float x) {
+  float e = exp(2.0 * clamp(x, -20.0, 20.0));
+  return (e - 1.0) / (e + 1.0);
+}
+
+void main() {
+  // Same coordinate grid as the CPU path: x stretched for the wide plate,
+  // y compressed, radius from the stretched frame.
+  float nx = v.x;
+  float ny = -v.y;
+  float x = nx * 2.2;
+  float y = ny * 1.1;
+  float r = sqrt(nx * nx * 4.0 + ny * ny);
+
+  float h0[${HIDDEN}];
+  float h1[${HIDDEN}];
+
+  // GLSL ES 1.0 only allows uniform-array indices built from constants and
+  // loop counters, so the row offset is written inline rather than held in
+  // a local. Layer 0: sin(W0 · [x, y, r, 1]).
+  for (int o = 0; o < ${HIDDEN}; o++) {
+    float s = w0[o * ${IN0}] * x + w0[o * ${IN0} + 1] * y + w0[o * ${IN0} + 2] * r + w0[o * ${IN0} + 3];
+    h0[o] = sin(s);
+  }
+  // Layer 1: sin
+  for (int o = 0; o < ${HIDDEN}; o++) {
+    float s = w1[o * ${INH} + ${HIDDEN}];
+    for (int i = 0; i < ${HIDDEN}; i++) s += w1[o * ${INH} + i] * h0[i];
+    h1[o] = sin(s);
+  }
+  // Layer 2: sin
+  for (int o = 0; o < ${HIDDEN}; o++) {
+    float s = w2[o * ${INH} + ${HIDDEN}];
+    for (int i = 0; i < ${HIDDEN}; i++) s += w2[o * ${INH} + i] * h1[i];
+    h0[o] = sin(s);
+  }
+  // Layer 3: tanh (last hidden layer keeps it bounded and smooth)
+  for (int o = 0; o < ${HIDDEN}; o++) {
+    float s = w3[o * ${INH} + ${HIDDEN}];
+    for (int i = 0; i < ${HIDDEN}; i++) s += w3[o * ${INH} + i] * h0[i];
+    h1[o] = tanh_(s);
+  }
+  // Output: tanh, three channels
+  float out0 = wo[${HIDDEN}];
+  float out1 = wo[${INH} + ${HIDDEN}];
+  float out2 = wo[2 * ${INH} + ${HIDDEN}];
+  for (int i = 0; i < ${HIDDEN}; i++) {
+    out0 += wo[i] * h1[i];
+    out1 += wo[${INH} + i] * h1[i];
+    out2 += wo[2 * ${INH} + i] * h1[i];
+  }
+  out0 = tanh_(out0);
+  out1 = tanh_(out1);
+  out2 = tanh_(out2);
+
+  // Palette mapping, identical to the CPU path.
+  float u = (out0 + 1.0) * 0.5;
+  float t0 = u * u * (3.0 - 2.0 * u);
+  float g = pow(max(0.0, out1), 2.2);
+  float shade = 1.0 + out2 * 0.06;
+
+  vec3 c = mix(paper, ink, t0);
+  c = mix(c, accent, g);
+  c *= shade;
+  gl_FragColor = vec4(c / 255.0, 1.0);
+}`;
+
+function compile(gl, type, src) {
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+    const log = gl.getShaderInfoLog(sh);
+    gl.deleteShader(sh);
+    throw new Error(`shader: ${log}`);
+  }
+  return sh;
+}
+
+/**
+ * Sets up the GL program and returns { render(layers, palette), resize(),
+ * destroy() }, or null if WebGL is unavailable. The canvas is sized to its
+ * CSS box times DPR, capped by GL_MAX_PIXELS so no device is asked to draw
+ * more than it can comfortably.
+ */
+function makeGl(canvas) {
+  // A canvas can only ever hold one kind of context. If the shader fails to
+  // compile on this GPU, the fallback still needs a 2D context on the same
+  // canvas, so probe the program on a scratch canvas first and only touch
+  // the real one once the program is known to link.
+  const probe = document.createElement('canvas');
+  const pg = probe.getContext('webgl');
+  if (!pg) return null;
+  try {
+    const vs = compile(pg, pg.VERTEX_SHADER, VERT);
+    const fs = compile(pg, pg.FRAGMENT_SHADER, FRAG);
+    const pp = pg.createProgram();
+    pg.attachShader(pp, vs);
+    pg.attachShader(pp, fs);
+    pg.linkProgram(pp);
+    if (!pg.getProgramParameter(pp, pg.LINK_STATUS)) return null;
+  } catch {
+    return null;
+  } finally {
+    pg.getExtension('WEBGL_lose_context')?.loseContext();
+  }
+
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false, preserveDrawingBuffer: true, powerPreference: 'low-power' });
+  if (!gl) return null;
+
+  const vs = compile(gl, gl.VERTEX_SHADER, VERT);
+  const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+  gl.useProgram(program);
+
+  // Two triangles covering clip space.
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+  const aLoc = gl.getAttribLocation(program, 'a');
+  gl.enableVertexAttribArray(aLoc);
+  gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+
+  const u = {
+    w: ['w0', 'w1', 'w2', 'w3', 'wo'].map((n) => gl.getUniformLocation(program, n)),
+    paper: gl.getUniformLocation(program, 'paper'),
+    ink: gl.getUniformLocation(program, 'ink'),
+    accent: gl.getUniformLocation(program, 'accent'),
+  };
+
+  const resize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, GL_MAX_DPR);
+    let w = Math.max(1, Math.round(rect.width * dpr));
+    let h = Math.max(1, Math.round(rect.height * dpr));
+    const px = w * h;
+    if (px > GL_MAX_PIXELS) {
+      const s = Math.sqrt(GL_MAX_PIXELS / px);
+      w = Math.round(w * s);
+      h = Math.round(h * s);
+    }
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    gl.viewport(0, 0, w, h);
+  };
+
+  const render = (layers, palette) => {
+    for (let k = 0; k < layers.length; k++) gl.uniform1fv(u.w[k], layers[k].w);
+    gl.uniform3fv(u.paper, palette[0]);
+    gl.uniform3fv(u.ink, palette[1]);
+    gl.uniform3fv(u.accent, palette[2]);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  };
+
+  const destroy = () => {
+    try {
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch {}
+  };
+
+  return { gl, render, resize, destroy };
+}
+
+// ---------------------------------------------------------------- canvas2d
+
+function makeCpu(canvas) {
+  const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) return null;
+  canvas.width = CPU_W;
+  canvas.height = CPU_H;
+  const img = ctx.createImageData(CPU_W, CPU_H);
+  const a = new Float32Array(INH);
+  const b = new Float32Array(INH);
+
+  const coords = new Float32Array(CPU_W * CPU_H * 3);
+  for (let y = 0; y < CPU_H; y++) {
+    for (let x = 0; x < CPU_W; x++) {
+      const i = (y * CPU_W + x) * 3;
+      const nx = (x / (CPU_W - 1)) * 2 - 1;
+      const ny = (y / (CPU_H - 1)) * 2 - 1;
+      coords[i] = nx * 2.2;
+      coords[i + 1] = ny * 1.1;
+      coords[i + 2] = Math.sqrt(nx * nx * 4 + ny * ny);
+    }
+  }
+
+  const render = (layers, palette) => {
+    const data = img.data;
+    const [paper, ink, accent] = palette;
+    for (let p = 0; p < CPU_W * CPU_H; p++) {
+      const ci = p * 3;
+      a[0] = coords[ci];
+      a[1] = coords[ci + 1];
+      a[2] = coords[ci + 2];
+      a[3] = 1;
+      let inp = a;
+      let out = b;
+      let inSize = IN0;
+      for (let k = 0; k < layers.length; k++) {
+        const L = layers[k];
+        const w = L.w;
+        const outSize = L.outSize;
+        const last = k === layers.length - 1;
+        for (let o = 0; o < outSize; o++) {
+          let s = 0;
+          const row = o * inSize;
+          for (let i = 0; i < inSize; i++) s += w[row + i] * inp[i];
+          out[o] = last || k === layers.length - 2 ? Math.tanh(s) : Math.sin(s);
+        }
+        if (!last) out[outSize] = 1;
+        const tmp = inp;
+        inp = out;
+        out = tmp;
+        inSize = outSize + 1;
+      }
+      const u = (inp[0] + 1) * 0.5;
+      const t0 = u * u * (3 - 2 * u);
+      const g = Math.max(0, inp[1]) ** 2.2;
+      const shade = 1 + inp[2] * 0.06;
+      let r = paper[0] + (ink[0] - paper[0]) * t0;
+      let gg = paper[1] + (ink[1] - paper[1]) * t0;
+      let bb = paper[2] + (ink[2] - paper[2]) * t0;
+      r += (accent[0] - r) * g;
+      gg += (accent[1] - gg) * g;
+      bb += (accent[2] - bb) * g;
+      const di = p * 4;
+      data[di] = r * shade;
+      data[di + 1] = gg * shade;
+      data[di + 2] = bb * shade;
+      data[di + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  };
+
+  return { render, resize: () => {}, destroy: () => {} };
+}
+
+// ---------------------------------------------------------------- component
 
 export default function Atlas() {
   const canvasRef = useRef(null);
-  const seedRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false });
-    if (!ctx) return;
 
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
-    seedRef.current = seed;
     canvas.dataset.seed = String(seed);
-
     const layers = buildNet(seed);
-    const img = ctx.createImageData(W, H);
-    const bufs = { a: new Float32Array(HIDDEN + 1), b: new Float32Array(HIDDEN + 1) };
 
-    // Coordinate grid, computed once: x, y in [-1, 1] with the plate's
-    // aspect folded in, plus radius so the net can make rings.
-    const coords = new Float32Array(W * H * 3);
-    for (let y = 0; y < H; y++) {
-      for (let x = 0; x < W; x++) {
-        const i = (y * W + x) * 3;
-        const nx = (x / (W - 1)) * 2 - 1;
-        const ny = (y / (H - 1)) * 2 - 1;
-        coords[i] = nx * 2.2;
-        coords[i + 1] = ny * 1.1;
-        coords[i + 2] = Math.sqrt(nx * nx * 4 + ny * ny);
-      }
-    }
-
-    const readPalette = () => {
-      const cs = getComputedStyle(document.documentElement);
-      const probe = document.createElement('span');
-      probe.style.display = 'none';
-      document.body.appendChild(probe);
-      const resolve = (v) => {
-        probe.style.color = v;
-        return parseRgb(getComputedStyle(probe).color);
-      };
-      const pal = [
-        resolve(cs.getPropertyValue('--paper').trim() || '#fff'),
-        resolve(cs.getPropertyValue('--ink-soft').trim() || '#444'),
-        resolve(cs.getPropertyValue('--accent').trim() || '#23408e'),
-      ];
-      probe.remove();
-      return pal;
-    };
+    // ?atlas=cpu forces the fallback, for testing the path a WebGL-less
+    // browser would take.
+    const forceCpu = new URLSearchParams(location.search).get('atlas') === 'cpu';
+    let renderer = forceCpu ? null : makeGl(canvas);
+    let mode = renderer ? 'webgl' : 'canvas2d';
+    if (!renderer) renderer = makeCpu(canvas);
+    if (!renderer) return;
+    canvas.dataset.renderer = mode;
+    const fps = mode === 'webgl' ? GL_FPS : CPU_FPS;
 
     let palette = readPalette();
     let frames = 0;
@@ -233,14 +443,19 @@ export default function Atlas() {
     let timer = 0;
     let visible = true;
     let running = false;
+    // The element being painted. Swapped for a fresh canvas if the GL
+    // context is lost, see onLost below.
+    let activeCanvas = canvas;
     const t0 = performance.now();
+
+    renderer.resize();
 
     const frame = () => {
       const t = (performance.now() - t0) / 1000;
-      driftWeights(layers, t, 0.3);
-      render(ctx, img, layers, coords, palette, bufs);
+      driftWeights(layers, t);
+      renderer.render(layers, palette);
       frames++;
-      canvas.dataset.frames = String(frames);
+      activeCanvas.dataset.frames = String(frames);
     };
 
     const loop = () => {
@@ -248,18 +463,18 @@ export default function Atlas() {
       frame();
       timer = setTimeout(() => {
         raf = requestAnimationFrame(loop);
-      }, 1000 / FPS);
+      }, 1000 / fps);
     };
 
     const start = () => {
       if (running || reduced) return;
       running = true;
-      canvas.dataset.running = 'true';
+      activeCanvas.dataset.running = 'true';
       loop();
     };
     const stop = () => {
       running = false;
-      canvas.dataset.running = 'false';
+      activeCanvas.dataset.running = 'false';
       clearTimeout(timer);
       cancelAnimationFrame(raf);
     };
@@ -267,9 +482,7 @@ export default function Atlas() {
     // First frame always, so the plate is never blank; reduced motion stops
     // here with a single still.
     frame();
-    if (reduced) {
-      canvas.dataset.running = 'false';
-    }
+    if (reduced) activeCanvas.dataset.running = 'false';
 
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -287,23 +500,54 @@ export default function Atlas() {
     };
     document.addEventListener('visibilitychange', onVis);
 
-    // Re-ink on theme change: watch data-theme on <html>. Always repaint
-    // one frame here rather than only when paused: a click on the footer
-    // toggle scrolls the plate offscreen in the same task, and the
-    // IntersectionObserver that pauses the loop fires *after* this
-    // callback, so "if (!running)" would skip the repaint and leave a
-    // light-palette frame sitting on a dark page until the next scroll.
+    // Re-ink on theme change. Always repaint one frame: the footer toggle
+    // scrolls the plate offscreen in the same task, and the pause observer
+    // fires after this callback, so a conditional repaint would be skipped.
     const mo = new MutationObserver(() => {
       palette = readPalette();
       frame();
     });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+    // Resize follows the CSS box so the GL buffer stays at native pixels.
+    const ro = new ResizeObserver(() => {
+      renderer.resize();
+      if (!running) frame();
+    });
+    ro.observe(canvas);
+
+    // If the GL context is lost (GPU reset, tab backgrounded on mobile), fall
+    // back to the CPU path for the rest of the visit rather than go blank. A
+    // canvas that has held a WebGL context cannot hand out a 2D one, so the
+    // fallback paints to a fresh canvas swapped into the same slot.
+    const onLost = (e) => {
+      e.preventDefault();
+      stop();
+      renderer.destroy();
+      const fresh = canvas.cloneNode(false);
+      fresh.removeAttribute('width');
+      fresh.removeAttribute('height');
+      canvas.replaceWith(fresh);
+      activeCanvas = fresh;
+      renderer = makeCpu(fresh);
+      mode = 'canvas2d';
+      fresh.dataset.renderer = mode;
+      fresh.dataset.seed = canvas.dataset.seed;
+      if (renderer) {
+        frame();
+        if (visible && !document.hidden) start();
+      }
+    };
+    canvas.addEventListener('webglcontextlost', onLost);
+
     return () => {
       stop();
       io.disconnect();
       mo.disconnect();
+      ro.disconnect();
       document.removeEventListener('visibilitychange', onVis);
+      canvas.removeEventListener('webglcontextlost', onLost);
+      renderer.destroy();
     };
   }, []);
 
@@ -313,8 +557,8 @@ export default function Atlas() {
         <canvas
           ref={canvasRef}
           className="atlas"
-          width={W}
-          height={H}
+          width={CPU_W}
+          height={CPU_H}
           aria-label="A small neural network painting a slowly changing field"
           role="img"
         />
@@ -324,7 +568,7 @@ export default function Atlas() {
               <radialGradient id="atlas-g" cx="40%" cy="38%" r="70%">
                 <stop offset="0" stopColor="var(--accent)" stopOpacity="0.55" />
                 <stop offset="0.45" stopColor="var(--ink-soft)" stopOpacity="0.5" />
-                <stop offset="1" stopColor="var(--paper-raised)" />
+                <stop offset="1" stopColor="var(--paper)" />
               </radialGradient>
             </defs>
             <rect width="128" height="128" fill="url(#atlas-g)" />
@@ -334,8 +578,8 @@ export default function Atlas() {
       <figcaption className="atlas-caption">
         <span className="tag">Fig. 0 — Atlas</span>
         <span className="atlas-note">
-          A four-layer network, ~900 weights, seeded by the moment you arrived.
-          It drifts; it never repeats.
+          A four-layer network, ~1,200 weights, seeded by the moment you
+          arrived. It drifts; it never repeats.
         </span>
       </figcaption>
     </figure>
