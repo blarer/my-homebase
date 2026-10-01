@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Benchmark from '@/components/Benchmark';
+import { DiskScan, Dictation, Footprint, Clip } from '@/components/Benchmark';
 import Work from '@/components/Work';
 import Stack from '@/components/Stack';
 import Footer from '@/components/Footer';
@@ -8,12 +8,13 @@ import snapshot from '@/lib/repos.json';
 export const metadata = {
   title: 'Blare — the work, measured',
   description:
-    'A disk-scan benchmark run as a race, every repository drawn to scale, and the languages they are written in, counted from the GitHub API.',
+    'Benchmarks from four repositories run as races, every repository drawn to scale, and the languages they are written in, counted from the GitHub API.',
 };
 
 /**
- * The figures. Everything on this page is a measurement: the benchmark
- * race, the treemap of real source bytes, the language ring and table.
+ * The figures. The first four are measurements from individual
+ * repositories, each folded under its own title; the last two are drawn
+ * from the repositories themselves and change when the code does.
  */
 export default function WorkPage() {
   const { repos, syncedAt } = snapshot;
@@ -26,12 +27,15 @@ export default function WorkPage() {
         </Link>
         <h1 className="work-title">The work, measured</h1>
         <p className="work-lede">
-          Three figures. The first is a benchmark I ran; the other two are
-          drawn from the repositories themselves, so they change when the
-          code does.
+          Six figures. The first four are measurements I took, one per
+          repository, folded under their titles. The last two are drawn from
+          the repositories themselves, so they change when the code does.
         </p>
       </header>
-      <Benchmark />
+      <DiskScan />
+      <Dictation />
+      <Footprint />
+      <Clip />
       <Work repos={repos} />
       <Stack repos={repos} />
       <Footer syncedAt={syncedAt} />

@@ -129,6 +129,11 @@
     calc(var(--load-lane) + var(--load-lane-step) * 2) both;
 }
 
+.benchmark[open] .lane[data-lane='3'] {
+  animation: lane-settle var(--dur-settle) var(--ease-settle)
+    calc(var(--load-lane) + var(--load-lane-step) * 3) both;
+}
+
 /* The work page head settles like the title page. */
 .work-head .work-home {
   animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-title) both;

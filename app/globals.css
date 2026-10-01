@@ -398,7 +398,7 @@
 .lane-time {
   font-size: 14px;
   font-weight: 500;
-  min-width: 5.5ch;
+  min-width: 6ch;
   text-align: right;
   color: var(--ink-faint);
   transition: color var(--dur-flip) var(--ease-snap);
@@ -566,7 +566,29 @@
    native marker is replaced by a chevron drawn after the title, and the
    head keeps the same centred stack as every other figure. */
 .benchmark {
-  padding-block: clamp(32px, 5vw, 56px) clamp(72px, 11vw, 132px);
+  padding-block: clamp(32px, 5vw, 56px) clamp(40px, 6vw, 72px);
+}
+
+/* Consecutive folded figures stack with a hairline between them rather than
+   the full section rule, so the four read as a list of figures; the rule
+   returns before the first unfolded section. Specificity beats .section. */
+.section.benchmark + .section.benchmark {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.benchmark[open] {
+  padding-bottom: clamp(72px, 11vw, 132px);
+}
+
+.race-caption a {
+  color: inherit;
+  border-bottom: 1px solid var(--rule);
+  transition: color var(--dur-flip) var(--ease-snap), border-color var(--dur-flip) var(--ease-snap);
+}
+
+.race-caption a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .benchmark-summary {

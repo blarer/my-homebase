@@ -1,184 +1,116 @@
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
-import '@/app/components.css';
-import '@/app/motion.css';
+import Race from '@/components/Race';
 
 /**
- * The benchmark table from storage-manager-swift, run as a race.
- *
- * Each bar advances in real time, scaled so the slowest run (du -sk, 22.7s)
- * takes 2.4 seconds of wall clock. The point lands before you finish reading
- * the headline: the same work, three ways, and the gap is the whole argument.
- *
- * The figure is a <details> disclosure folded under the /work title: the
- * summary is the figure head, the body is the race. Native <details> means
- * it opens without JavaScript; the race itself waits for the open event and
- * then RACE_DELAY_MS more, so the lanes settle in before the needles move.
- * Keep that constant in step with the --load-* tokens in motion.css.
+ * The measured figures, one per repository. Every number here was measured
+ * on the machine named in the lede and is quoted from that repository's
+ * README; nothing is estimated. Each is a Race: a shared axis, lanes that
+ * advance in real time, and the one lane that is mine drawn in the signal
+ * colour.
  */
-const RUNS = [
-  { label: 'du -sk', seconds: 22.7, note: 'one lstat per file' },
-  { label: 'parallel read_dir + lstat', seconds: 3.5, note: 'threads, same syscall' },
-  { label: 'storage-manager', seconds: 2.2, note: 'getattrlistbulk, batched', mine: true },
-];
 
-const SLOWEST = Math.max(...RUNS.map((run) => run.seconds));
-const RACE_MS = 2400;
-const RACE_DELAY_MS = 1400;
-
-export default function Benchmark() {
-  const [elapsed, setElapsed] = useState(0);
-  const [done, setDone] = useState(false);
-  const [open, setOpen] = useState(false);
-  const frame = useRef(0);
-
-  // The race only runs once the disclosure is opened: the figure is folded
-  // under the page title by default, so a reader who never opens it never
-  // pays for the rAF loop, and one who does sees the race from the start.
-  useEffect(() => {
-    if (!open) return;
-
-    const reduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (reduced) {
-      setElapsed(SLOWEST);
-      setDone(true);
-      return;
-    }
-
-    let start = null;
-    const tick = (now) => {
-      if (start === null) start = now;
-      const progress = Math.min((now - start) / RACE_MS, 1);
-      setElapsed(progress * SLOWEST);
-      if (progress < 1) {
-        frame.current = requestAnimationFrame(tick);
-      } else {
-        setDone(true);
-      }
-    };
-
-    const timer = setTimeout(() => {
-      frame.current = requestAnimationFrame(tick);
-    }, RACE_DELAY_MS);
-    return () => {
-      clearTimeout(timer);
-      cancelAnimationFrame(frame.current);
-    };
-  }, [open]);
-
+export function DiskScan() {
   return (
-    <details
+    <Race
       id="benchmark"
-      className="section benchmark"
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-    >
-      <summary className="shell benchmark-summary">
-        <span className="section-head benchmark-head">
-          <span className="tag">Fig. 1 — Benchmark</span>
-          <span className="benchmark-title">
-            The same scan, three ways
-            <span className="benchmark-chevron" aria-hidden="true" />
-          </span>
-          <span className="benchmark-hint">Open the figure</span>
-        </span>
-      </summary>
+      figure="Fig. 1 — storage-manager-swift"
+      title="The same scan, three ways"
+      lede="296 GB, 956k files, one machine. The gap between the lanes is the whole argument for building the tool."
+      unit="t / seconds"
+      kind="seconds"
+      ticks={[0, 5, 10, 15, 20]}
+      runs={[
+        { label: 'du -sk', value: 22.7, note: 'one lstat per file' },
+        { label: 'parallel read_dir + lstat', value: 3.5, note: 'threads, same syscall' },
+        { label: 'storage-manager', value: 2.2, note: 'getattrlistbulk, batched', mine: true },
+      ]}
+      caption={
+        <>
+          10.3&times; faster than <span className="num">du</span>, because batching
+          directory attributes beats one syscall per file.
+        </>
+      }
+      repo="https://github.com/blarer/storage-manager-swift"
+    />
+  );
+}
 
-      <div className="shell benchmark-body">
-        <p className="section-lede">
-          296&nbsp;GB, 956k files, one machine. The gap between the lanes is
-          the whole argument for building the tool.
-        </p>
+export function Dictation() {
+  return (
+    <Race
+      id="dictation"
+      figure="Fig. 2 — outloud"
+      title="Key release to text on screen"
+      lede="Voice dictation, measured end to end on an M4 Pro: from letting go of the hotkey to the words appearing. The transport decides the spread."
+      unit="t / milliseconds"
+      kind="millis"
+      ticks={[0, 100, 200, 300, 400]}
+      runs={[
+        { label: 'Aqua Voice', value: 450, note: 'advertised insert latency' },
+        { label: 'outloud, clipboard fallback', value: 445, note: 'unfocused app, paste' },
+        { label: 'outloud, dictation', value: 189, note: 'accessibility write, native field' },
+        { label: 'outloud, edit-by-voice', value: 131, note: 'selection rewritten in place', mine: true },
+      ]}
+      caption={
+        <>
+          Fully local. Recognition is on-device, so the only latency left is
+          the write into the field, and an accessibility write beats
+          synthesized keystrokes.
+        </>
+      }
+      repo="https://github.com/blarer/outloud"
+    />
+  );
+}
 
-        <div className="race" aria-label="Disk scan benchmark, seconds to completion">
-          {/* The time axis the lanes are plotted against: second ticks in the
-              track column, labelled every 5s. Decorative for screen readers;
-              the lanes carry the numbers. */}
-          <div className="race-axis" aria-hidden="true">
-            <span className="race-axis-label tag">t / seconds</span>
-            <span className="race-axis-track">
-              {[0, 5, 10, 15, 20].map((s) => (
-                <span
-                  key={s}
-                  className="num race-axis-tick"
-                  style={{ left: `${(s / SLOWEST) * 100}%` }}
-                >
-                  {s}
-                </span>
-              ))}
-            </span>
-            <span />
-          </div>
-          {/* Without JavaScript the rAF loop never advances the inline
-              styles, so this stylesheet draws the finished race instead:
-              full bars, real times, needles resting at the finish. The
-              caption's own no-JS timer lives in components.css. */}
-          <noscript>
-            <style>{`
-              .lane-fill { width: var(--final) !important; }
-              .lane-head { left: var(--final) !important; opacity: 0.28; }
-              .lane-time-live { display: none; }
-              .lane-time::after { content: attr(data-final); }
-              .lane-time { color: var(--ink); }
-              .lane-mine .lane-time { color: var(--accent); font-weight: 600; }
-            `}</style>
-          </noscript>
-          {RUNS.map((run, index) => {
-            // Bars share one time axis: a lane's final length is its share of
-            // the slowest run. If every bar filled its own track, the gap the
-            // chart exists to show would disappear at the finish.
-            const reached = Math.min(elapsed, run.seconds);
-            const width = (reached / SLOWEST) * 100;
-            const finished = elapsed >= run.seconds;
-            // The lane's final geometry, exposed to CSS so a <noscript>
-            // stylesheet can draw the finished race when the rAF loop that
-            // normally drives these inline styles never runs.
-            const finalWidth = (run.seconds / SLOWEST) * 100;
+export function Footprint() {
+  return (
+    <Race
+      id="footprint"
+      figure="Fig. 3 — wattsbar"
+      title="A menu bar app, before and after"
+      lede="The same battery meter rewritten from Python and rumps into native Swift against IOKit. Memory at rest, measured in Activity Monitor."
+      unit="resident memory / MB"
+      kind="megabytes"
+      ticks={[0, 20, 40, 60]}
+      runs={[
+        { label: 'Python + rumps', value: 70, note: '41 MB bundle, py2app' },
+        { label: 'Swift + IOKit', value: 12, note: '165 KB bundle', mine: true },
+      ]}
+      caption={
+        <>
+          5.8&times; less memory and a bundle 250&times; smaller, for the same
+          number in the menu bar: live watts read from the SMC every second.
+        </>
+      }
+      repo="https://github.com/blarer/wattsbar"
+    />
+  );
+}
 
-            return (
-              <div
-                className={`lane${run.mine ? ' lane-mine' : ''}`}
-                key={run.label}
-                data-lane={index}
-              >
-                <div className="lane-label">
-                  <span className="lane-name">{run.label}</span>
-                  <span className="lane-note">{run.note}</span>
-                </div>
-
-                <div className="lane-track">
-                  <div
-                    className="lane-fill"
-                    style={{ width: `${width}%`, '--final': `${finalWidth}%` }}
-                  />
-                  <div
-                    className="lane-head"
-                    style={{ left: `${width}%`, '--final': `${finalWidth}%` }}
-                    data-finished={finished || undefined}
-                  />
-                </div>
-
-                <div
-                  className="num lane-time"
-                  data-finished={finished || undefined}
-                  data-final={`${run.seconds.toFixed(1)}s`}
-                >
-                  <span className="lane-time-live">{reached.toFixed(1)}s</span>
-                </div>
-              </div>
-            );
-          })}
-
-          <p className="race-caption" data-done={done || undefined}>
-            <span aria-hidden="true">└─ </span>
-            10.3&times; faster than <span className="num">du</span>, because batching
-            directory attributes beats one syscall per file. Full method in the repo.
-          </p>
-        </div>
-      </div>
-    </details>
+export function Clip() {
+  return (
+    <Race
+      id="clip"
+      figure="Fig. 4 — mp4trim"
+      title="One clip, every Discord tier"
+      lede="A 51.5 s, 1440p60 AV1 OBS recording, 415 MB lossless. The same selection encoded to fit each upload limit; the budget is computed first and the result is measured after."
+      unit="output size / MB"
+      kind="megabytes"
+      ticks={[0, 100, 200, 300, 400]}
+      runs={[
+        { label: 'Nitro, 500 MB', value: 439, note: '1440p60, source bitrate' },
+        { label: 'Lossless trim', value: 415, note: 'stream copy, Dolby Vision intact' },
+        { label: 'Nitro Basic, 50 MB', value: 47.3, note: '1080p60, 7.0 Mbps' },
+        { label: 'Free, 10 MB', value: 9.4, note: '540p30', mine: true },
+      ]}
+      caption={
+        <>
+          Budget is 93% of the limit minus audio, then encode, measure, and
+          retry lower if it overshot. Under the limit every time, or it tells
+          you to pick a shorter range.
+        </>
+      }
+      repo="https://github.com/blarer/mp4trim"
+    />
   );
 }

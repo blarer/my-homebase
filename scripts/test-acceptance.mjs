@@ -242,25 +242,28 @@ check('work: treemap present', workHas.treemap);
 check('work: ring present', workHas.ring);
 check('work: no atlas', !workHas.atlas);
 check('work: home link', workHas.home === '/', String(workHas.home));
-check('work: Fig. 1/2/3 order', workHas.tags[0]?.startsWith('Fig. 1') && workHas.tags[1]?.startsWith('Fig. 2') && workHas.tags[2]?.startsWith('Fig. 3'), workHas.tags.join(' | '));
+check('work: Fig. 1–6 order', workHas.tags.length === 6 && workHas.tags.every((t, i) => t.startsWith(`Fig. ${i + 1}`)), workHas.tags.join(' | '));
 check('work: title', /the work, measured/i.test(workHas.title), workHas.title);
 
-// The benchmark is folded under the title: closed by default, race idle.
-const folded = await work.evaluate(() => {
-  const d = document.querySelector('details#benchmark');
-  return {
-    isDetails: !!d,
-    open: d?.open,
-    summaryText: d?.querySelector('summary')?.textContent.trim(),
-    raceVisible: d ? d.querySelector('.race').checkVisibility() : null,
-    fill: d?.querySelector('.lane-mine .lane-fill')?.style.width,
-  };
-});
-check('work: benchmark is a <details>', folded.isDetails);
-check('work: benchmark closed by default', folded.open === false, String(folded.open));
-check('work: summary carries the figure head', /Fig\. 1/.test(folded.summaryText) && /three ways/.test(folded.summaryText), folded.summaryText);
-check('work: race hidden while closed', folded.raceVisible === false);
-check('work: race not started while closed', folded.fill === '0%', String(folded.fill));
+// Four figures are folded under their titles: closed by default, races idle.
+const folded = await work.evaluate(() =>
+  [...document.querySelectorAll('details.benchmark')].map((d) => ({
+    id: d.id,
+    open: d.open,
+    summaryText: d.querySelector('summary')?.textContent.trim(),
+    raceVisible: d.querySelector('.race').checkVisibility(),
+    fill: d.querySelector('.lane-mine .lane-fill')?.style.width,
+    lanes: d.querySelectorAll('.lane').length,
+    repoLink: d.querySelector('.race-caption a')?.getAttribute('href'),
+  })),
+);
+check('work: four folded figures', folded.length === 4 && folded.map((f) => f.id).join(',') === 'benchmark,dictation,footprint,clip', folded.map((f) => f.id).join(','));
+check('work: all closed by default', folded.every((f) => f.open === false));
+check('work: summaries carry the figure heads', folded.every((f, i) => new RegExp(`Fig\\. ${i + 1}`).test(f.summaryText)), folded.map((f) => f.summaryText).join(' | '));
+check('work: races hidden while closed', folded.every((f) => f.raceVisible === false));
+check('work: races not started while closed', folded.every((f) => f.fill === '0%'), folded.map((f) => f.fill).join(','));
+check('work: lane counts 3/4/2/4', folded.map((f) => f.lanes).join(',') === '3,4,2,4', folded.map((f) => f.lanes).join(','));
+check('work: each figure links its repo', folded.every((f) => /github\.com\/blarer\//.test(f.repoLink ?? '')), folded.map((f) => f.repoLink).join(','));
 
 // Every head on /work sits on the same centre axis as the page title.
 const workCentred = await work.evaluate(() => {
@@ -275,30 +278,50 @@ const workCentred = await work.evaluate(() => {
 check('work: figure titles centred on page axis', workCentred.heads.every((d) => Math.abs(d) < 2), workCentred.heads.map((d) => d.toFixed(1)).join(','));
 check('work: ledes centred on page axis', workCentred.ledes.every((d) => Math.abs(d) < 2), workCentred.ledes.map((d) => d.toFixed(1)).join(','));
 
-// Race sequence: open the figure, then delayed start, run, finish, breathe.
+// Race sequence: open the first figure, then delayed start, run, finish, breathe.
 await work.goto(WORK, { waitUntil: 'networkidle' });
 await work.click('details#benchmark > summary');
 await work.waitForTimeout(300);
 check('work: benchmark opens on click', await work.$eval('details#benchmark', (d) => d.open));
+check('work: other figures stay closed', await work.evaluate(() => ['dictation', 'footprint', 'clip'].every((id) => !document.getElementById(id).open)));
 check('work: race visible once open', await work.$eval('details#benchmark .race', (el) => el.checkVisibility()));
-check('work: race not started at 300ms after open', (await work.$eval('.lane-mine .lane-fill', (el) => el.style.width)) === '0%');
+check('work: race not started at 300ms after open', (await work.$eval('details#benchmark .lane-mine .lane-fill', (el) => el.style.width)) === '0%');
 await work.waitForTimeout(1500);
-check('work: race running by 1.8s after open', (await work.$eval('.lane-mine .lane-fill', (el) => parseFloat(el.style.width))) > 0);
+check('work: race running by 1.8s after open', (await work.$eval('details#benchmark .lane-mine .lane-fill', (el) => parseFloat(el.style.width))) > 0);
 await work.waitForTimeout(2800);
 const idle = await work.evaluate(() => {
+  const d = document.querySelector('details#benchmark');
   const running = (el) => (el ? el.getAnimations().filter((a) => a.playState === 'running').map((a) => a.animationName) : []);
   const pseudo = (el, ps) => (el ? el.getAnimations({ subtree: true }).filter((a) => a.effect?.pseudoElement === ps && a.playState === 'running').map((a) => a.animationName) : []);
   return {
-    done: !!document.querySelector('.race-caption[data-done]'),
-    stamp: running(document.querySelector('.lane-mine .lane-time')),
-    cursor: pseudo(document.querySelector('.race-caption'), '::after'),
-    axisAligned: Math.abs(document.querySelector('.race-axis-track').getBoundingClientRect().left - document.querySelector('.lane-track').getBoundingClientRect().left) < 1,
+    done: !!d.querySelector('.race-caption[data-done]'),
+    stamp: running(d.querySelector('.lane-mine .lane-time')),
+    cursor: pseudo(d.querySelector('.race-caption'), '::after'),
+    axisAligned: Math.abs(d.querySelector('.race-axis-track').getBoundingClientRect().left - d.querySelector('.lane-track').getBoundingClientRect().left) < 1,
+    finalTime: d.querySelector('.lane-mine .lane-time-live')?.textContent,
   };
 });
 check('work: race finished', idle.done);
+check('work: winning time reads 2.2s', idle.finalTime === '2.2s', String(idle.finalTime));
 check('work: stamp breathes', idle.stamp.includes('stamp-breathe'), idle.stamp.join(','));
 check('work: caption cursor blinks', idle.cursor.includes('cursor-blink'), idle.cursor.join(','));
 check('work: axis aligned with lanes', idle.axisAligned);
+
+// The second figure runs its own race in its own unit when opened.
+await work.click('details#dictation > summary');
+await work.waitForTimeout(4300);
+const dict = await work.evaluate(() => {
+  const d = document.querySelector('details#dictation');
+  return {
+    done: !!d.querySelector('.race-caption[data-done]'),
+    unit: d.querySelector('.race-axis-label')?.textContent.trim(),
+    mine: d.querySelector('.lane-mine .lane-time-live')?.textContent,
+    slowest: d.querySelector('.lane[data-lane="0"] .lane-time-live')?.textContent,
+    firstStillOpen: document.querySelector('details#benchmark').open,
+  };
+});
+check('work: dictation race finishes independently', dict.done && dict.firstStillOpen, JSON.stringify(dict));
+check('work: dictation in milliseconds', /millisecond/.test(dict.unit) && dict.mine === '131ms' && dict.slowest === '450ms', JSON.stringify(dict));
 
 // Reveal + idle further down. With the benchmark folded, #work sits near
 // the fold at 720px tall, so use a shorter viewport for this one so the
@@ -347,8 +370,8 @@ await rm.goto(WORK, { waitUntil: 'networkidle' });
 await rm.click('details#benchmark > summary');
 await rm.waitForTimeout(400);
 const reducedWork = await rm.evaluate(() => ({
-  done: !!document.querySelector('.race-caption[data-done]'),
-  fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
+  done: !!document.querySelector('details#benchmark .race-caption[data-done]'),
+  fill: document.querySelector('details#benchmark .lane-mine .lane-fill')?.style.width,
   infinite: document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity).length,
 }));
 check('reduced: race at final state', reducedWork.done && reducedWork.fill !== '0%', JSON.stringify(reducedWork));
