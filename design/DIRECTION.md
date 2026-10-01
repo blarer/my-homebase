@@ -82,6 +82,33 @@ Two pages.
 - The footer closes with the same Oxford rule, and the theme switch reads
   **Daylight / Lamplight**.
 
+### The letters
+
+The two letters of the title page light on hover, and which pair of lights
+you get is a coin flip made once per visit:
+
+| Pair | J | L |
+|---|---|---|
+| Elemental | Ice, pale blue falling to deep water | Fire, hottest at the base, cooling to yellow-white |
+| Celestial | Void, near-black with a violet rim | Solar, white-hot at the crown falling to amber |
+
+This is the one piece of the page that is purely for pleasure: everything
+else is a measurement. It earns its place by staying out of the way. The
+resting state is plain ink, the lights only exist under the cursor, and the
+flip never shifts a glyph, so the title page still reads as a title page.
+
+The colour is a gradient clipped to a second copy of the glyph, because a
+gradient cannot be a text colour. Headbang is blackletter and both letters
+overhang their advance width, so that copy is given a box half an em larger
+on every side, pulled back by the same amount, with padding to put it back
+in register. Without that, the J's tail and the L's foot stay black while
+the body of the letter lights up.
+
+The flip runs in an effect rather than during render: the server cannot
+agree with the client on a random number, and a mismatch would be a
+hydration error. `?hero=elemental` or `?hero=celestial` pins the pair for
+screenshots and acceptance runs.
+
 ### Fig. 0 — Atlas
 
 The front page's one figure is a CPPN: a four-hidden-layer MLP (16 wide,

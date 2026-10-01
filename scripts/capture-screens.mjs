@@ -7,7 +7,9 @@ const url = process.env.URL ?? 'http://localhost:3777/';
 const outDir = 'design/screens/review';
 
 const routes = [
-  { name: 'front', path: '' },
+  // The hero pair is a coin flip per visit, so pin it here: review shots
+  // should differ because the design changed, not because of the flip.
+  { name: 'front', path: '?hero=elemental' },
   { name: 'work', path: 'work/' },
 ];
 

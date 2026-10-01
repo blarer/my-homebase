@@ -37,10 +37,72 @@ check('front: Old Standard loaded', fonts.some((f) => /Old Standard/.test(f)), f
 check('front: Courier Prime loaded', fonts.some((f) => /Courier Prime/.test(f)), fonts.join(', '));
 check('front: Headbang loaded', fonts.some((f) => /headbang/i.test(f)), fonts.join(', '));
 check('front: no legacy fonts', !fonts.some((f) => /Space|Instrument|Archivo|Plex/.test(f)), fonts.join(', '));
-check('front: h1 is JL', (await page.textContent('h1.hero-name'))?.trim() === 'JL');
+check('front: h1 is JL', (await page.textContent('h1.hero-name'))?.replace(/\s+/g, '') === 'JL');
 check('front: h1 Headbang', /headbang/i.test(await fam(page, 'h1.hero-name')));
 check('front: .num typewriter', /Courier|typewriter/.test(await fam(page, '.num')));
 check('front: prose serif', /Old|old-serif/.test(await fam(page, '.about-body')));
+
+// Hero lighting. Each letter is lit by a gradient clipped to a copy of its
+// own glyph, and which pair you get is a coin flip per visit. The resting
+// state must be plain ink, so hover is the only thing that lights it.
+const lit = async (sel) => {
+  const before = (prop) => page.$eval(sel, (el, p) => getComputedStyle(el, '::before').getPropertyValue(p), prop);
+  const rest = { opacity: await before('opacity'), image: await before('background-image') };
+  await page.hover(sel);
+  await page.waitForTimeout(450);
+  const filter = await page.$eval(sel, (el) => getComputedStyle(el).filter);
+  const hovered = { opacity: await before('opacity'), image: await before('background-image') };
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(450);
+  return { rest, hovered, filter };
+};
+const pairNow = await page.$eval('.hero-name', (el) => el.dataset.pair);
+check('front: hero pair chosen', ['elemental', 'celestial'].includes(pairNow), String(pairNow));
+
+const litJ = await lit('.hero-letter-j');
+const litL = await lit('.hero-letter-l');
+check('front: J dark at rest', litJ.rest.opacity === '0', litJ.rest.opacity);
+check('front: L dark at rest', litL.rest.opacity === '0', litL.rest.opacity);
+check('front: J lights on hover', litJ.hovered.opacity === '1', litJ.hovered.opacity);
+check('front: L lights on hover', litL.hovered.opacity === '1', litL.hovered.opacity);
+check('front: J light is a gradient', /gradient/.test(litJ.hovered.image), litJ.hovered.image.slice(0, 48));
+check('front: L light is a gradient', /gradient/.test(litL.hovered.image), litL.hovered.image.slice(0, 48));
+check('front: J and L differ', litJ.hovered.image !== litL.hovered.image);
+check('front: J glows on hover', /drop-shadow/.test(litJ.filter), litJ.filter.slice(0, 48));
+check('front: L glows on hover', /drop-shadow/.test(litL.filter), litL.filter.slice(0, 48));
+// The glyph copy must cover the whole letter, overhangs included: the box is
+// grown half an em and pulled back by the same amount, so it starts above
+// and left of the letter and ends below and right of it.
+const cover = await page.evaluate(() => {
+  const el = document.querySelector('.hero-letter-j');
+  const b = el.getBoundingClientRect();
+  const o = getComputedStyle(el, '::before');
+  return { top: o.top, left: o.left, padding: o.padding, h: b.height };
+});
+check('front: lit copy overhangs the letter box',
+  parseFloat(cover.top) < 0 && parseFloat(cover.left) < 0 && parseFloat(cover.padding) > 0,
+  JSON.stringify(cover));
+
+// Both pairs are reachable and paint different colours for the same letter.
+const pairImage = async (pair, sel) => {
+  const p2 = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await p2.goto(new URL(`?hero=${pair}`, base).href, { waitUntil: 'domcontentloaded' });
+  await p2.waitForFunction(() => document.querySelector('.hero-name')?.dataset.pair);
+  const got = await p2.$eval('.hero-name', (el) => el.dataset.pair);
+  const image = await p2.$eval(sel, (el) => getComputedStyle(el, '::before').backgroundImage);
+  await p2.close();
+  return { got, image };
+};
+const elemJ = await pairImage('elemental', '.hero-letter-j');
+const celJ = await pairImage('celestial', '.hero-letter-j');
+const elemL = await pairImage('elemental', '.hero-letter-l');
+const celL = await pairImage('celestial', '.hero-letter-l');
+check('front: ?hero pins elemental', elemJ.got === 'elemental', elemJ.got);
+check('front: ?hero pins celestial', celJ.got === 'celestial', celJ.got);
+check('front: ice and void differ', elemJ.image !== celJ.image);
+check('front: fire and solar differ', elemL.image !== celL.image);
+check('front: all four lights are gradients',
+  [elemJ, celJ, elemL, celL].every((r) => /gradient/.test(r.image)));
 
 // Layout: the front page is an introduction. No race, no treemap, no ring.
 const frontHas = await page.evaluate(() => ({
