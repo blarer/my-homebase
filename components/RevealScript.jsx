@@ -1,33 +1,77 @@
+'use client';
+
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+
 /**
  * One-shot section reveals via IntersectionObserver.
  *
- * The mockup drove these with `animation-timeline: view()`, which some
- * browsers (and headless capture runs) never fire — sections sat ghosted at
- * their keyframe start forever. This replaces the scroll timeline with the
- * boring, universal pattern:
+ * Sections start dimmed (see motion.css, scoped to `html.reveal-ready`) and
+ * get `.in-view` once as they enter the viewport. The dimmed state only
+ * exists under `reveal-ready`, which is added *after* the observer is wired,
+ * so no JS (or a throw) means fully visible static content.
  *
- *   1. This inline script runs at the end of <body>, after the sections exist.
- *   2. Sections already in the viewport are marked `.in-view` synchronously,
- *      so first paint never shows a dimmed hero.
- *   3. Everything else gets an IntersectionObserver that adds `.in-view` once
- *      and unobserves. CSS transitions do the actual motion.
- *   4. Only then is `reveal-ready` added to <html>. The dimmed starting state
- *      in CSS is scoped to `html.reveal-ready`, so without JS (or if anything
- *      here throws) the page renders fully visible and static.
+ * This runs as an effect keyed on the pathname, not as an inline script,
+ * because the App Router swaps page content on client-side navigation
+ * without re-running inline scripts. The first version was inline and
+ * worked on a cold load but left every section invisible after clicking
+ * from / to /work: `reveal-ready` persisted on <html> while the new
+ * sections never received `.in-view`. The effect re-arms on each route.
  *
- * prefers-reduced-motion bails out before any class is added: no dimming, no
- * observer, no motion.
+ * prefers-reduced-motion bails out before any class is added: no dimming,
+ * no observer, no motion.
  *
  * A section that ends up ABOVE the viewport also counts as revealed. The
  * observer's root is inflated 100000px upward so skipped-past sections still
- * intersect it: with a plain viewport root, an instant jump (End key, anchor
- * link, find-in-page) can move a section from below the viewport to above it
- * without a single intersecting frame, so no callback ever fires and the
- * section stays dimmed forever. The callback also treats a negative top as
+ * intersect it: an instant jump (End key, anchor link, find-in-page) can
+ * move a section from below the viewport to above it without a single
+ * intersecting frame, so the callback also treats a negative top as
  * revealed for belt-and-braces.
  */
-const script = `(function(){try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(!('IntersectionObserver' in window))return;var els=document.querySelectorAll('.section');if(!els.length)return;var io=new IntersectionObserver(function(es){for(var i=0;i<es.length;i++){var e=es[i];if(e.isIntersecting||e.boundingClientRect.top<0){e.target.classList.add('in-view');io.unobserve(e.target)}}},{rootMargin:'100000px 0px -10% 0px'});for(var i=0;i<els.length;i++){var el=els[i];if(el.getBoundingClientRect().top<innerHeight*0.9){el.classList.add('in-view')}else{io.observe(el)}}document.documentElement.classList.add('reveal-ready')}catch(e){}})()`;
-
 export default function RevealScript() {
-  return <script dangerouslySetInnerHTML={{ __html: script }} />;
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const root = document.documentElement;
+    // Drop the armed state from the previous route first so that, if
+    // anything below bails, the new page renders fully visible.
+    root.classList.remove('reveal-ready');
+
+    try {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (!('IntersectionObserver' in window)) return;
+      const els = document.querySelectorAll('.section');
+      if (!els.length) return;
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting || entry.boundingClientRect.top < 0) {
+              entry.target.classList.add('in-view');
+              io.unobserve(entry.target);
+            }
+          }
+        },
+        { rootMargin: '100000px 0px -10% 0px' },
+      );
+
+      for (const el of els) {
+        if (el.getBoundingClientRect().top < innerHeight * 0.9) {
+          el.classList.add('in-view');
+        } else {
+          io.observe(el);
+        }
+      }
+
+      root.classList.add('reveal-ready');
+      return () => {
+        io.disconnect();
+        root.classList.remove('reveal-ready');
+      };
+    } catch {
+      // Leave the page visible.
+    }
+  }, [pathname]);
+
+  return null;
 }

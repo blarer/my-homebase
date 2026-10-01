@@ -281,6 +281,33 @@ check('mobile: atlas 4:3', await mob.$eval('canvas.atlas', (c) => { const r = c.
 check('mobile: atlas GL buffer under pixel cap', await mob.$eval('canvas.atlas', (c) => c.dataset.renderer !== 'webgl' || c.width * c.height <= 2.2e6));
 
 // ---------------------------------------------------------------- /work
+// Client-side navigation first: this is the path a visitor takes from the
+// front page. The reveal must re-arm for the new route's sections, or the
+// whole page sits at opacity 0 (the inline-script version did exactly that).
+const nav = await browser.newPage({ viewport: { width: 1200, height: 720 } });
+watch(nav);
+await nav.goto(base, { waitUntil: 'networkidle' });
+await nav.click('.footer a[href="/work/"]');
+await nav.waitForURL(/\/work\//);
+await nav.waitForTimeout(1200);
+const afterNav = await nav.evaluate(() => ({
+  path: location.pathname,
+  visibleSections: [...document.querySelectorAll('.section')].filter((s) => s.getBoundingClientRect().top < innerHeight).map((s) => `${s.id}:${getComputedStyle(s).opacity}`),
+  anyInView: !!document.querySelector('.section.in-view'),
+}));
+check('nav: client-side / → /work lands on /work/', afterNav.path === '/work/', afterNav.path);
+check('nav: sections in viewport are visible after client nav', afterNav.visibleSections.length > 0 && afterNav.visibleSections.every((s) => s.endsWith(':1')), afterNav.visibleSections.join(' '));
+await nav.click('a.work-home');
+await nav.waitForURL((u) => u.pathname === '/');
+await nav.waitForTimeout(1200);
+const backHome = await nav.evaluate(() => ({
+  aboutOpacity: getComputedStyle(document.querySelector('#about')).opacity,
+  atlasRunning: document.querySelector('canvas.atlas')?.dataset.running,
+}));
+check('nav: back to / re-arms (about visible once scrolled)', await nav.evaluate(async () => { document.querySelector('#about').scrollIntoView(); await new Promise((r) => setTimeout(r, 1200)); return getComputedStyle(document.querySelector('#about')).opacity === '1'; }));
+check('nav: atlas restarts on return to /', backHome.atlasRunning === 'true' || (await nav.$eval('canvas.atlas', (c) => c.dataset.running)) === 'true');
+await nav.close();
+
 const work = await browser.newPage({ viewport: { width: 1200, height: 720 } });
 watch(work);
 const wres = await work.goto(WORK, { waitUntil: 'networkidle' });
