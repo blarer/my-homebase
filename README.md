@@ -8,13 +8,15 @@ The canonical origin used for metadata, the sitemap, and robots.txt lives in
 
 ## The idea
 
-The site argues rather than asserts. The hero runs the `storage-manager-swift`
-benchmark as a race on a shared time axis, and the work section is a squarified
-treemap of the real repositories, each tile sized by actual source bytes and
-split into language bands. One signal colour per theme (pen-trace ultramarine
-by day, panel-lamp amber by night) marks only what has been measured; every
-other saturated colour on the page is carrying data. The full design direction
-lives in `design/DIRECTION.md`.
+The front page is an introduction: a title page, one living figure (a tiny
+neural network painting a field that drifts and never repeats), and a few
+paragraphs. The measured work lives at `/work`: the `storage-manager-swift`
+benchmark run as a race, folded under the page title; a squarified treemap
+of the real repositories, each tile sized by actual source bytes and split
+into language bands; and the languages, counted. One signal colour per theme
+(fountain-pen blue by daylight, old gold by lamplight) marks only what has
+been measured; every other saturated colour on the page is carrying data.
+The full design direction lives in `design/DIRECTION.md`.
 
 ## Running it
 
@@ -30,7 +32,7 @@ Two browser-driven scripts need a server running and Chrome installed
 
 ```bash
 npx next start -p 3778 &
-npm run test:acceptance          # 32 checks: fonts, palette, theme toggle, avatar, OG, mobile
+npm run test:acceptance          # ~80 checks over / and /work: fonts, layout, atlas, motion, theme, reduced motion
 URL=http://localhost:3000/ npm run screens   # regenerate design/screens/review/
 ```
 
@@ -53,9 +55,13 @@ in the readout, and a colour to `lib/languageColors.js` if the language is new.
 
 | Path | Purpose |
 |---|---|
-| `app/page.jsx` | Section order, reads the snapshot |
+| `app/page.jsx` | Front page: title, atlas, about |
+| `app/work/page.jsx` | The figures: benchmark, treemap, languages |
 | `app/globals.css` | Design tokens and all component styles |
-| `components/Hero.jsx` | Benchmark race |
+| `app/motion.css` | Load sequence, idle motion, reveals, theme crossfade |
+| `components/Hero.jsx` | Title page |
+| `components/Atlas.jsx` | The drifting CPPN figure |
+| `components/Benchmark.jsx` | Benchmark race, as a disclosure |
 | `components/Work.jsx` | Repository treemap and readout |
 | `components/Stack.jsx` | Language ranking |
 | `lib/treemap.js` | Squarified treemap layout |

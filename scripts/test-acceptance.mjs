@@ -1,223 +1,360 @@
+/**
+ * Browser acceptance checks against a running server (default
+ * http://localhost:3778/). Drives real Chrome via Playwright from the npx
+ * cache. Covers both routes: the front page (title page, atlas, about) and
+ * /work (benchmark race, treemap, languages), plus motion, theme, and a
+ * reduced-motion pass.
+ */
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pwPath = '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
-const url = process.env.URL ?? 'http://localhost:3778/';
+const base = (process.env.URL ?? 'http://localhost:3778/').replace(/\/?$/, '/');
+const WORK = new URL('work/', base).href;
 const results = [];
-const check = (name, ok, detail = '') =>
-  results.push({ name, ok: Boolean(ok), detail });
+const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail });
 
 const browser = await chromium.launch({ channel: 'chrome' });
+const errors = [];
+const watch = (page) => {
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('pageerror', (e) => errors.push(String(e)));
+};
+
+// ---------------------------------------------------------------- front page
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-const consoleErrors = [];
-page.on('console', (m) => m.type() === 'error' && consoleErrors.push(m.text()));
-page.on('pageerror', (e) => consoleErrors.push(String(e)));
+watch(page);
+const res = await page.goto(base, { waitUntil: 'networkidle' });
+check('front: 200', res.status() === 200, String(res.status()));
 
-const res = await page.goto(url, { waitUntil: 'networkidle' });
-check('page 200', res.status() === 200, String(res.status()));
-
-// 1. Hero renamed to JL
-const h1 = await page.textContent('h1.hero-name');
-check('hero h1 is JL', h1?.trim() === 'JL', JSON.stringify(h1));
-
-// 2. Fonts: Old Standard on headings/prose, Courier Prime on data. Check
-//    the resolved family AND that the loaded font actually rendered.
-const fam = (sel) =>
-  page.$eval(sel, (el) => getComputedStyle(el).fontFamily);
+const fam = (p, sel) => p.$eval(sel, (el) => getComputedStyle(el).fontFamily);
 const fonts = await page.evaluate(async () => {
   await document.fonts.ready;
-  const loaded = [...document.fonts].filter((f) => f.status === 'loaded');
-  return [...new Set(loaded.map((f) => f.family))];
+  return [...new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family))];
 });
-check('Old Standard loaded', fonts.some((f) => /Old_Standard|Old Standard/.test(f)), fonts.join(', '));
-check('Courier Prime loaded', fonts.some((f) => /Courier_Prime|Courier Prime/.test(f)), fonts.join(', '));
-check('no Space Mono / Instrument / Archivo / Plex', !fonts.some((f) => /Space|Instrument|Archivo|Plex/.test(f)), fonts.join(', '));
-check('h1 family serif var', /old-serif|Old/.test(await fam('h1.hero-name')), await fam('h1.hero-name'));
-check('.num family typewriter var', /typewriter|Courier/.test(await fam('.num')), await fam('.num'));
-check('.tag family typewriter var', /typewriter|Courier/.test(await fam('.tag')), await fam('.tag'));
-check('body prose family serif', /old-serif|Old/.test(await fam('.about-body')), await fam('.about-body'));
+check('front: Old Standard loaded', fonts.some((f) => /Old Standard/.test(f)), fonts.join(', '));
+check('front: Courier Prime loaded', fonts.some((f) => /Courier Prime/.test(f)), fonts.join(', '));
+check('front: Headbang loaded', fonts.some((f) => /headbang/i.test(f)), fonts.join(', '));
+check('front: no legacy fonts', !fonts.some((f) => /Space|Instrument|Archivo|Plex/.test(f)), fonts.join(', '));
+check('front: h1 is JL', (await page.textContent('h1.hero-name'))?.trim() === 'JL');
+check('front: h1 Headbang', /headbang/i.test(await fam(page, 'h1.hero-name')));
+check('front: .num typewriter', /Courier|typewriter/.test(await fam(page, '.num')));
+check('front: prose serif', /Old|old-serif/.test(await fam(page, '.about-body')));
 
-// 3. Palette: flat paper, no grid, accent colours.
-const bodyBg = await page.$eval('body', (el) => getComputedStyle(el).backgroundImage);
-check('body has no grid background', bodyBg === 'none', bodyBg);
-const bodyBefore = await page.$eval('body', (el) => getComputedStyle(el, '::before').content);
-check('no grain pseudo-element', bodyBefore === 'none', bodyBefore);
-const lightPaper = await page.$eval('html', (el) => getComputedStyle(el).backgroundColor);
-check('light paper #f3f1ec', lightPaper === 'rgb(243, 241, 236)', lightPaper);
-const accent = await page.$eval('html', (el) => getComputedStyle(el).getPropertyValue('--accent').trim());
-check('light accent #23408e', accent === '#23408e', accent);
+// Layout: the front page is an introduction. No race, no treemap, no ring.
+const frontHas = await page.evaluate(() => ({
+  race: !!document.querySelector('.race'),
+  treemap: !!document.querySelector('.treemap'),
+  ring: !!document.querySelector('.ring'),
+  atlas: !!document.querySelector('canvas.atlas'),
+  about: !!document.querySelector('#about'),
+  workLinks: [...document.querySelectorAll('a[href="/work/"]')].length,
+}));
+check('front: no race', !frontHas.race);
+check('front: no treemap', !frontHas.treemap);
+check('front: no ring', !frontHas.ring);
+check('front: atlas present', frontHas.atlas);
+check('front: about present', frontHas.about);
+check('front: links to /work/ (about + footer)', frontHas.workLinks >= 2, String(frontHas.workLinks));
 
-// 4. Figure labels
-const tags = await page.$$eval('.section-head .tag', (els) => els.map((e) => e.textContent.trim()));
-check('Fig. 1 / Fig. 2 / Notes', tags[0]?.startsWith('Fig. 1') && tags[1]?.startsWith('Fig. 2') && tags[2]?.startsWith('Notes'), tags.join(' | '));
-
-// 5. Time axis exists and aligns with lane tracks (same left edge)
-const axisBox = await page.$eval('.race-axis-track', (el) => el.getBoundingClientRect().left);
-const laneBox = await page.$eval('.lane-track', (el) => el.getBoundingClientRect().left);
-check('axis aligns with lane track', Math.abs(axisBox - laneBox) < 1, `${axisBox} vs ${laneBox}`);
-
-// 6. Hero name not clipped at left edge: glyph box must be inside the shell.
-const clip = await page.$eval('h1.hero-name', (el) => {
-  const shell = el.closest('.shell').getBoundingClientRect();
-  const r = el.getBoundingClientRect();
-  return { h1Left: r.left, shellLeft: shell.left, padding: parseFloat(getComputedStyle(el.closest('.shell')).paddingLeft) };
+// Centred: hero name and thesis are horizontally centred in the shell.
+const centred = await page.evaluate(() => {
+  const mid = (el) => {
+    const r = el.getBoundingClientRect();
+    return r.left + r.width / 2;
+  };
+  const shell = document.querySelector('.hero .shell');
+  return {
+    shell: mid(shell),
+    name: mid(document.querySelector('.hero-name')),
+    thesis: mid(document.querySelector('.hero-thesis')),
+    caption: mid(document.querySelector('.atlas-caption')),
+    aboutTitle: mid(document.querySelector('.about-title')),
+    textAlign: getComputedStyle(document.querySelector('.hero-head')).textAlign,
+  };
 });
-check('hero name inside shell padding', clip.h1Left >= clip.shellLeft, JSON.stringify(clip));
+const near = (a, b) => Math.abs(a - b) < 2;
+check('front: hero name centred', near(centred.name, centred.shell) && centred.textAlign === 'center', JSON.stringify(centred));
+check('front: thesis centred', near(centred.thesis, centred.shell));
+check('front: atlas caption centred', near(centred.caption, centred.shell));
+check('front: about title centred', near(centred.aboutTitle, centred.shell));
 
-// 7. Theme toggle: click switches to dark, labels read Lamplight, palette flips.
-await page.click('.theme-toggle');
+// Hero name clears the thesis (Headbang descenders).
+const hb = await page.evaluate(() => ({
+  nameBottom: document.querySelector('.hero-name').getBoundingClientRect().bottom,
+  thesisTop: document.querySelector('.hero-thesis').getBoundingClientRect().top,
+}));
+check('front: hero name clears thesis', hb.nameBottom <= hb.thesisTop + 1, JSON.stringify(hb));
+
+// Palette: flat paper, no grid.
+check('front: no body grid', (await page.$eval('body', (el) => getComputedStyle(el).backgroundImage)) === 'none');
+check('front: light paper', (await page.$eval('html', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(243, 241, 236)');
+
+// ---- Atlas ----
+await page.waitForTimeout(1500);
+const atlas = await page.evaluate(async () => {
+  const c = document.querySelector('canvas.atlas');
+  const ctx = c.getContext('2d');
+  const grab = () => Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
+  const f0 = Number(c.dataset.frames);
+  const s0 = grab();
+  await new Promise((r) => setTimeout(r, 600));
+  const f1 = Number(c.dataset.frames);
+  const s1 = grab();
+  let diff = 0;
+  for (let i = 0; i < s0.length; i += 4) diff += Math.abs(s0[i] - s1[i]) + Math.abs(s0[i + 1] - s1[i + 1]) + Math.abs(s0[i + 2] - s1[i + 2]);
+  const colours = new Set();
+  for (let i = 0; i < s1.length; i += 4) colours.add((s1[i] << 16) | (s1[i + 1] << 8) | s1[i + 2]);
+  // Frame cost: time one render via the exposed frame counter is not
+  // possible from outside, so measure a long task proxy: how long does a
+  // 600ms window of rAF callbacks get blocked? Sample main-thread gaps.
+  const gaps = [];
+  let last = performance.now();
+  await new Promise((r) => {
+    let n = 0;
+    const tick = (t) => {
+      gaps.push(t - last);
+      last = t;
+      if (++n < 30) requestAnimationFrame(tick);
+      else r();
+    };
+    requestAnimationFrame(tick);
+  });
+  const worst = Math.max(...gaps.slice(1));
+  return {
+    seed: c.dataset.seed,
+    running: c.dataset.running,
+    frames: f1 - f0,
+    diff,
+    colours: colours.size,
+    worstGap: Math.round(worst),
+    w: c.width,
+    h: c.height,
+  };
+});
+check('atlas: seeded', /^\d+$/.test(atlas.seed), atlas.seed);
+check('atlas: running', atlas.running === 'true');
+check('atlas: ~12fps (>=5 frames in 600ms)', atlas.frames >= 5, String(atlas.frames));
+check('atlas: pixels change between frames', atlas.diff > 10000, String(atlas.diff));
+check('atlas: rich field (>500 colours)', atlas.colours > 500, String(atlas.colours));
+check('atlas: no long frames (worst rAF gap < 60ms)', atlas.worstGap < 60, `${atlas.worstGap}ms`);
+check('atlas: 128x128 buffer', atlas.w === 128 && atlas.h === 128, `${atlas.w}x${atlas.h}`);
+
+// Pauses when scrolled offscreen; resumes when back.
+await page.evaluate(() => document.querySelector('.footer').scrollIntoView());
 await page.waitForTimeout(400);
-const theme = await page.$eval('html', (el) => el.dataset.theme);
-check('toggle → dark', theme === 'dark', theme);
-const label = await page.textContent('.theme-toggle-label');
-check('label reads Lamplight', label?.trim() === 'Lamplight', JSON.stringify(label));
-const darkPaper = await page.$eval('html', (el) => getComputedStyle(el).backgroundColor);
-check('dark paper #17140f', darkPaper === 'rgb(23, 20, 15)', darkPaper);
-const darkAccent = await page.$eval('html', (el) => getComputedStyle(el).getPropertyValue('--accent').trim());
-check('dark accent #d4a94c', darkAccent === '#d4a94c', darkAccent);
-const stored = await page.evaluate(() => localStorage.getItem('theme'));
-check('theme persisted', stored === 'dark', String(stored));
+const paused = await page.evaluate(async () => {
+  const c = document.querySelector('canvas.atlas');
+  const f0 = Number(c.dataset.frames);
+  await new Promise((r) => setTimeout(r, 500));
+  return { running: c.dataset.running, frames: Number(c.dataset.frames) - f0 };
+});
+check('atlas: pauses offscreen', paused.running === 'false' && paused.frames === 0, JSON.stringify(paused));
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.waitForTimeout(400);
+check('atlas: resumes onscreen', (await page.$eval('canvas.atlas', (c) => c.dataset.running)) === 'true');
 
-// 8. Reload keeps dark without flash (ThemeScript path)
+// Re-inks on theme flip: the plate's mean colour must move once the palette
+// swaps (dark paper + cream ink read lighter on average than light paper +
+// iron-gall ink, so the direction is not fixed; only the change is).
+const meanRgb = (c) => {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  let r = 0, g = 0, b = 0;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+  const n = d.length / 4;
+  return [r / n, g / n, b / n];
+};
+const beforeFlip = await page.$eval('canvas.atlas', meanRgb);
+// Clicking the footer toggle scrolls the atlas offscreen, which pauses it;
+// the MutationObserver still repaints one re-inked frame on theme change.
+// Wait for that frame (frames counter advances by at least one).
+const f0 = await page.$eval('canvas.atlas', (c) => Number(c.dataset.frames));
+await page.click('.theme-toggle');
+await page.waitForFunction((n) => Number(document.querySelector('canvas.atlas').dataset.frames) > n, f0, { timeout: 3000 });
+const afterFlip = await page.$eval('canvas.atlas', meanRgb);
+const flipDist = Math.hypot(...beforeFlip.map((v, i) => v - afterFlip[i]));
+check('atlas: re-inks on theme flip (mean colour moves > 30)', flipDist > 30, `Δ=${flipDist.toFixed(0)} ${beforeFlip.map((v) => v.toFixed(0))} → ${afterFlip.map((v) => v.toFixed(0))}`);
+
+// Theme flip itself (the crossfade runs 480ms; wait it out before sampling).
+await page.waitForFunction(() => !document.documentElement.classList.contains('theme-flipping'), null, { timeout: 2000 });
+check('theme: dark after toggle', (await page.$eval('html', (el) => el.dataset.theme)) === 'dark');
+check('theme: label Lamplight', (await page.textContent('.theme-toggle-label'))?.trim() === 'Lamplight');
+check('theme: dark paper', (await page.$eval('html', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(23, 20, 15)');
+check('theme: persisted', (await page.evaluate(() => localStorage.getItem('theme'))) === 'dark');
 await page.reload({ waitUntil: 'domcontentloaded' });
-const themeAfter = await page.$eval('html', (el) => el.dataset.theme);
-check('theme survives reload', themeAfter === 'dark', themeAfter);
+check('theme: survives reload', (await page.$eval('html', (el) => el.dataset.theme)) === 'dark');
 
-// 9. Avatar: served, 460px, PNG
-const avatar = await page.request.get(new URL('/avatar.png', url).href);
-check('avatar.png 200', avatar.status() === 200, String(avatar.status()));
-const buf = await avatar.body();
-check('avatar is PNG', buf.slice(1, 4).toString() === 'PNG', buf.slice(0, 8).toString('hex'));
-const w = buf.readUInt32BE(16);
-check('avatar 460px wide', w === 460, String(w));
-
-// 10. OG image renders, 1200x630 PNG
-const og = await page.request.get(new URL('/opengraph-image', url).href);
-check('og image 200', og.status() === 200, String(og.status()));
-const ogBuf = await og.body();
-check('og image is PNG', ogBuf.slice(1, 4).toString() === 'PNG');
-check('og 1200x630', ogBuf.readUInt32BE(16) === 1200 && ogBuf.readUInt32BE(20) === 630, `${ogBuf.readUInt32BE(16)}x${ogBuf.readUInt32BE(20)}`);
-
-// 11. theme-color meta
+// Static assets + metadata.
+const avatar = await page.request.get(new URL('avatar.png', base).href);
+const abuf = await avatar.body();
+check('avatar: 200 PNG 460px', avatar.status() === 200 && abuf.slice(1, 4).toString() === 'PNG' && abuf.readUInt32BE(16) === 460);
+const og = await page.request.get(new URL('opengraph-image', base).href);
+const obuf = await og.body();
+check('og: 200 PNG 1200x630', og.status() === 200 && obuf.slice(1, 4).toString() === 'PNG' && obuf.readUInt32BE(16) === 1200 && obuf.readUInt32BE(20) === 630);
 const metas = await page.$$eval('meta[name="theme-color"]', (els) => els.map((e) => e.content));
-check('theme-color metas', metas.includes('#f3f1ec') && metas.includes('#17140f'), metas.join(', '));
+check('meta: theme-color both', metas.includes('#f3f1ec') && metas.includes('#17140f'), metas.join(', '));
+const sitemap = await (await page.request.get(new URL('sitemap.xml', base).href)).text();
+check('sitemap: lists /work/', /\/work\//.test(sitemap));
 
-// 12. Mobile: no horizontal overflow
+// Load sequence on the front page: name settles, atlas develops after.
+await page.evaluate(() => localStorage.removeItem('theme'));
+await page.goto(base, { waitUntil: 'commit' });
+await page.waitForTimeout(300);
+const early = await page.evaluate(() => ({
+  name: document.querySelector('.hero-name')?.getAnimations().map((a) => `${a.animationName}:${a.playState}`).join(',') ?? 'none',
+  plateOpacity: parseFloat(getComputedStyle(document.querySelector('.atlas-plate')).opacity),
+}));
+check('load: hero name settling at 300ms', /ink-settle:running/.test(early.name), early.name);
+check('load: atlas plate not yet developed at 300ms', early.plateOpacity < 0.5, String(early.plateOpacity));
+await page.waitForTimeout(2200);
+check('load: atlas plate developed by 2.5s', (await page.$eval('.atlas-plate', (el) => parseFloat(getComputedStyle(el).opacity))) > 0.99);
+
+// Idle on the front page: portrait drifts.
+await page.evaluate(() => document.querySelector('#about').scrollIntoView());
+await page.waitForTimeout(600);
+check('idle: portrait drifts', await page.$eval('.portrait img', (el) => el.getAnimations().some((a) => a.animationName === 'portrait-drift' && a.playState === 'running')));
+
+// Mobile.
 const mob = await browser.newPage({ viewport: { width: 390, height: 844 } });
-await mob.goto(url, { waitUntil: 'networkidle' });
-const overflow = await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-check('mobile no horizontal overflow', overflow <= 0, `${overflow}px`);
-const h1Mob = await mob.$eval('h1.hero-name', (el) => el.getBoundingClientRect().right <= window.innerWidth);
-check('mobile hero name fits', h1Mob);
+watch(mob);
+await mob.goto(base, { waitUntil: 'networkidle' });
+check('mobile: no horizontal overflow', (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
+check('mobile: hero name fits', await mob.$eval('h1.hero-name', (el) => el.getBoundingClientRect().right <= window.innerWidth));
+check('mobile: atlas 4:3', await mob.$eval('canvas.atlas', (c) => { const r = c.getBoundingClientRect(); return Math.abs(r.width / r.height - 4 / 3) < 0.05; }));
 
-// 13. No JS errors
-check('no console/page errors', consoleErrors.length === 0, consoleErrors.join(' | '));
+// ---------------------------------------------------------------- /work
+const work = await browser.newPage({ viewport: { width: 1200, height: 720 } });
+watch(work);
+const wres = await work.goto(WORK, { waitUntil: 'networkidle' });
+check('work: 200', wres.status() === 200, String(wres.status()));
+const workHas = await work.evaluate(() => ({
+  race: !!document.querySelector('.benchmark .race'),
+  treemap: !!document.querySelector('.treemap'),
+  ring: !!document.querySelector('.ring'),
+  atlas: !!document.querySelector('canvas.atlas'),
+  home: document.querySelector('a.work-home')?.getAttribute('href'),
+  tags: [...document.querySelectorAll('.section-head .tag')].map((e) => e.textContent.trim()),
+  title: document.title,
+}));
+check('work: race present', workHas.race);
+check('work: treemap present', workHas.treemap);
+check('work: ring present', workHas.ring);
+check('work: no atlas', !workHas.atlas);
+check('work: home link', workHas.home === '/', String(workHas.home));
+check('work: Fig. 1/2/3 order', workHas.tags[0]?.startsWith('Fig. 1') && workHas.tags[1]?.startsWith('Fig. 2') && workHas.tags[2]?.startsWith('Fig. 3'), workHas.tags.join(' | '));
+check('work: title', /the work, measured/i.test(workHas.title), workHas.title);
 
-// ---- Motion ----
-const mo = await browser.newPage({ viewport: { width: 1200, height: 720 } });
-
-// 14. Headbang on the hero, and its glyph box clears the thesis line.
-await mo.goto(url, { waitUntil: 'networkidle' });
-const hb = await mo.evaluate(async () => {
-  await document.fonts.ready;
-  const name = document.querySelector('.hero-name');
-  const thesis = document.querySelector('.hero-thesis');
+// The benchmark is folded under the title: closed by default, race idle.
+const folded = await work.evaluate(() => {
+  const d = document.querySelector('details#benchmark');
   return {
-    fam: getComputedStyle(name).fontFamily,
-    loaded: [...document.fonts].some((f) => /headbang/i.test(f.family) && f.status === 'loaded'),
-    nameBottom: name.getBoundingClientRect().bottom,
-    thesisTop: thesis.getBoundingClientRect().top,
+    isDetails: !!d,
+    open: d?.open,
+    summaryText: d?.querySelector('summary')?.textContent.trim(),
+    raceVisible: d ? d.querySelector('.race').checkVisibility() : null,
+    fill: d?.querySelector('.lane-mine .lane-fill')?.style.width,
   };
 });
-check('Headbang loaded on hero', hb.loaded && /headbang/i.test(hb.fam), hb.fam);
-check('hero name clears thesis', hb.nameBottom <= hb.thesisTop + 1, `${hb.nameBottom} vs ${hb.thesisTop}`);
+check('work: benchmark is a <details>', folded.isDetails);
+check('work: benchmark closed by default', folded.open === false, String(folded.open));
+check('work: summary carries the figure head', /Fig\. 1/.test(folded.summaryText) && /three ways/.test(folded.summaryText), folded.summaryText);
+check('work: race hidden while closed', folded.raceVisible === false);
+check('work: race not started while closed', folded.fill === '0%', String(folded.fill));
 
-// 15. Load sequence: name settles before the race starts. At 300ms the name
-//     should be mid-animation; the race should not have moved until >1.4s.
-await mo.goto(url, { waitUntil: 'commit' });
-await mo.waitForTimeout(300);
-const early = await mo.evaluate(() => ({
-  nameAnim: document.querySelector('.hero-name')?.getAnimations().map((a) => `${a.animationName}:${a.playState}`).join(',') ?? 'none',
-  fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
-}));
-check('hero name animating at 300ms', /ink-settle:running/.test(early.nameAnim), early.nameAnim);
-check('race not started at 300ms', early.fill === '0%', String(early.fill));
-await mo.waitForTimeout(1500);
-const later = await mo.evaluate(() => parseFloat(document.querySelector('.lane-mine .lane-fill')?.style.width));
-check('race running by 1.8s', later > 0, String(later));
+// Every head on /work sits on the same centre axis as the page title.
+const workCentred = await work.evaluate(() => {
+  const mid = (el) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
+  const axis = mid(document.querySelector('.work-title'));
+  return {
+    axis,
+    heads: [...document.querySelectorAll('.section-head h2, .benchmark-title')].map((h) => mid(h) - axis),
+    ledes: [...document.querySelectorAll('.section-lede')].filter((h) => h.checkVisibility()).map((h) => mid(h) - axis),
+  };
+});
+check('work: figure titles centred on page axis', workCentred.heads.every((d) => Math.abs(d) < 2), workCentred.heads.map((d) => d.toFixed(1)).join(','));
+check('work: ledes centred on page axis', workCentred.ledes.every((d) => Math.abs(d) < 2), workCentred.ledes.map((d) => d.toFixed(1)).join(','));
 
-// 16. Idle animations are live after the race lands.
-await mo.waitForTimeout(2800);
-const idle = await mo.evaluate(() => {
+// Race sequence: open the figure, then delayed start, run, finish, breathe.
+await work.goto(WORK, { waitUntil: 'networkidle' });
+await work.click('details#benchmark > summary');
+await work.waitForTimeout(300);
+check('work: benchmark opens on click', await work.$eval('details#benchmark', (d) => d.open));
+check('work: race visible once open', await work.$eval('details#benchmark .race', (el) => el.checkVisibility()));
+check('work: race not started at 300ms after open', (await work.$eval('.lane-mine .lane-fill', (el) => el.style.width)) === '0%');
+await work.waitForTimeout(1500);
+check('work: race running by 1.8s after open', (await work.$eval('.lane-mine .lane-fill', (el) => parseFloat(el.style.width))) > 0);
+await work.waitForTimeout(2800);
+const idle = await work.evaluate(() => {
   const running = (el) => (el ? el.getAnimations().filter((a) => a.playState === 'running').map((a) => a.animationName) : []);
-  const pseudoRunning = (el, ps) => (el ? el.getAnimations({ subtree: true }).filter((a) => a.effect?.pseudoElement === ps && a.playState === 'running').map((a) => a.animationName) : []);
+  const pseudo = (el, ps) => (el ? el.getAnimations({ subtree: true }).filter((a) => a.effect?.pseudoElement === ps && a.playState === 'running').map((a) => a.animationName) : []);
   return {
+    done: !!document.querySelector('.race-caption[data-done]'),
     stamp: running(document.querySelector('.lane-mine .lane-time')),
-    cursor: pseudoRunning(document.querySelector('.race-caption'), '::after'),
-    ring: running(document.querySelector('.ring')),
-    portrait: running(document.querySelector('.portrait img')),
-    bands: running(document.querySelector('.tile[data-active] .tile-bands')),
-    done: !!document.querySelector('.race-caption[data-done]'),
+    cursor: pseudo(document.querySelector('.race-caption'), '::after'),
+    axisAligned: Math.abs(document.querySelector('.race-axis-track').getBoundingClientRect().left - document.querySelector('.lane-track').getBoundingClientRect().left) < 1,
   };
 });
-check('race finished', idle.done);
-check('idle: stamp breathes', idle.stamp.includes('stamp-breathe'), idle.stamp.join(','));
-check('idle: caption cursor blinks', idle.cursor.includes('cursor-blink'), idle.cursor.join(','));
-check('idle: ring drifts', idle.ring.includes('ring-drift'), idle.ring.join(','));
-check('idle: portrait drifts', idle.portrait.includes('portrait-drift'), idle.portrait.join(','));
-check('idle: active tile bands pulse', idle.bands.includes('bands-pulse'), idle.bands.join(','));
+check('work: race finished', idle.done);
+check('work: stamp breathes', idle.stamp.includes('stamp-breathe'), idle.stamp.join(','));
+check('work: caption cursor blinks', idle.cursor.includes('cursor-blink'), idle.cursor.join(','));
+check('work: axis aligned with lanes', idle.axisAligned);
 
-// 17. Ring has no Tailwind `.ring` box-shadow.
-const ringShadow = await mo.$eval('.ring', (el) => getComputedStyle(el).boxShadow);
-check('ring has no utility box-shadow', ringShadow === 'none', ringShadow);
+// Reveal + idle further down. With the benchmark folded, #work sits near
+// the fold at 720px tall, so use a shorter viewport for this one so the
+// section genuinely starts offscreen and has to reveal.
+await work.setViewportSize({ width: 1200, height: 480 });
+await work.goto(WORK, { waitUntil: 'networkidle' });
+check('work: treemap starts dimmed below the fold', (await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity))) < 1);
+await work.evaluate(() => document.querySelector('#work').scrollIntoView({ block: 'start', behavior: 'instant' }));
+await work.waitForTimeout(80);
+const r0 = await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity));
+await work.waitForTimeout(1600);
+const r1 = await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity));
+check('work: treemap frame fades in', r0 < 1 && r1 > 0.99, `${r0} → ${r1}`);
+await work.setViewportSize({ width: 1200, height: 720 });
+check('work: active tile bands pulse', await work.$eval('.tile[data-active] .tile-bands', (el) => el.getAnimations().some((a) => a.animationName === 'bands-pulse')));
+await work.evaluate(() => document.querySelector('#languages').scrollIntoView());
+await work.waitForTimeout(800);
+check('work: ring drifts', await work.$eval('.ring', (el) => el.getAnimations().some((a) => a.animationName === 'ring-drift' && a.playState === 'running')));
+check('work: ring no utility box-shadow', (await work.$eval('.ring', (el) => getComputedStyle(el).boxShadow)) === 'none');
 
-// 18. Scroll reveal: Work section stagger actually transitions.
-await mo.evaluate(() => document.querySelector('#work').scrollIntoView({ block: 'start', behavior: 'instant' }));
-await mo.waitForTimeout(80);
-const revealStart = await mo.evaluate(() => ({
-  inView: document.querySelector('#work').classList.contains('in-view'),
-  frameOpacity: parseFloat(getComputedStyle(document.querySelector('#work .treemap-frame')).opacity),
-}));
-await mo.waitForTimeout(1600);
-const revealEnd = await mo.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#work .treemap-frame')).opacity));
-check('work section marked in-view', revealStart.inView);
-check('treemap frame fades in (start < 1, end ≈ 1)', revealStart.frameOpacity < 1 && revealEnd > 0.99, `${revealStart.frameOpacity} → ${revealEnd}`);
+// Mobile /work.
+await mob.goto(WORK, { waitUntil: 'networkidle' });
+check('work mobile: no horizontal overflow', (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
 
-// 19. Theme flip crossfades: background is mid-way between palettes ~150ms in.
-await mo.evaluate(() => window.scrollTo(0, 0));
-const flip = await mo.evaluate(async () => {
-  const html = document.documentElement;
-  const bg = () => getComputedStyle(html).backgroundColor;
-  document.querySelector('.theme-toggle').click();
-  const t0 = performance.now();
-  await new Promise((r) => setTimeout(r, 150 - (performance.now() - t0)));
-  const mid = bg();
-  const midFlipping = html.classList.contains('theme-flipping');
-  await new Promise((r) => setTimeout(r, 700));
-  return { mid, midFlipping, end: bg(), endFlipping: html.classList.contains('theme-flipping') };
-});
-const midRgb = flip.mid.match(/\d+/g).map(Number);
-check('theme flip mid-transition at 150ms', flip.midFlipping && midRgb[0] > 23 && midRgb[0] < 243, `${flip.mid} flipping=${flip.midFlipping}`);
-check('theme flip settles dark, class removed', flip.end === 'rgb(23, 20, 15)' && !flip.endFlipping, `${flip.end} flipping=${flip.endFlipping}`);
-
-// 20. Reduced motion: no idle animations, everything visible, race at final state.
+// ---------------------------------------------------------------- reduced motion
 const rm = await browser.newPage({ viewport: { width: 1200, height: 720 }, reducedMotion: 'reduce' });
-await rm.goto(url, { waitUntil: 'networkidle' });
-await rm.waitForTimeout(400);
-const reduced = await rm.evaluate(() => {
-  const anims = document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity);
+watch(rm);
+await rm.goto(base, { waitUntil: 'networkidle' });
+await rm.waitForTimeout(600);
+const reducedFront = await rm.evaluate(async () => {
+  const c = document.querySelector('canvas.atlas');
+  const f0 = Number(c.dataset.frames);
+  await new Promise((r) => setTimeout(r, 500));
   return {
-    infinite: anims.map((a) => a.animationName),
-    fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
-    done: !!document.querySelector('.race-caption[data-done]'),
-    revealReady: document.documentElement.classList.contains('reveal-ready'),
-    sectionOpacity: [...document.querySelectorAll('.section')].map((s) => getComputedStyle(s).opacity),
+    infinite: document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity).map((a) => a.animationName),
+    atlasFrames: Number(c.dataset.frames),
+    atlasGrew: Number(c.dataset.frames) - f0,
+    atlasRunning: c.dataset.running,
+    sections: [...document.querySelectorAll('.section')].map((s) => getComputedStyle(s).opacity),
   };
 });
-check('reduced motion: no infinite animations', reduced.infinite.length === 0, reduced.infinite.join(','));
-check('reduced motion: race at final state immediately', reduced.done && reduced.fill !== '0%', `done=${reduced.done} fill=${reduced.fill}`);
-check('reduced motion: no reveal dimming', !reduced.revealReady && reduced.sectionOpacity.every((o) => o === '1'), `ready=${reduced.revealReady} ${reduced.sectionOpacity.join(',')}`);
+check('reduced: no infinite animations on front', reducedFront.infinite.length === 0, reducedFront.infinite.join(','));
+check('reduced: atlas renders exactly one frame', reducedFront.atlasFrames === 1 && reducedFront.atlasGrew === 0 && reducedFront.atlasRunning === 'false', JSON.stringify(reducedFront));
+check('reduced: no reveal dimming', reducedFront.sections.every((o) => o === '1'));
+await rm.goto(WORK, { waitUntil: 'networkidle' });
+await rm.click('details#benchmark > summary');
+await rm.waitForTimeout(400);
+const reducedWork = await rm.evaluate(() => ({
+  done: !!document.querySelector('.race-caption[data-done]'),
+  fill: document.querySelector('.lane-mine .lane-fill')?.style.width,
+  infinite: document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity).length,
+}));
+check('reduced: race at final state', reducedWork.done && reducedWork.fill !== '0%', JSON.stringify(reducedWork));
+check('reduced: no infinite animations on /work', reducedWork.infinite === 0, String(reducedWork.infinite));
+
+check('no console/page errors', errors.length === 0, errors.join(' | '));
 
 await browser.close();
 

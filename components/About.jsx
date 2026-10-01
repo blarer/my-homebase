@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import '@/app/motion.css';
 
 /**
@@ -16,11 +17,7 @@ export default function About() {
           <div className="section-head about-section-head">
             <span className="tag">Notes — About</span>
           </div>
-          <h2 className="about-title">
-            If I can&apos;t measure it,
-            <br />
-            I don&apos;t claim it.
-          </h2>
+          <h2 className="about-title">Jains Yeah Yeah Yeah</h2>
 
           <figure className="portrait">
             <Image
@@ -56,6 +53,11 @@ export default function About() {
           </p>
 
           <ul className="about-links">
+            <li>
+              <Link href="/work/" className="about-work-link">
+                See the work, measured<span aria-hidden="true"> →</span>
+              </Link>
+            </li>
             <li>
               <a href="https://github.com/blarer">github.com/blarer</a>
             </li>

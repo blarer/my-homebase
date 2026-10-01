@@ -85,27 +85,68 @@
   animation: rule-draw 700ms var(--ease-settle) var(--load-rule) both;
 }
 
-.hero .race-axis {
+/* The living plate develops after the rule, like a print coming up in the
+   tray: it fades from paper rather than sliding. */
+@keyframes plate-develop {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.atlas-plate {
+  animation: plate-develop 1100ms var(--ease-settle) var(--load-axis) both;
+}
+
+/* On /work the race is folded under the title; when the disclosure opens,
+   the body develops and the lanes compose themselves in order, the same
+   way the title page did. Benchmark.jsx starts the rAF race RACE_DELAY_MS
+   after the open event to match. Animations on descendants of a closed
+   <details> do not run until it opens, so these restart on every open. */
+.benchmark[open] .benchmark-body {
+  animation: plate-develop 600ms var(--ease-settle) both;
+}
+
+.benchmark[open] .race-axis {
   animation: lane-settle var(--dur-settle) var(--ease-settle) var(--load-axis) both;
 }
 
-.hero .lane[data-lane='0'] {
+.benchmark[open] .lane[data-lane='0'] {
   animation: lane-settle var(--dur-settle) var(--ease-settle) var(--load-lane) both;
 }
 
-.hero .lane[data-lane='1'] {
+.benchmark[open] .lane[data-lane='1'] {
   animation: lane-settle var(--dur-settle) var(--ease-settle)
     calc(var(--load-lane) + var(--load-lane-step)) both;
 }
 
-.hero .lane[data-lane='2'] {
+.benchmark[open] .lane[data-lane='2'] {
   animation: lane-settle var(--dur-settle) var(--ease-settle)
     calc(var(--load-lane) + var(--load-lane-step) * 2) both;
 }
 
-/* The race caption's no-JS timer in components.css fires at 2.4s; with the
-   race now starting 1.4s late, the JS path lands at 3.8s. Match it. */
-.race .race-caption {
+/* The work page head settles like the title page. */
+.work-head .work-home {
+  animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-title) both;
+}
+
+.work-head .work-title {
+  animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-thesis) both;
+}
+
+.work-head .work-lede {
+  animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-rule) both;
+}
+
+/* The race caption's no-JS timer in components.css fires at 2.4s from when
+   its animation starts. Inside a closed <details> it does not start, so
+   scoping to [open] makes it count from the moment the figure is opened:
+   RACE_DELAY_MS + RACE_MS = 3.8s, matching the JS path. */
+.benchmark[open] .race .race-caption {
   animation-delay: 3.8s;
 }
 
@@ -458,8 +499,13 @@ html.theme-flipping * {
   .hero .hero-name,
   .hero .hero-thesis,
   .hero .hero-head::after,
-  .hero .race-axis,
-  .hero .lane,
+  .atlas-plate,
+  .benchmark[open] .benchmark-body,
+  .benchmark[open] .race-axis,
+  .benchmark[open] .lane,
+  .work-head .work-home,
+  .work-head .work-title,
+  .work-head .work-lede,
   .race .lane-mine .lane-head,
   .race .lane-mine .lane-time,
   .race .race-caption::after,

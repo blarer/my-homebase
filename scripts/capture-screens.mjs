@@ -6,25 +6,34 @@ const { chromium } = require(pwPath);
 const url = process.env.URL ?? 'http://localhost:3777/';
 const outDir = 'design/screens/review';
 
+const routes = [
+  { name: 'front', path: '' },
+  { name: 'work', path: 'work/' },
+];
+
 const viewports = [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
 ];
 
 const browser = await chromium.launch({ channel: 'chrome' });
-for (const vp of viewports) {
-  for (const theme of ['light', 'dark']) {
-    const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-    await page.goto(url, { waitUntil: 'networkidle' });
-    await page.evaluate((t) => {
-      document.documentElement.dataset.theme = t;
-      try { localStorage.setItem('theme', t); } catch {}
-    }, theme);
-    await page.waitForTimeout(500);
-    const file = `${outDir}/${vp.name}-${theme}.png`;
-    await page.screenshot({ path: file, fullPage: true });
-    console.log('saved', file);
-    await page.close();
+for (const route of routes) {
+  for (const vp of viewports) {
+    for (const theme of ['light', 'dark']) {
+      const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
+      await page.goto(new URL(route.path, url).href, { waitUntil: 'networkidle' });
+      await page.evaluate((t) => {
+        document.documentElement.dataset.theme = t;
+        try { localStorage.setItem('theme', t); } catch {}
+        // Open any folded figures so the capture shows them.
+        document.querySelectorAll('details').forEach((d) => { d.open = true; });
+      }, theme);
+      await page.waitForTimeout(4500);
+      const file = `${outDir}/${route.name}-${vp.name}-${theme}.png`;
+      await page.screenshot({ path: file, fullPage: true });
+      console.log('saved', file);
+      await page.close();
+    }
   }
 }
 await browser.close();

@@ -67,14 +67,32 @@ actually is.
 
 ## Structure as information
 
-- The hero is a **title page**: the name at monograph-title size, a thesis
-  line, then the thick-thin Oxford rule that period journals drew under the
-  masthead.
-- Sections are **numbered figures**, because they literally are figures:
-  `Fig. 1 — Work` is a treemap, `Fig. 2 — Languages` is a ring and a table.
-  About is `Notes`, not a figure, because it is prose.
+Two pages.
+
+- **`/` is an introduction.** Title page (the name in Headbang, one line
+  about the person, the thick-thin Oxford rule), then one living figure,
+  then Notes. Everything is centred on one axis, the way a title page is.
+  No benchmark, no treemap, no ring: a first visit meets a person before a
+  dataset.
+- **`/work` is the figures.** `Fig. 1 — Benchmark` is folded under the page
+  title as a `<details>` disclosure, so the syscall detail is one click
+  away rather than in the reader's face; `Fig. 2 — Work` is the treemap;
+  `Fig. 3 — Languages` is the ring and the table. Figure heads are centred
+  on the same axis as the page title.
 - The footer closes with the same Oxford rule, and the theme switch reads
   **Daylight / Lamplight**.
+
+### Fig. 0 — Atlas
+
+The front page's one figure is a CPPN: a four-hidden-layer MLP (16 wide,
+~1.2k weights) mapping `(x, y, r, 1)` to three channels, run over a 128×128
+field at 12 fps. The weights are seeded from the visit time and drift on a
+superposition of slow sines, so the field flows and never repeats. Output
+is mapped into the page's own palette (paper, soft ink, accent) read from
+computed styles, so it re-inks on a theme flip. The canvas is masked with a
+feathered edge and a 1.5px blur so it dissolves into the paper rather than
+sitting in a box. It pauses offscreen and when the tab is hidden, renders
+one still under reduced motion, and shows a static SVG without JS.
 
 ## Motion
 

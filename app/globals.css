@@ -171,18 +171,24 @@
   border-top: 1px solid var(--rule);
 }
 
+/* Figure heads are centred and stacked: the figure number as an eyebrow,
+   the title beneath it, a rule under both. Every heading on the site now
+   sits on the same axis as the title page. */
 .section-head {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 40px;
-  padding-bottom: 14px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--rule-soft);
+  text-align: center;
 }
 
 .section-head h2 {
   font-size: clamp(24px, 3.4vw, 38px);
   letter-spacing: 0;
+  text-wrap: balance;
 }
 
 /* ---- Motion ---- */
@@ -208,13 +214,16 @@
 /* ---- Hero: the benchmark race ---- */
 
 .hero {
-  padding-block: clamp(96px, 15vh, 168px) clamp(64px, 9vw, 104px);
+  padding-block: clamp(112px, 18vh, 200px) clamp(40px, 6vw, 72px);
 }
 
+/* The title page is centred, the way a title page is. */
 .hero-head {
   display: grid;
   gap: 22px;
-  margin-bottom: clamp(48px, 7vw, 76px);
+  margin-bottom: 0;
+  justify-items: center;
+  text-align: center;
 }
 
 /* The title page. The name is set in Headbang, and the thick-thin Oxford
@@ -229,13 +238,14 @@
   line-height: 1.1;
   letter-spacing: 0;
   text-transform: none;
-  margin-left: -0.02em;
+  margin-left: 0;
   margin-bottom: 0.05em;
 }
 
 .hero-head::after {
   content: '';
   display: block;
+  width: 100%;
   height: 5px;
   border-top: 3px solid var(--ink);
   border-bottom: 1px solid var(--ink);
@@ -247,6 +257,7 @@
   font-size: clamp(16px, 1.6vw, 18px);
   line-height: 1.65;
   color: var(--ink-soft);
+  text-wrap: balance;
 }
 
 .race {
@@ -436,15 +447,217 @@
   .lane-track { grid-area: track; }
 }
 
+/* ---- Atlas: the living figure on the front page ---- */
+
+.atlas-plate {
+  margin: 0 auto;
+  padding-block: clamp(8px, 2vw, 24px) clamp(64px, 10vw, 128px);
+  width: 100%;
+  max-width: var(--shell);
+  padding-inline: var(--gutter);
+}
+
+/* No frame: the field dissolves into the paper at its edges, like a wash
+   that was never ruled off. The feather is a mask on the frame box, so the
+   canvas keeps its full raster and nothing is cropped; the outer ~18% of
+   each axis fades to nothing, with a soft radial falloff on top so the
+   corners go first. */
+.atlas-frame {
+  position: relative;
+  --feather: 18%;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+    linear-gradient(to bottom, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+    radial-gradient(ellipse 70% 70% at 50% 50%, #000 55%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+    linear-gradient(to bottom, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),
+    radial-gradient(ellipse 70% 70% at 50% 50%, #000 55%, transparent 100%);
+  -webkit-mask-composite: source-in, source-in;
+  mask-composite: intersect;
+}
+
+.atlas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  height: auto;
+  object-fit: cover;
+  image-rendering: auto;
+  /* A touch of blur on the upscaled raster so the 128px grid never shows
+     as cells, only as a soft field. */
+  filter: blur(1.5px);
+}
+
+.atlas-static {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.atlas-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.atlas-note {
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
+  font-size: 13.5px;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--ink-faint);
+  max-width: 60ch;
+  text-wrap: balance;
+}
+
+@media (max-width: 720px) {
+  .atlas {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* ---- /work: page head ---- */
+
+.work-head {
+  display: grid;
+  gap: 16px;
+  padding-block: clamp(64px, 10vh, 112px) clamp(8px, 2vw, 24px);
+  justify-items: center;
+  text-align: center;
+}
+
+.work-home {
+  justify-self: center;
+  color: var(--ink-faint);
+}
+
+.work-home:hover {
+  color: var(--ink);
+}
+
+.work-title {
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.work-lede {
+  max-width: 56ch;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.65;
+  color: var(--ink-soft);
+  text-wrap: balance;
+}
+
+/* The first figure on /work sits directly under the head; no top rule. */
+.work-head + .section {
+  border-top: 0;
+}
+
+/* ---- Benchmark: a figure folded under the page title ---- */
+
+/* The whole section is a <details>; its summary is the figure head. The
+   native marker is replaced by a chevron drawn after the title, and the
+   head keeps the same centred stack as every other figure. */
+.benchmark {
+  padding-block: clamp(32px, 5vw, 56px) clamp(72px, 11vw, 132px);
+}
+
+.benchmark-summary {
+  list-style: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.benchmark-summary::-webkit-details-marker {
+  display: none;
+}
+
+.benchmark-summary:focus-visible {
+  outline: none;
+}
+
+.benchmark-summary:focus-visible .benchmark-title {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.benchmark-head {
+  margin-bottom: 0;
+  padding-bottom: 18px;
+  transition: border-color var(--dur-move) var(--ease-settle, var(--ease-snap));
+}
+
+.benchmark[open] .benchmark-head {
+  margin-bottom: 40px;
+}
+
+.benchmark-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3.4vw, 38px);
+  line-height: 1.15;
+  color: var(--ink);
+  text-wrap: balance;
+  transition: color var(--dur-move) var(--ease-settle, var(--ease-snap));
+}
+
+.benchmark-summary:hover .benchmark-title {
+  color: var(--accent);
+}
+
+/* Chevron: a small rotated square, drawn with borders so it inherits the
+   title colour and turns on open. */
+.benchmark-chevron {
+  display: inline-block;
+  width: 0.38em;
+  height: 0.38em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.12em) rotate(45deg);
+  transition: transform var(--dur-move) var(--ease-settle, var(--ease-snap));
+  opacity: 0.7;
+}
+
+.benchmark[open] .benchmark-chevron {
+  transform: translateY(0.08em) rotate(225deg);
+}
+
+.benchmark-hint {
+  font-family: var(--font-typewriter), 'Courier New', monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: opacity var(--dur-move) var(--ease-settle, var(--ease-snap));
+}
+
+.benchmark[open] .benchmark-hint {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
 /* ---- Work: repository treemap ---- */
 
 .section-lede {
   max-width: 56ch;
-  margin-bottom: 32px;
+  margin: 0 auto 32px;
   font-family: var(--font-old-serif), 'Times New Roman', Georgia, serif;
   font-size: 14.5px;
   line-height: 1.7;
   color: var(--ink-soft);
+  text-align: center;
+  text-wrap: balance;
 }
 
 .treemap-frame {
@@ -957,15 +1170,27 @@
 
 /* ---- About ---- */
 
+/* About reads as one centred column: eyebrow, title, portrait, then the
+   paragraphs, like the preface of the monograph. */
 .about-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
-  gap: clamp(32px, 6vw, 84px);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(28px, 4vw, 44px);
+  justify-items: center;
+  text-align: center;
+  max-width: 760px;
+}
+
+.about-head {
+  display: grid;
+  justify-items: center;
+  gap: 0;
 }
 
 .about-section-head {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .about-title {
@@ -973,6 +1198,7 @@
   font-size: clamp(26px, 3.8vw, 46px);
   line-height: 1.12;
   letter-spacing: 0;
+  text-wrap: balance;
 }
 
 .about-body {
@@ -983,11 +1209,13 @@
   font-size: 15px;
   line-height: 1.85;
   color: var(--ink-soft);
+  justify-items: center;
 }
 
 .about-links {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 24px;
   margin: 10px 0 0;
   padding: 0;
@@ -998,6 +1226,11 @@
 .about-links a {
   color: var(--ink);
   padding-bottom: 2px;
+}
+
+.about-work-link {
+  color: var(--accent);
+  font-weight: 700;
 }
 
 @media (max-width: 860px) {
@@ -1140,8 +1373,9 @@
    spec sheet rather than a social avatar. */
 .portrait {
   display: flex;
-  align-items: flex-end;
-  gap: 14px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin: 34px 0 0;
 }
 
