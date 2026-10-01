@@ -288,6 +288,25 @@
   opacity: 1;
 }
 
+/* The lit copy sits on top of the ink letter, and anti-aliasing means its
+   edge pixels are partly transparent. Whatever is underneath therefore
+   leaks out as a one-pixel fringe. On light paper against the ice and fire
+   gradients that is invisible, but in Lamplight the ink is cream and the
+   void is nearly black, so the J came out ringed in white.
+
+   So the ink letter fades out as the light fades in: at rest the glyph is
+   ink and the copy is hidden, on hover the copy carries the whole glyph
+   and there is nothing behind it to show through.
+
+   Guarded by @supports, because a browser that cannot clip a background to
+   text would otherwise hide the letter on hover and show nothing in its
+   place. There the letter simply stays ink. */
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .hero-letter:hover {
+    color: transparent;
+  }
+}
+
 /* Two pairs of lights, chosen by a coin flip in Hero.jsx. Nothing is lit
    until the flip lands, which is also the resting state, so a visitor who
    hovers in the first frames simply sees ink. */

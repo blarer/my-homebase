@@ -104,6 +104,52 @@ check('front: fire and solar differ', elemL.image !== celL.image);
 check('front: all four lights are gradients',
   [elemJ, celJ, elemL, celL].every((r) => /gradient/.test(r.image)));
 
+// No pale fringe around a lit letter. The copy of the glyph that carries
+// the gradient is anti-aliased, so any ink left underneath leaks out as a
+// bright rim. Worst case is Lamplight with the void J: cream ink under a
+// near-black letter.
+//
+// This has to be measured in pixels, not read off a rule, so: hover the J
+// for real, screenshot a band along its left edge, and decode the shot by
+// handing it back to the browser as a data URL and drawing it to a canvas.
+// A fringe shows up as pixels far brighter than both the letter and the
+// page behind it.
+const fringePeak = await (async () => {
+  const p2 = await browser.newPage({ viewport: { width: 1200, height: 620 }, colorScheme: 'dark' });
+  await p2.goto(new URL('?hero=celestial', base).href, { waitUntil: 'networkidle' });
+  await p2.waitForFunction(() => document.querySelector('.hero-name')?.dataset.pair);
+  const box = await p2.$eval('.hero-letter-j', (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x, y: r.y, w: r.width, h: r.height };
+  });
+  await p2.hover('.hero-letter-j');
+  await p2.waitForTimeout(700);
+  // A narrow strip straddling the left edge of the stem, below the head
+  // serif, where the rim was reported.
+  const shot = await p2.screenshot({
+    clip: { x: box.x - 6, y: box.y + box.h * 0.35, width: 26, height: 40 },
+  });
+  const peak = await p2.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const { data } = ctx.getImageData(0, 0, c.width, c.height);
+    let max = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      max = Math.max(max, (data[i] + data[i + 1] + data[i + 2]) / 3);
+    }
+    return max;
+  }, shot.toString('base64'));
+  await p2.close();
+  return peak;
+})();
+// Lamplight paper is ~23/255 and the void letter is darker still; the cream
+// ink that used to leak is ~235. Anything under 90 means no rim.
+check('front: no pale fringe around the lit void J', fringePeak < 90, `peak luma ${fringePeak.toFixed(1)}`);
+
 // Layout: the front page is an introduction. No race, no treemap, no ring.
 const frontHas = await page.evaluate(() => ({
   race: !!document.querySelector('.race'),
