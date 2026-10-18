@@ -1,6 +1,6 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-09-23",
+  "syncedAt": "2026-10-18",
   "repos": [
     {
       "name": "outloud",
@@ -8,7 +8,7 @@
       "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
       "url": "https://github.com/blarer/outloud",
       "homepage": null,
-      "pushedAt": "2026-08-12",
+      "pushedAt": "2026-09-23",
       "createdAt": "2026-07-28",
       "stars": 0,
       "languages": {
@@ -51,6 +51,27 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
+        "Nix": 289971,
+        "Shell": 94985,
+        "Just": 82893,
+        "CSS": 63481,
+        "PowerShell": 40694,
+        "Python": 39428,
+        "TypeScript": 37628,
+        "JavaScript": 30316,
+        "Lua": 28874
+      }
+    },
+    {
+      "name": "private-03",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
         "Go": 211094,
         "Svelte": 94755,
         "Shell": 49478,
@@ -60,7 +81,7 @@
       }
     },
     {
-      "name": "private-03",
+      "name": "private-04",
       "private": true,
       "description": "",
       "url": null,
@@ -74,21 +95,16 @@
       }
     },
     {
-      "name": "private-04",
-      "private": true,
-      "description": "",
-      "url": null,
+      "name": "mp4trim",
+      "private": false,
+      "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
+      "url": "https://github.com/blarer/mp4trim",
       "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
+      "pushedAt": "2026-10-14",
+      "createdAt": "2026-07-08",
       "stars": 0,
       "languages": {
-        "Nix": 196701,
-        "Just": 39096,
-        "Lua": 33419,
-        "Shell": 18725,
-        "Python": 16729,
-        "PowerShell": 8007
+        "Python": 302586
       }
     },
     {
@@ -109,6 +125,22 @@
       }
     },
     {
+      "name": "my-homebase",
+      "private": false,
+      "description": "",
+      "url": "https://github.com/blarer/my-homebase",
+      "homepage": "https://my-homebase.vercel.app",
+      "pushedAt": "2026-10-17",
+      "createdAt": "2025-06-17",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 145248,
+        "CSS": 58359,
+        "Shell": 2490,
+        "TypeScript": 614
+      }
+    },
+    {
       "name": "private-06",
       "private": true,
       "description": "",
@@ -121,21 +153,6 @@
         "Python": 104293,
         "PowerShell": 5771,
         "Batchfile": 2725
-      }
-    },
-    {
-      "name": "my-homebase",
-      "private": false,
-      "description": "",
-      "url": "https://github.com/blarer/my-homebase",
-      "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-07-27",
-      "createdAt": "2025-06-17",
-      "stars": 0,
-      "languages": {
-        "JavaScript": 58096,
-        "CSS": 20782,
-        "TypeScript": 614
       }
     },
     {
@@ -228,19 +245,6 @@
       }
     },
     {
-      "name": "mp4trim",
-      "private": false,
-      "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
-      "url": "https://github.com/blarer/mp4trim",
-      "homepage": null,
-      "pushedAt": "2026-07-08",
-      "createdAt": "2026-07-08",
-      "stars": 0,
-      "languages": {
-        "Python": 34551
-      }
-    },
-    {
       "name": "private-10",
       "private": true,
       "description": "",
@@ -261,7 +265,7 @@
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-09-23",
+      "pushedAt": "2026-10-18",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
