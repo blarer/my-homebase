@@ -1,6 +1,6 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-09-23",
+  "syncedAt": "2026-10-27",
   "repos": [
     {
       "name": "outloud",
@@ -8,14 +8,14 @@
       "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
       "url": "https://github.com/blarer/outloud",
       "homepage": null,
-      "pushedAt": "2026-08-12",
+      "pushedAt": "2026-10-26",
       "createdAt": "2026-07-28",
       "stars": 0,
       "languages": {
-        "Rust": 2233706,
-        "Shell": 211473,
+        "Rust": 2324559,
+        "Shell": 214446,
         "Python": 53877,
-        "PowerShell": 28947,
+        "PowerShell": 41951,
         "Nix": 16281,
         "Swift": 9790,
         "Batchfile": 3302
@@ -51,6 +51,45 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
+        "Nix": 331621,
+        "Shell": 115777,
+        "TypeScript": 110133,
+        "Just": 90267,
+        "CSS": 81163,
+        "JavaScript": 58478,
+        "PowerShell": 50007,
+        "Python": 39428,
+        "Lua": 39393
+      }
+    },
+    {
+      "name": "private-03",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Swift": 440741,
+        "HTML": 18415,
+        "Shell": 4791,
+        "Python": 3250,
+        "Just": 1115,
+        "CSS": 528
+      }
+    },
+    {
+      "name": "private-04",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
         "Go": 211094,
         "Svelte": 94755,
         "Shell": 49478,
@@ -60,7 +99,7 @@
       }
     },
     {
-      "name": "private-03",
+      "name": "private-05",
       "private": true,
       "description": "",
       "url": null,
@@ -74,25 +113,20 @@
       }
     },
     {
-      "name": "private-04",
-      "private": true,
-      "description": "",
-      "url": null,
+      "name": "mp4trim",
+      "private": false,
+      "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
+      "url": "https://github.com/blarer/mp4trim",
       "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
+      "pushedAt": "2026-10-14",
+      "createdAt": "2026-07-08",
       "stars": 0,
       "languages": {
-        "Nix": 196701,
-        "Just": 39096,
-        "Lua": 33419,
-        "Shell": 18725,
-        "Python": 16729,
-        "PowerShell": 8007
+        "Python": 302586
       }
     },
     {
-      "name": "private-05",
+      "name": "private-06",
       "private": true,
       "description": "",
       "url": null,
@@ -109,7 +143,38 @@
       }
     },
     {
-      "name": "private-06",
+      "name": "my-homebase",
+      "private": false,
+      "description": "",
+      "url": "https://github.com/blarer/my-homebase",
+      "homepage": "https://my-homebase.vercel.app",
+      "pushedAt": "2026-10-26",
+      "createdAt": "2025-06-17",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 145248,
+        "CSS": 58359,
+        "Shell": 2490,
+        "TypeScript": 614
+      }
+    },
+    {
+      "name": "private-07",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Nix": 177135,
+        "Just": 14959,
+        "Shell": 8790
+      }
+    },
+    {
+      "name": "private-08",
       "private": true,
       "description": "",
       "url": null,
@@ -121,21 +186,6 @@
         "Python": 104293,
         "PowerShell": 5771,
         "Batchfile": 2725
-      }
-    },
-    {
-      "name": "my-homebase",
-      "private": false,
-      "description": "",
-      "url": "https://github.com/blarer/my-homebase",
-      "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-07-27",
-      "createdAt": "2025-06-17",
-      "stars": 0,
-      "languages": {
-        "JavaScript": 58096,
-        "CSS": 20782,
-        "TypeScript": 614
       }
     },
     {
@@ -155,7 +205,7 @@
       }
     },
     {
-      "name": "private-07",
+      "name": "private-09",
       "private": true,
       "description": "",
       "url": null,
@@ -185,7 +235,7 @@
       }
     },
     {
-      "name": "private-08",
+      "name": "private-10",
       "private": true,
       "description": "",
       "url": null,
@@ -201,7 +251,7 @@
       }
     },
     {
-      "name": "private-09",
+      "name": "private-11",
       "private": true,
       "description": "",
       "url": null,
@@ -228,20 +278,7 @@
       }
     },
     {
-      "name": "mp4trim",
-      "private": false,
-      "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
-      "url": "https://github.com/blarer/mp4trim",
-      "homepage": null,
-      "pushedAt": "2026-07-08",
-      "createdAt": "2026-07-08",
-      "stars": 0,
-      "languages": {
-        "Python": 34551
-      }
-    },
-    {
-      "name": "private-10",
+      "name": "private-12",
       "private": true,
       "description": "",
       "url": null,
@@ -250,9 +287,8 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
-        "Shell": 10916,
-        "CSS": 8317,
-        "Dockerfile": 353
+        "Shell": 16590,
+        "CSS": 4219
       }
     },
     {
@@ -261,7 +297,7 @@
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-09-23",
+      "pushedAt": "2026-10-27",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
@@ -269,7 +305,20 @@
       }
     },
     {
-      "name": "private-11",
+      "name": "private-13",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Python": 11332
+      }
+    },
+    {
+      "name": "private-14",
       "private": true,
       "description": "",
       "url": null,
