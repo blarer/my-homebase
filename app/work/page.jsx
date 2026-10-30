@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { DiskScan, Dictation, Footprint, Clip } from '@/components/Benchmark';
-import Work from '@/components/Work';
-import Stack from '@/components/Stack';
-import Footer from '@/components/Footer';
+import Race from '@/components/work/Race';
+import FigureIndex from '@/components/work/FigureIndex';
+import Treemap from '@/components/work/Treemap';
+import Languages from '@/components/work/Languages';
+import Footer from '@/components/site/Footer';
+import { FIGURES } from '@/lib/figures';
 import snapshot from '@/lib/repos.json';
 
 export const metadata = {
@@ -20,25 +22,27 @@ export default function WorkPage() {
   const { repos, syncedAt } = snapshot;
 
   return (
-    <main>
-      <header className="shell work-head">
-        <Link href="/" className="work-home tag">
-          <span aria-hidden="true">← </span>Home
-        </Link>
-        <h1 className="work-title">The work, measured</h1>
-        <p className="work-lede">
-          Six figures. The first four are measurements I took, one per
-          repository, folded under their titles. The last two are drawn from
-          the repositories themselves, so they change when the code does.
-        </p>
-      </header>
-      <DiskScan />
-      <Dictation />
-      <Footprint />
-      <Clip />
-      <Work repos={repos} />
-      <Stack repos={repos} />
+    <>
+      <main id="main" tabIndex={-1}>
+        <header className="shell work-head" data-running-head="The work, measured">
+          <h1 className="work-title">The work, measured</h1>
+          <p className="work-lede">
+            Six figures. The first four are measurements I took, one per
+            repository, folded under their titles. The last two are drawn from
+            the repositories themselves, so they change when the code does.
+          </p>
+          <Link href="/" className="work-home">
+            <span aria-hidden="true">← </span>Back to the introduction
+          </Link>
+        </header>
+        <FigureIndex />
+        {FIGURES.map((figure) => (
+          <Race key={figure.id} {...figure} />
+        ))}
+        <Treemap repos={repos} />
+        <Languages repos={repos} />
+      </main>
       <Footer syncedAt={syncedAt} />
-    </main>
+    </>
   );
 }

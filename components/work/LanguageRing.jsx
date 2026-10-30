@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { languageColor } from "@/lib/languageColors";
+import { bytes } from "@/lib/format";
 
 /**
  * Every language across every repository, public and private, as one ring.
@@ -20,12 +21,6 @@ const SIZE = 260;
 const STROKE = 34;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-function bytes(total) {
-  if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(2)} MB`;
-  if (total >= 1_000) return `${Math.round(total / 1_000)} KB`;
-  return `${total} B`;
-}
 
 export default function LanguageRing({ repos }) {
   const [active, setActive] = useState(null);
@@ -61,7 +56,7 @@ export default function LanguageRing({ repos }) {
         className="ring"
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         role="img"
-        aria-label={`Language distribution across ${repos.length} repositories, ${bytes(total)} of source in total.`}
+        aria-label={`Language distribution across ${repos.length} repositories, ${bytes(total, 2)} of source in total.`}
         onMouseLeave={() => setActive(null)}
       >
         {/* Rotated so the largest language starts at twelve o'clock, which is
@@ -103,11 +98,11 @@ export default function LanguageRing({ repos }) {
               />
               {current.name}
             </span>
-            <span className="num ring-bytes">{bytes(current.value)}</span>
+            <span className="num ring-bytes">{bytes(current.value, 2)}</span>
           </>
         ) : (
           <>
-            <span className="num ring-pct">{bytes(total)}</span>
+            <span className="num ring-pct">{bytes(total, 2)}</span>
             <span className="ring-name">
               across {segments.length} languages
             </span>

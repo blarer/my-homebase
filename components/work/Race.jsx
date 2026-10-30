@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import '@/app/components.css';
-import '@/app/motion.css';
+import { figureLabel } from '@/lib/figures';
 
 /**
  * A measured comparison drawn as a race, folded under a disclosure.
@@ -19,7 +18,7 @@ import '@/app/motion.css';
  *
  * Props:
  *   id        anchor and details id
- *   figure    "Fig. 1 — Benchmark"
+ *   n         figure number; repoName names it ("Fig. 1 — mp4trim")
  *   title     "The same scan, three ways"
  *   lede      one sentence of context
  *   unit      axis label, e.g. "t / seconds"
@@ -40,13 +39,28 @@ const FORMAT = {
   megabytes: (v) => `${v >= 100 ? Math.round(v) : v.toFixed(1)} MB`,
 };
 
-export default function Race({ id, figure, title, lede, unit, kind, ticks, runs, caption, repo }) {
+export default function Race({ id, n, repoName, title, lede, unit, kind, ticks, runs, caption, headline, repo }) {
+  const figure = figureLabel(n, repoName);
   const format = FORMAT[kind] ?? String;
   const slowest = Math.max(...runs.map((run) => run.value));
   const [elapsed, setElapsed] = useState(0);
   const [done, setDone] = useState(false);
   const [open, setOpen] = useState(false);
   const frame = useRef(0);
+  const details = useRef(null);
+
+  // A link to #clip (from the list of figures, or pasted from elsewhere)
+  // should land on an open figure, not a closed one with the race hidden.
+  useEffect(() => {
+    const openFromHash = () => {
+      if (window.location.hash === `#${id}` && details.current && !details.current.open) {
+        details.current.open = true;
+      }
+    };
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    return () => window.removeEventListener('hashchange', openFromHash);
+  }, [id]);
 
   // The race only runs once the disclosure is opened: a reader who never
   // opens it never pays for the rAF loop, and one who does sees the race
@@ -87,18 +101,26 @@ export default function Race({ id, figure, title, lede, unit, kind, ticks, runs,
 
   return (
     <details
+      ref={details}
       id={id}
       className="section benchmark"
+      data-running-head={figure}
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary className="shell benchmark-summary">
         <span className="section-head benchmark-head">
-          <span className="tag">{figure}</span>
           <span className="benchmark-title">
             {title}
             <span className="benchmark-chevron" aria-hidden="true" />
           </span>
-          <span className="benchmark-hint">Open the figure</span>
+          <span className="tag">{figure}</span>
+          <span className="benchmark-hint">
+            <span className="benchmark-hint-result num">{headline}</span>
+            <span className="benchmark-hint-action" aria-hidden="true">
+              <span className="benchmark-hint-closed">Run the figure</span>
+              <span className="benchmark-hint-open">Fold it away</span>
+            </span>
+          </span>
         </span>
       </summary>
 
@@ -126,7 +148,7 @@ export default function Race({ id, figure, title, lede, unit, kind, ticks, runs,
           {/* Without JavaScript the rAF loop never advances the inline
               styles, so this stylesheet draws the finished race instead:
               full bars, real values, needles resting at the finish. The
-              caption's own no-JS timer lives in components.css. */}
+              caption's own no-JS timer lives in race.css. */}
           <noscript>
             <style>{`
               .lane-fill { width: var(--final) !important; }

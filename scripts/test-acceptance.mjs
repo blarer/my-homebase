@@ -7,7 +7,9 @@
  */
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pwPath = '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
+// PLAYWRIGHT_PATH points at any playwright install; CHROME_PATH at any
+// Chromium build (default: the installed Chrome channel).
+const pwPath = process.env.PLAYWRIGHT_PATH ?? '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
 const base = (process.env.URL ?? 'http://localhost:3778/').replace(/\/?$/, '/');
@@ -15,7 +17,7 @@ const WORK = new URL('work/', base).href;
 const results = [];
 const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail });
 
-const browser = await chromium.launch({ channel: 'chrome' });
+const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : { channel: 'chrome' });
 const errors = [];
 const watch = (page) => {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
@@ -304,8 +306,13 @@ const beforeFlip = await page.$eval('canvas.atlas', meanRgb);
 // Clicking the footer toggle scrolls the atlas offscreen, which pauses it;
 // the MutationObserver still repaints one re-inked frame on theme change.
 // Wait for that frame (frames counter advances by at least one).
+// The theme is applied inside a View Transition callback where supported,
+// which runs a frame after the click, so wait for the theme to land first
+// and then for the re-inked frame.
 const f0 = await page.$eval('canvas.atlas', (c) => Number(c.dataset.frames));
 await page.click('.theme-toggle');
+await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark', null, { timeout: 3000 });
+await page.waitForTimeout(800);
 await page.waitForFunction((n) => Number(document.querySelector('canvas.atlas').dataset.frames) > n, f0, { timeout: 3000 });
 const afterFlip = await page.$eval('canvas.atlas', meanRgb);
 const flipDist = Math.hypot(...beforeFlip.map((v, i) => v - afterFlip[i]));

@@ -4,14 +4,16 @@
 import { createRequire } from 'module';
 import { mkdirSync } from 'fs';
 const require = createRequire(import.meta.url);
-const pwPath = '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
+// PLAYWRIGHT_PATH points at any playwright install; CHROME_PATH at any
+// Chromium build (default: the installed Chrome channel).
+const pwPath = process.env.PLAYWRIGHT_PATH ?? '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
 const url = process.env.URL ?? 'http://localhost:3778/';
 const out = 'design/screens/motion';
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch({ channel: 'chrome' });
+const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : { channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 1200, height: 720 } });
 
 // Phase 1: load sequence. Sample the hero at these ms after navigation.

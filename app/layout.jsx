@@ -1,8 +1,9 @@
 import { Old_Standard_TT, Courier_Prime } from 'next/font/google';
 import localFont from 'next/font/local';
-import './globals.css';
-import ThemeScript from '@/components/ThemeScript';
-import RevealScript from '@/components/RevealScript';
+import './styles/index.css';
+import ThemeScript from '@/components/site/ThemeScript';
+import RevealScript from '@/components/site/RevealScript';
+import Masthead from '@/components/site/Masthead';
 import { SITE_URL } from '@/lib/site';
 
 // The title page's two letters are set in Headbang, the display face from
@@ -73,6 +74,10 @@ export default function RootLayout({ children }) {
         <ThemeScript />
       </head>
       <body>
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <Masthead />
         {children}
         {/* Runs after the sections exist; see RevealScript for why it lives
             at the end of <body> rather than in <head>. */}
