@@ -205,7 +205,7 @@
     {
       "rev": "R",
       "date": "2026-10-30",
-      "commits": 7,
+      "commits": 9,
       "subjects": [
         "Refresh repository snapshot",
         "design: baseline audit and proposed architecture",
@@ -213,9 +213,11 @@
         "Verify revamp: list of figures is a section, acceptance waits for theme",
         "Use Section and FigureHead for the treemap and languages figures",
         "Add PRODUCT.md: product truth for the redesign (engineers and employers)",
-        "Datasheet redesign: replace Offprint with an IC datasheet"
+        "Datasheet redesign: replace Offprint with an IC datasheet",
+        "Datasheet: fix render issues found in review, rewrite acceptance suite",
+        "design: DESIGN.md for the Datasheet direction, audit, screens"
       ],
-      "last": "aa44916"
+      "last": "94919c5"
     }
   ]
 }
