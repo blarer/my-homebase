@@ -699,3 +699,15 @@ html.theme-flipping * {
     }
   }
 }
+
+@layer motion {
+  /* The list of figures has its own row-by-row entrance; it does not also
+     take the section reveal, which would fade it twice. */
+  .section.figure-index,
+  html.reveal-ready .section.figure-index:not(.in-view) {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}

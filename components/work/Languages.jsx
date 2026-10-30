@@ -1,6 +1,8 @@
 import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
 import LanguageRing from "@/components/work/LanguageRing";
+import Section from "@/components/ui/Section";
+import FigureHead from "@/components/ui/FigureHead";
 
 /**
  * Languages, counted rather than claimed.
@@ -28,12 +30,8 @@ export default function Languages({ repos }) {
   const largest = ranked[0]?.[1] ?? 1;
 
   return (
-    <section id="languages" className="section" data-running-head="Fig. 6 — Languages">
-      <div className="shell">
-        <div className="section-head">
-          <h2>What the work is actually written in</h2>
-          <span className="tag">Fig. 6 — Languages</span>
-        </div>
+    <Section id="languages" runningHead="Fig. 6 — Languages">
+        <FigureHead figure="Fig. 6 — Languages" title="What the work is actually written in" />
 
         <div className="lang-split">
           <LanguageRing repos={repos} />
@@ -76,7 +74,6 @@ export default function Languages({ repos }) {
             ))}
           </ol>
         </div>
-      </div>
-    </section>
+    </Section>
   );
 }

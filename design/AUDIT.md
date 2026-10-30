@@ -109,10 +109,10 @@ CSS unresolvable from `.next/server/app`). Source scan (`app components`):
 | `npm test` | pass (69 ok; privacy name check UNVERIFIED, `gh` unauthenticated, same as before) |
 | `npm run lint` | no warnings |
 | `npm run build` | ok. `/` 10.4 kB (116 kB first load), `/work` 5.4 kB (111 kB); within budget |
-| `npm run test:acceptance` (`next start -p 3778`, nix Chromium 156, SwiftShader GL) | **114 passed, 4 failed** |
+| `npm run test:acceptance` (`next start -p 3778`, nix Chromium 156, SwiftShader GL) | **113 to 114 passed, 4 to 5 failed** across runs |
 
 The same acceptance script against the pre-revamp build on this host gave
-111 passed, 7 failed. The 4 remaining failures all also fail on the
+111 passed, 7 failed. The remaining failures (J/L hover, both atlas fps checks, atlas restart) all also fail on the
 baseline here and come from the headless environment, not the code:
 software WebGL runs the atlas at ~15 fps (`~60fps on GL`, `no long
 frames`, `atlas restarts on return`), and the J hover opacity is sampled
