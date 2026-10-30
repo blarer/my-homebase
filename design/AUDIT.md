@@ -81,6 +81,54 @@ with anything else). The code under it is not:
 5. P3 motion: one easing; animate `<details>` open/close; one authored
    entrance per page rather than the same rise everywhere.
 
-## After
+## After (branch `agent/impeccable-revamp`)
 
-See the "After" section appended below once the revamp lands.
+### Detector, rendered (`/` and `/work/`)
+
+| | Before | After |
+|---|---|---|
+| Warnings | 20 | 3 |
+| Advisories | 2 | 0 |
+| `low-contrast` | 7 | 0 |
+| `undersized-ui-text` | 4 | 0 |
+| `kicker-above-heading` | 3 | 0 |
+| `hero-eyebrow-chip` | 1 | 0 |
+| `gradient-text` | 1 | 0 (the lit copy is not present at rest when scanned) |
+| `bounce-easing` | 2 | 0 |
+| `cream-palette` | 2 | 2, pinned by DIRECTION.md, kept |
+| `text-overflow` | 1 | 1, intended Headbang overhang, kept |
+
+Static HTML scan: unchanged (2 `flat-type-hierarchy` false positives,
+CSS unresolvable from `.next/server/app`). Source scan (`app components`):
+1 advisory before, 0 after.
+
+### Commands
+
+| Step | Result |
+|---|---|
+| `npm test` | pass (69 ok; privacy name check UNVERIFIED, `gh` unauthenticated, same as before) |
+| `npm run lint` | no warnings |
+| `npm run build` | ok. `/` 10.4 kB (116 kB first load), `/work` 5.4 kB (111 kB); within budget |
+| `npm run test:acceptance` (`next start -p 3778`, nix Chromium 156, SwiftShader GL) | **114 passed, 4 failed** |
+
+The same acceptance script against the pre-revamp build on this host gave
+111 passed, 7 failed. The 4 remaining failures all also fail on the
+baseline here and come from the headless environment, not the code:
+software WebGL runs the atlas at ~15 fps (`~60fps on GL`, `no long
+frames`, `atlas restarts on return`), and the J hover opacity is sampled
+mid-transition (`0.89`). They should pass on the Mac with real Chrome.
+
+One acceptance change: the theme-flip check now waits for `data-theme` to
+change before waiting for the re-inked atlas frame, because the theme is
+applied inside a View Transition callback.
+
+### Re-scored
+
+| # | Dimension | Before | After |
+|---|---|---|---|
+| 1 | Accessibility | 2 | 3 (AA contrast both themes, skip link, site nav with `aria-current`, hash-openable figures, ≥32px targets in chrome) |
+| 2 | Performance | 3 | 3 (one CSS entry point, scroll-driven progress costs no JS) |
+| 3 | Theming | 3 | 4 (single token file, both themes, browser surfaces themed) |
+| 4 | Responsive | 3 | 3 |
+| 5 | Integrity | 2 | 4 (layered cascade, grouped components, figures as data) |
+| **Total** | 13 | **17/20** |

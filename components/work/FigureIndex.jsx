@@ -12,7 +12,8 @@ export default function FigureIndex() {
   ];
 
   return (
-    <nav className="shell figure-index" aria-labelledby="figure-index-title">
+    <nav id="figures" className="section figure-index" aria-labelledby="figure-index-title">
+      <div className="shell figure-index-inner">
       <h2 id="figure-index-title" className="figure-index-title">
         List of figures
       </h2>
@@ -31,6 +32,7 @@ export default function FigureIndex() {
           </li>
         ))}
       </ol>
+      </div>
     </nav>
   );
 }

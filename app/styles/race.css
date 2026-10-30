@@ -229,9 +229,13 @@
 
 /* ---- /work: list of figures ---- */
 
-.figure-index {
-  max-width: 760px;
+.section.figure-index {
   padding-block: var(--space-l) var(--space-xl);
+  border-top: 0;
+}
+
+.figure-index-inner {
+  max-width: 760px;
 }
 
 .figure-index-title {
@@ -331,7 +335,7 @@
 }
 
 /* The first figure sits directly under the list; no top rule. */
-.figure-index + .section {
+.section.figure-index + .section {
   border-top: 0;
 }
 

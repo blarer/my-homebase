@@ -306,8 +306,13 @@ const beforeFlip = await page.$eval('canvas.atlas', meanRgb);
 // Clicking the footer toggle scrolls the atlas offscreen, which pauses it;
 // the MutationObserver still repaints one re-inked frame on theme change.
 // Wait for that frame (frames counter advances by at least one).
+// The theme is applied inside a View Transition callback where supported,
+// which runs a frame after the click, so wait for the theme to land first
+// and then for the re-inked frame.
 const f0 = await page.$eval('canvas.atlas', (c) => Number(c.dataset.frames));
 await page.click('.theme-toggle');
+await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark', null, { timeout: 3000 });
+await page.waitForTimeout(800);
 await page.waitForFunction((n) => Number(document.querySelector('canvas.atlas').dataset.frames) > n, f0, { timeout: 3000 });
 const afterFlip = await page.$eval('canvas.atlas', meanRgb);
 const flipDist = Math.hypot(...beforeFlip.map((v, i) => v - afterFlip[i]));
