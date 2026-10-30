@@ -23,12 +23,33 @@ function apply(theme) {
  * when it opens, only when you turn the lamp on).
  */
 let flipTimer = 0;
-function flip(theme) {
+
+/**
+ * Re-ink the page. Where View Transitions exist, the new palette spreads
+ * out from the switch itself as a circle, like ink taking on blotting
+ * paper; elsewhere, and under reduced motion, every colour crossfades.
+ * Either way `theme-flipping` is on <html> for the duration.
+ */
+function flip(theme, origin) {
   const root = document.documentElement;
   root.classList.add('theme-flipping');
-  apply(theme);
   clearTimeout(flipTimer);
   flipTimer = setTimeout(() => root.classList.remove('theme-flipping'), 560);
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!document.startViewTransition || reduced || !origin) {
+    apply(theme);
+    return;
+  }
+
+  const { x, y } = origin;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  root.style.setProperty('--flip-x', `${x}px`);
+  root.style.setProperty('--flip-y', `${y}px`);
+  root.style.setProperty('--flip-r', `${radius}px`);
+  root.classList.add('theme-wiping');
+  const transition = document.startViewTransition(() => apply(theme));
+  transition.finished.finally(() => root.classList.remove('theme-wiping'));
 }
 
 export default function ThemeToggle() {
@@ -51,9 +72,10 @@ export default function ThemeToggle() {
     return () => media.removeEventListener('change', onChange);
   }, []);
 
-  const toggle = () => {
+  const toggle = (event) => {
     const next = theme === 'dark' ? 'light' : 'dark';
-    flip(next);
+    const box = event.currentTarget.querySelector('.theme-toggle-knob')?.getBoundingClientRect();
+    flip(next, box && { x: box.left + box.width / 2, y: box.top + box.height / 2 });
     localStorage.setItem(STORAGE_KEY, next);
     setTheme(next);
   };

@@ -1,0 +1,116 @@
+/*
+ * Tokens: Offprint. A scientific monograph, printed.
+ *
+ * Daylight is book paper with iron-gall ink and one spot colour, the
+ * fountain-pen blue of a corrected proof. Lamplight is the same page read at
+ * night: lampblack ground, aged cream ink, old gold where the proof was
+ * marked. The spot colour means "measured": winning lane, finished times,
+ * needles, focus, the current page. Every other saturated colour is data.
+ *
+ * Every value a component uses comes from here. Components never write a
+ * colour, a duration, or a font stack of their own.
+ */
+@layer tokens {
+  :root {
+    color-scheme: light;
+
+    /* ---- Colour: daylight ---- */
+    --paper: #f3f1ec;
+    --paper-raised: #faf9f6;
+    --ink: #1c1a17;
+    --ink-soft: #4d4840;
+    /* 4.96:1 on paper, 5.31:1 on plate. DIRECTION.md had #7d766a (3.98:1),
+       which failed WCAG AA on every caption; see design/AUDIT.md. */
+    --ink-faint: #6e675b;
+    --accent: #23408e;
+    --accent-soft: rgba(35, 64, 142, 0.1);
+    --rule: rgba(28, 26, 23, 0.2);
+    --rule-soft: rgba(28, 26, 23, 0.09);
+    --track: rgba(28, 26, 23, 0.06);
+    --hatch: rgba(28, 26, 23, 0.32);
+    --band-rest: 0.26;
+    --band-active: 0.62;
+    --glow: rgba(35, 64, 142, 0.1);
+    --glow-strong: rgba(35, 64, 142, 0.16);
+    --shadow-low: 0 1px 2px rgba(28, 26, 23, 0.04), 0 4px 14px rgba(28, 26, 23, 0.035);
+    --shadow-high: 0 2px 4px rgba(28, 26, 23, 0.05), 0 14px 40px rgba(28, 26, 23, 0.07);
+    --masthead-bg: rgba(243, 241, 236, 0.86);
+
+    /* ---- Type ---- */
+    --font-serif: var(--font-old-serif), 'Times New Roman', Georgia, serif;
+    --font-mono: var(--font-typewriter), 'Courier New', Courier, monospace;
+    --font-name: var(--font-headbang), var(--font-serif);
+
+    /* Fluid modular scale: ~1.2 on a phone opening to ~1.333 on a desk. */
+    --step--2: 12px;
+    --step--1: clamp(12.5px, 0.74rem + 0.12vw, 13.5px);
+    --step-0: clamp(15px, 0.9rem + 0.18vw, 16.5px);
+    --step-1: clamp(18px, 1.02rem + 0.42vw, 22px);
+    --step-2: clamp(22px, 1.18rem + 0.95vw, 30px);
+    --step-3: clamp(27px, 1.3rem + 1.9vw, 42px);
+    --step-4: clamp(34px, 1.4rem + 3.6vw, 64px);
+    --tracking-caps: 0.16em;
+    --leading-body: 1.85;
+    --leading-tight: 1.12;
+
+    /* ---- Space ---- */
+    --space-3xs: 4px;
+    --space-2xs: 8px;
+    --space-xs: 12px;
+    --space-s: clamp(16px, 1.2vw + 10px, 20px);
+    --space-m: clamp(24px, 2vw + 14px, 32px);
+    --space-l: clamp(36px, 3vw + 20px, 52px);
+    --space-xl: clamp(56px, 6vw + 24px, 96px);
+    --space-2xl: clamp(72px, 11vw, 132px);
+    --gutter: clamp(20px, 5vw, 64px);
+    --shell: 1120px;
+    --measure: 66ch;
+    --masthead-h: 56px;
+
+    /* ---- Motion ----
+       Two exponential ease-outs (a page settling) and one symmetrical curve
+       for things that breathe. Nothing overshoots. */
+    --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-breathe: cubic-bezier(0.45, 0, 0.55, 1);
+    --dur-flip: 140ms;
+    --dur-move: 320ms;
+    --dur-reveal: 600ms;
+    --dur-settle: 900ms;
+
+    /* Load sequence. Race.jsx waits RACE_DELAY_MS after a figure opens;
+       keep the lane steps in step with that constant. */
+    --load-title: 0ms;
+    --load-thesis: 180ms;
+    --load-rule: 360ms;
+    --load-axis: 620ms;
+    --load-lane: 720ms;
+    --load-lane-step: 110ms;
+  }
+
+  /* Lamplight is not an inverted page: the warmth of the paper stays in
+     the ground, and the proof marks turn to old gold. */
+  [data-theme='dark'] {
+    color-scheme: dark;
+
+    --paper: #17140f;
+    --paper-raised: #1f1b15;
+    --ink: #ece4d2;
+    --ink-soft: #b3a88f;
+    /* 5.04:1 on paper. DIRECTION.md had #7f7562 (4.04:1). */
+    --ink-faint: #8f8571;
+    --accent: #d4a94c;
+    --accent-soft: rgba(212, 169, 76, 0.16);
+    --rule: rgba(236, 228, 210, 0.18);
+    --rule-soft: rgba(236, 228, 210, 0.08);
+    --track: rgba(236, 228, 210, 0.07);
+    --hatch: rgba(236, 228, 210, 0.34);
+    --band-rest: 0.34;
+    --band-active: 0.74;
+    --glow: rgba(212, 169, 76, 0.28);
+    --glow-strong: rgba(212, 169, 76, 0.5);
+    --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.18);
+    --shadow-high: 0 2px 4px rgba(0, 0, 0, 0.22), 0 14px 40px rgba(0, 0, 0, 0.25);
+    --masthead-bg: rgba(23, 20, 15, 0.84);
+  }
+}

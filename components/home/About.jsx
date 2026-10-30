@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import '@/app/motion.css';
 
 /**
  * About, in his own register.
@@ -11,12 +10,9 @@ import '@/app/motion.css';
  */
 export default function About() {
   return (
-    <section id="about" className="section">
+    <section id="about" className="section" data-running-head="Notes">
       <div className="shell about-grid">
         <div className="about-head">
-          <div className="section-head about-section-head">
-            <span className="tag">Notes — About</span>
-          </div>
           <h2 className="about-title">Jains Yeah Yeah Yeah</h2>
 
           <figure className="portrait">

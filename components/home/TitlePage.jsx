@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import '@/app/motion.css';
 
 /**
  * The title page.
@@ -27,7 +26,7 @@ import '@/app/motion.css';
  */
 const PAIRS = ['elemental', 'celestial'];
 
-export default function Hero() {
+export default function TitlePage() {
   const [pair, setPair] = useState(null);
 
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="hero">
+    <section className="hero" data-running-head="An introduction">
       <div className="shell hero-inner">
         <header className="hero-head">
           <h1 className="display hero-name" data-pair={pair ?? undefined}>

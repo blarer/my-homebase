@@ -1,7 +1,6 @@
 import { languageColor } from "@/lib/languageColors";
-import LanguageRing from "@/components/LanguageRing";
-import "@/app/components.css";
-import "@/app/motion.css";
+import { bytes } from "@/lib/format";
+import LanguageRing from "@/components/work/LanguageRing";
 
 /**
  * Languages, counted rather than claimed.
@@ -15,13 +14,7 @@ import "@/app/motion.css";
  * decoration for the other.
  */
 
-function bytes(total) {
-  if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)} MB`;
-  if (total >= 1_000) return `${Math.round(total / 1_000)} KB`;
-  return `${total} B`;
-}
-
-export default function Stack({ repos }) {
+export default function Languages({ repos }) {
   const totals = new Map();
 
   for (const repo of repos) {
@@ -35,11 +28,11 @@ export default function Stack({ repos }) {
   const largest = ranked[0]?.[1] ?? 1;
 
   return (
-    <section id="languages" className="section">
+    <section id="languages" className="section" data-running-head="Fig. 6 — Languages">
       <div className="shell">
         <div className="section-head">
-          <span className="tag">Fig. 6 — Languages</span>
           <h2>What the work is actually written in</h2>
+          <span className="tag">Fig. 6 — Languages</span>
         </div>
 
         <div className="lang-split">

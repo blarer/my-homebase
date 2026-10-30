@@ -1,3 +1,4 @@
+@layer motion {
 /*
  * Motion for the Offprint direction.
  *
@@ -18,20 +19,6 @@
  * whole file collapses under prefers-reduced-motion at the bottom.
  */
 
-:root {
-  /* Load sequence timing. The race in Hero.jsx waits RACE_DELAY_MS
-     (1400) before its first frame, so the lanes are in place before the
-     needles start. Keep these in step with that constant. */
-  --load-title: 0ms;
-  --load-thesis: 180ms;
-  --load-rule: 360ms;
-  --load-axis: 620ms;
-  --load-lane: 720ms;
-  --load-lane-step: 110ms;
-  --dur-settle: 900ms;
-  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-breathe: cubic-bezier(0.45, 0, 0.55, 1);
-}
 
 /* ---- 1. Page load: the title page composes itself ---- */
 
@@ -134,20 +121,73 @@
     calc(var(--load-lane) + var(--load-lane-step) * 3) both;
 }
 
-/* The work page head settles like the title page. */
-.work-head .work-home {
+/* /work's one authored moment: the head settles like the title page, then
+   the list of figures is set row by row, each leader drawn out from its
+   title to its result like a compositor running the dots across. */
+.work-head .work-title {
   animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-title) both;
 }
 
-.work-head .work-title {
+.work-head .work-lede {
   animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-thesis) both;
 }
 
-.work-head .work-lede {
+.work-head .work-home {
   animation: ink-settle var(--dur-settle) var(--ease-settle) var(--load-rule) both;
 }
 
-/* The race caption's no-JS timer in components.css fires at 2.4s from when
+.figure-index-title {
+  animation: ink-settle var(--dur-settle) var(--ease-settle) 420ms both;
+}
+
+@keyframes leader-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.figure-index-row {
+  animation: ink-settle 700ms var(--ease-settle) calc(520ms + var(--i) * 70ms) both;
+}
+
+.figure-index-leader {
+  animation: leader-draw 900ms var(--ease-settle) calc(640ms + var(--i) * 70ms) both;
+}
+
+/* Folded figures open and close on a height transition where the engine
+   supports animating to `auto` (interpolate-size, set on html in base.css).
+   Elsewhere they snap open, which is the native behaviour. */
+.benchmark::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 560ms var(--ease-settle),
+    content-visibility 560ms allow-discrete;
+}
+
+.benchmark[open]::details-content {
+  block-size: auto;
+}
+
+/* The figure-head rules either side of the plate number draw outward from
+   the number as the section arrives. */
+@keyframes plate-rule {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.section.in-view .section-head .tag::before {
+  transform-origin: right;
+  animation: plate-rule 700ms var(--ease-settle) 260ms both;
+}
+
+.section.in-view .section-head .tag::after {
+  transform-origin: left;
+  animation: plate-rule 700ms var(--ease-settle) 260ms both;
+}
+
+/* The race caption's no-JS timer in race.css fires at 2.4s from when
    its animation starts. Inside a closed <details> it does not start, so
    scoping to [open] makes it count from the moment the figure is opened:
    RACE_DELAY_MS + RACE_MS = 3.8s, matching the JS path. */
@@ -159,7 +199,7 @@
 
 /* The winning needle never quite rests: a slow glow swell, like a pen
    held on the paper. Only while the race is running or has just finished;
-   once stamped, the halo cools (components.css) and this stops. */
+   once stamped, the halo cools (race.css) and this stops. */
 @keyframes needle-breathe {
   0%,
   100% {
@@ -437,7 +477,7 @@ html.reveal-ready .section:not(.in-view) .treemap .tile {
 
 /* The theme knob travels on a spring-ish curve and the track tints. */
 .theme-toggle-knob {
-  transition: transform 420ms cubic-bezier(0.34, 1.4, 0.64, 1);
+  transition: transform 420ms var(--ease-settle);
 }
 
 .theme-toggle-track {
@@ -545,5 +585,117 @@ html.theme-flipping * {
   .readout-name a::after,
   .notfound-link::after {
     transition: none;
+  }
+}
+/* ---- Reduced motion: snap everything above to its final state ---- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The caption's no-JS timer would otherwise still wait 2.4s (the global
+     clamp shortens durations, not delays). Show the conclusion immediately. */
+  .race .race-caption {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* RevealScript bails before adding reveal-ready under reduced motion, so
+     the bar runs never dim; this belt-and-braces the final state anyway. */
+  html.reveal-ready .section:not(.in-view) .lang-bar-run {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .lang-row:hover .lang-needle,
+  .lang-row:focus-within .lang-needle {
+    transform: none;
+  }
+
+  .treemap .tile[data-active],
+  .treemap .tile:hover {
+    transform: none;
+  }
+}
+
+}
+@layer motion {
+  /* ---- Chrome ---- */
+
+  /* Reading progress, driven by the document's own scroll position. */
+  @keyframes progress-fill {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .masthead-progress {
+      animation: progress-fill linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  /* The running head changes by rolling up, like a page turning under it.
+     React keys the span on the text, so each change is a fresh mount. */
+  @keyframes running-in {
+    from {
+      opacity: 0;
+      transform: translateY(70%);
+      filter: blur(3px);
+    }
+  }
+
+  .masthead-running-text {
+    animation: running-in 520ms var(--ease-settle) both;
+  }
+
+  @keyframes masthead-in {
+    from {
+      transform: translateY(-100%);
+    }
+  }
+
+  .masthead {
+    animation: masthead-in 700ms var(--ease-settle) 200ms both;
+  }
+
+  /* ---- Theme: the new palette spreads from the switch ---- */
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  @keyframes ink-spread {
+    from {
+      clip-path: circle(0 at var(--flip-x, 50%) var(--flip-y, 100%));
+    }
+    to {
+      clip-path: circle(var(--flip-r, 150%) at var(--flip-x, 50%) var(--flip-y, 100%));
+    }
+  }
+
+  html.theme-wiping::view-transition-new(root) {
+    animation: ink-spread 720ms var(--ease-settle) both;
+  }
+
+  /* The crossfade class must not fight the snapshot wipe. */
+  html.theme-wiping.theme-flipping,
+  html.theme-wiping.theme-flipping * {
+    transition: none !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .masthead,
+    .masthead-running-text,
+    .figure-index-row,
+    .figure-index-leader,
+    .figure-index-title {
+      animation: none !important;
+    }
+
+    .benchmark::details-content {
+      transition: none;
+    }
   }
 }

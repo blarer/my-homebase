@@ -7,7 +7,9 @@
  */
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const pwPath = '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
+// PLAYWRIGHT_PATH points at any playwright install; CHROME_PATH at any
+// Chromium build (default: the installed Chrome channel).
+const pwPath = process.env.PLAYWRIGHT_PATH ?? '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
 const base = (process.env.URL ?? 'http://localhost:3778/').replace(/\/?$/, '/');
@@ -15,7 +17,7 @@ const WORK = new URL('work/', base).href;
 const results = [];
 const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail });
 
-const browser = await chromium.launch({ channel: 'chrome' });
+const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : { channel: 'chrome' });
 const errors = [];
 const watch = (page) => {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));

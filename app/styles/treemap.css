@@ -1,0 +1,402 @@
+@layer components {
+/* ---- Work: repository treemap ---- */
+
+.section-lede {
+  max-width: 56ch;
+  margin: 0 auto 32px;
+  font-family: var(--font-serif);
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.treemap-frame {
+  position: relative;
+  padding: 10px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-low);
+}
+
+/* A figure plate: the treemap sits on raised paper inside a single rule,
+   the way a printed plate is tipped into a book. */
+.treemap-frame::before,
+.treemap-frame::after {
+  content: none;
+}
+
+.treemap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  min-height: 280px;
+}
+
+.tile {
+  position: absolute;
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 12px;
+  border: 1px solid var(--paper-raised);
+  overflow: hidden;
+  transition: box-shadow var(--dur-move) var(--ease-snap);
+}
+
+/* The tile under the pointer lifts off the plate. z-index keeps its shadow
+   above the neighbouring tiles; position is already absolute. */
+.tile[data-active],
+.tile:hover {
+  z-index: 2;
+  box-shadow: var(--shadow-low);
+}
+
+/* Language bands fill the tile the way file blocks fill a disk map, so the
+   dominant language of a repo is legible at a glance. */
+.tile-bands {
+  position: absolute;
+  inset: 0;
+  opacity: var(--band-rest);
+  transition: opacity var(--dur-move) var(--ease-snap);
+}
+
+.tile[data-active] .tile-bands,
+.tile:hover .tile-bands {
+  opacity: var(--band-active);
+}
+
+.tile-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transition: opacity var(--dur-flip) var(--ease-snap);
+}
+
+/* Pointing at a band names it. The other bands in the same tile drop back so
+   the label and the colour it describes cannot be confused. */
+.tile-band[data-dimmed] { opacity: 0.35; }
+.tile-band[data-probed] { opacity: 1; }
+
+.probe {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-high);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.probe-share {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.probe-bytes { color: var(--ink-faint); }
+
+/* Private tiles are drawn dashed: measured and present, but visibly not
+   something you can click through to. */
+.tile[data-private] {
+  border-style: dashed;
+  border-color: var(--rule);
+}
+
+.tile[data-private] .tile-name {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.readout-private {
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+/* The label sits on whatever language band happens to be behind it, not on the
+   tile background, so its contrast was decided by the data rather than by the
+   palette. Measured worst case: --ink-faint on Shell green scored 2.87 against
+   a 4.5 threshold, and it failed in both themes.
+
+   Raising the ink colour alone cannot fix this, because the two themes need
+   opposite corrections and both still fail once a band goes opaque on hover
+   (light 3.12, dark 2.03). A scrim of the tile's own paper does work, because
+   it makes the label's contrast depend on the palette again instead of on
+   which language a repository happens to be written in.
+
+   Hover is the worst case, not rest: --band-active roughly doubles the band
+   opacity, so any fix evaluated only at rest is not a fix. Raising the ink
+   colour alone cannot work either, because the bands run from near-black Lua
+   navy to bright Shell green and no single colour clears 4.5 against both.
+
+   0.80 is the lowest scrim that passes all four states (both themes, rest and
+   hover) across all 18 languages. Worst case 4.79, on the size line over
+   Batchfile on hover. The band still reads through, so the tile keeps
+   carrying its data. */
+.tile-body {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  justify-self: start;
+  /* Hug the text rather than the tile, so the scrim reads as a label plate
+     instead of a band stretched across the tile. */
+  width: fit-content;
+  max-width: 100%;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  background: color-mix(in srgb, var(--paper-raised) 80%, transparent);
+  border-radius: 3px;
+}
+
+/* An empty body would otherwise paint a small floating plate on tiles whose
+   label the container query has withdrawn. */
+.tile-body:empty {
+  background: none;
+}
+
+.tile-name {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(13px, 1.5vw, 17px);
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tile-size {
+  font-size: 11.5px;
+  /* --ink-faint is tuned for text on the page background. Even over the scrim
+     it only reaches 2.06 on a bright band, so the size line uses the same ink
+     as body copy: 6.99 worst case across all 18 languages, both themes, at
+     rest and on hover. It stays visually secondary through size, not colour. */
+  color: var(--ink-soft);
+  /* Without this the size wraps onto a second line in a narrow tile, which is
+     what pushes the label past the bottom of the tile and makes `overflow:
+     hidden` cut through the glyphs. The name above already truncates with an
+     ellipsis rather than wrapping; the size now behaves the same way. */
+  white-space: nowrap;
+}
+
+/* A tile smaller than its own label used to paint the label anyway and let
+   `overflow: hidden` slice it mid-glyph. Below the sizes measured to fit, the
+   label is withdrawn from view instead of being cut.
+
+   The text stays in the accessibility tree. Each tile is a focusable <button>
+   whose accessible name comes only from this text, so removing it with
+   `display: none` would leave an unlabelled control; the clip-rect idiom hides
+   it visually while a screen reader still announces the repository and size.
+   Sighted users lose nothing either: hover and keyboard focus both name the
+   tile in the readout panel below the treemap.
+
+   Querying the tile itself rather than the viewport means the rule follows the
+   tile's real geometry, which squarify decides, not the window width. */
+.tile {
+  container-type: size;
+}
+
+/* The label needs 20px for the name, 2px gap, 18px for the size, 8px of scrim
+   padding and 24px of tile padding: 72px of tile. Under that the size line
+   goes first, because the name is what identifies the tile. Under 52px not
+   even the name and its scrim fit, so the tile reads as shape and colour
+   alone, as the smallest tiles in the SVG treemap already do.
+   Widths are the point at which the size string itself stops fitting. */
+@container (max-height: 71px) or (max-width: 63px) {
+  .tile-size {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@container (max-height: 51px) or (max-width: 47px) {
+  .tile-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Both lines are withdrawn at this size, so the scrim has nothing left to
+     sit behind. The `:empty` guard above cannot catch this: the spans are
+     still in the DOM, deliberately, because that is what keeps the tile's
+     accessible name intact. Without this the plate would paint as a small
+     blank pill on the smallest tiles. */
+  .tile-body {
+    padding: 0;
+    margin: 0;
+    background: none;
+  }
+}
+
+/* ---- Readout panel under the treemap ---- */
+
+.readout {
+  display: grid;
+  grid-template-columns: minmax(120px, 168px) minmax(0, 1fr) auto;
+  gap: clamp(20px, 4vw, 48px);
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+
+.readout-key {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+}
+
+.readout-pct {
+  font-size: clamp(26px, 3.6vw, 40px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.readout-name {
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.readout-name a {
+  padding-bottom: 1px;
+}
+
+.readout-name-host {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.readout-note {
+  max-width: 62ch;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.readout-langs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.readout-langs li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 1px;
+  flex: none;
+}
+
+.readout-lang-size {
+  color: var(--ink-faint);
+}
+
+.readout-meta {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  align-content: start;
+  text-align: right;
+}
+
+.readout-meta dd {
+  margin: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .treemap { aspect-ratio: 4 / 5; }
+
+  .readout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .readout-meta {
+    text-align: left;
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: 32px;
+  }
+}
+
+/* ---- Work: physical tiles, red focus, cheap probe ---- */
+
+.treemap .tile {
+  transition:
+    box-shadow var(--dur-move) var(--ease-snap),
+    transform var(--dur-move) var(--ease-snap);
+}
+
+/* The lift is physical: the tile rises a hair off the plate while its shadow
+   deepens. Transform only, so neighbours never reflow. */
+.treemap .tile[data-active],
+.treemap .tile:hover {
+  transform: translateY(-1px);
+}
+
+.treemap .tile:hover {
+  box-shadow: var(--shadow-high);
+}
+
+/* Keyboard focus is the checker's red ring, drawn inset because tiles abut
+   edge-to-edge and an outset ring would be swallowed by neighbours. */
+.treemap .tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+  z-index: 3;
+  box-shadow: var(--shadow-low);
+}
+
+/* The probe is positioned entirely by transform (left/top stay 0), so
+   tracking the cursor never invalidates layout. */
+.treemap .probe {
+  will-change: transform;
+  animation: probe-in var(--dur-flip) var(--ease-snap) both;
+}
+
+@keyframes probe-in {
+  from {
+    opacity: 0;
+  }
+}
+
+
+}

@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { squarify } from "@/lib/treemap";
 import { languageColor } from "@/lib/languageColors";
-import "@/app/components.css";
-import "@/app/motion.css";
+import { bytes } from "@/lib/format";
 
 /**
  * Work as a treemap of the actual repositories, each tile sized by real source
@@ -24,12 +23,6 @@ const NOTES = {
   "my-homebase": "This site. The treemap you are reading is its own component.",
 };
 
-function bytes(total) {
-  if (total >= 1_000_000) return `${(total / 1_000_000).toFixed(1)} MB`;
-  if (total >= 1_000) return `${Math.round(total / 1_000)} KB`;
-  return `${total} B`;
-}
-
 function useMeasure() {
   const ref = useRef(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -48,7 +41,7 @@ function useMeasure() {
   return [ref, size];
 }
 
-export default function Work({ repos }) {
+export default function Treemap({ repos }) {
   const [ref, size] = useMeasure();
   const [active, setActive] = useState(null);
 
@@ -122,11 +115,11 @@ export default function Work({ repos }) {
   };
 
   return (
-    <section id="work" className="section">
+    <section id="work" className="section" data-running-head="Fig. 5 — Work">
       <div className="shell">
         <div className="section-head">
-          <span className="tag">Fig. 5 — Work</span>
           <h2>{items.length} repositories, drawn to scale</h2>
+          <span className="tag">Fig. 5 — Work</span>
         </div>
 
         <p className="section-lede">

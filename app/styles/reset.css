@@ -1,0 +1,78 @@
+/*
+ * Reset. Replaces Tailwind's preflight, which was the only part of Tailwind
+ * this site used (and whose `.ring` utility collided with the language ring).
+ *
+ * Reduced motion lives here on purpose: an !important declaration in the
+ * earliest layer beats !important in every later layer, so no component or
+ * motion rule can re-enable movement for a reader who asked for none. Every
+ * animation in motion.css ends on its settled state, so clamping durations
+ * keeps the final frame and the state change, only the travel goes.
+ */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    tab-size: 4;
+    hanging-punctuation: first last;
+  }
+
+  img,
+  svg,
+  canvas,
+  video {
+    display: block;
+    max-width: 100%;
+  }
+
+  img {
+    height: auto;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+    background: none;
+    letter-spacing: inherit;
+  }
+
+  button,
+  summary {
+    cursor: pointer;
+  }
+
+  ol,
+  ul {
+    list-style: none;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  :where(h1, h2, h3, h4, p, figure, blockquote, dl, dd) {
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,7 +1,7 @@
-import Hero from '@/components/Hero';
-import Atlas from '@/components/Atlas';
-import About from '@/components/About';
-import Footer from '@/components/Footer';
+import TitlePage from '@/components/home/TitlePage';
+import Atlas from '@/components/home/Atlas';
+import About from '@/components/home/About';
+import Footer from '@/components/site/Footer';
 import snapshot from '@/lib/repos.json';
 
 export const metadata = {
@@ -12,18 +12,18 @@ export const metadata = {
 
 /**
  * The front page is an introduction: a title page, one living figure, and
- * a few paragraphs. The measured work (benchmark, treemap, languages) has
- * its own page at /work so a first visit meets a person before a dataset.
+ * a few paragraphs. The measured work has its own page at /work so a first
+ * visit meets a person before a dataset.
  */
 export default function Home() {
-  const { syncedAt } = snapshot;
-
   return (
-    <main>
-      <Hero />
-      <Atlas />
-      <About />
-      <Footer syncedAt={syncedAt} />
-    </main>
+    <>
+      <main id="main" tabIndex={-1}>
+        <TitlePage />
+        <Atlas />
+        <About />
+      </main>
+      <Footer syncedAt={snapshot.syncedAt} />
+    </>
   );
 }

@@ -1,0 +1,24 @@
+/*
+ * The only stylesheet entry point. Layer order is declared once, here, so
+ * the cascade never depends on which chunk Next emits first.
+ *
+ *   reset       element reset + reduced-motion clamp (wins over everything)
+ *   tokens      palette, type scale, space, motion values, per theme
+ *   base        elements and browser surfaces
+ *   layout      shell, section, figure head, type roles
+ *   components  one file per area of the site
+ *   motion      load, idle, reveal and response motion; last so it applies
+ *               over component defaults without specificity tricks
+ */
+@layer reset, tokens, base, layout, components, motion;
+
+@import './reset.css';
+@import './tokens.css';
+@import './base.css';
+@import './layout.css';
+@import './site.css';
+@import './home.css';
+@import './race.css';
+@import './treemap.css';
+@import './languages.css';
+@import './motion.css';

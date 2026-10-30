@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import '@/app/motion.css';
 
 /**
  * A small neural network, drifting.
@@ -609,7 +608,7 @@ export default function Atlas() {
   }, []);
 
   return (
-    <figure className="atlas-plate">
+    <figure className="atlas-plate" data-running-head="Fig. 0 — Atlas">
       <div className="atlas-frame">
         <canvas
           ref={canvasRef}

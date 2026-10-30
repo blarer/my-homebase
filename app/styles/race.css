@@ -1,0 +1,530 @@
+@layer components {
+.race {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--rule);
+}
+
+/* The figure's time axis, set above the lanes as a table's column head:
+   same three-column grid as a lane so the scale sits exactly over the
+   plotted tracks. */
+.race-axis {
+  display: grid;
+  grid-template-columns: minmax(150px, 15.5rem) 1fr auto;
+  align-items: end;
+  gap: clamp(14px, 2.4vw, 30px);
+  padding-block: 10px 6px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.race-axis-label {
+  font-size: 10px;
+}
+
+.race-axis-track {
+  position: relative;
+  display: block;
+  height: 14px;
+}
+
+.race-axis-tick {
+  position: absolute;
+  bottom: 0;
+  font-size: 10px;
+  color: var(--ink-faint);
+  transform: translateX(-50%);
+  padding-bottom: 2px;
+}
+
+.race-axis-tick::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 1px;
+  height: 5px;
+  background: var(--ink-faint);
+}
+
+.race-axis-tick:first-child {
+  transform: none;
+}
+
+.race-axis-tick:first-child::after {
+  left: 0;
+}
+
+@media (max-width: 640px) {
+  .race-axis {
+    display: none;
+  }
+}
+
+.lane {
+  display: grid;
+  grid-template-columns: minmax(150px, 15.5rem) 1fr auto;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 30px);
+  padding-block: 18px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+.lane-label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.lane-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.lane-note {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+}
+
+.lane-track {
+  position: relative;
+  height: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.lane-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--hatch) 0 2px,
+    transparent 2px 5px
+  );
+}
+
+/* The verified run is drawn in the checker's red: solid fill with a soft
+   glow, because this is the lane whose number the page is staking its claim
+   on. */
+.lane-mine .lane-fill {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--accent) 78%, var(--ink)),
+    var(--accent)
+  );
+  box-shadow: 0 0 14px var(--accent-soft);
+}
+
+.lane-head {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+  transform: translateX(-1px);
+}
+
+/* The winning lane's playhead is a red needle. */
+.lane-mine .lane-head {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-soft);
+}
+
+.lane-head[data-finished] {
+  opacity: 0.28;
+}
+
+.lane-time {
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 6ch;
+  text-align: right;
+  color: var(--ink-faint);
+  transition: color var(--dur-flip) var(--ease-snap);
+}
+
+.lane-time[data-finished] {
+  color: var(--ink);
+}
+
+/* The verified time stamps in red when it lands. */
+.lane-mine .lane-time[data-finished] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.race-caption {
+  margin-top: 18px;
+  max-width: 60ch;
+  font-family: var(--font-serif);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-faint);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity var(--dur-reveal) var(--ease-snap),
+    transform var(--dur-reveal) var(--ease-snap);
+}
+
+.race-caption[data-done] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .lane {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'label time'
+      'track track';
+    gap: 10px 14px;
+  }
+
+  .lane-label { grid-area: label; }
+  .lane-time  { grid-area: time; }
+  .lane-track { grid-area: track; }
+}
+
+/* ---- /work: page head ---- */
+
+.work-head {
+  display: grid;
+  gap: var(--space-s);
+  padding-block: calc(var(--masthead-h) + var(--space-xl)) var(--space-m);
+  justify-items: center;
+  text-align: center;
+}
+
+.work-title {
+  font-size: var(--step-4);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.work-lede {
+  max-width: 56ch;
+  font-family: var(--font-serif);
+  font-size: var(--step-1);
+  line-height: 1.65;
+  color: var(--ink-soft);
+  text-wrap: balance;
+}
+
+.work-home {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: var(--step-0);
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+}
+
+.work-home:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ---- /work: list of figures ---- */
+
+.figure-index {
+  max-width: 760px;
+  padding-block: var(--space-l) var(--space-xl);
+}
+
+.figure-index-title {
+  margin-bottom: var(--space-s);
+  font-size: var(--step-1);
+  font-style: italic;
+  font-weight: 400;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.figure-index-list {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding-block: var(--space-2xs);
+}
+
+.figure-index-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.2em auto minmax(24px, 1fr) auto;
+  align-items: baseline;
+  gap: var(--space-xs);
+  min-height: 44px;
+  padding: 10px var(--space-2xs);
+  isolation: isolate;
+}
+
+/* A wash that wipes in from the left on hover, behind the row. */
+.figure-index-link::before {
+  content: '';
+  position: absolute;
+  inset: 2px 0;
+  z-index: -1;
+  background: var(--accent-soft);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-move) var(--ease-settle);
+}
+
+.figure-index-link:hover::before,
+.figure-index-link:focus-visible::before {
+  transform: scaleX(1);
+}
+
+.figure-index-n {
+  color: var(--ink-faint);
+  font-size: var(--step--1);
+}
+
+.figure-index-name {
+  font-family: var(--font-serif);
+  font-size: var(--step-0);
+  color: var(--ink);
+}
+
+.figure-index-source {
+  font-size: var(--step--2);
+  color: var(--ink-faint);
+}
+
+/* Dot leaders, as a printed contents page sets them. */
+.figure-index-leader {
+  align-self: end;
+  height: 1px;
+  margin-bottom: 0.45em;
+  background-image: radial-gradient(circle, var(--ink-faint) 0.7px, transparent 1px);
+  background-size: 6px 2px;
+  background-repeat: repeat-x;
+  opacity: 0.8;
+  transform-origin: left;
+}
+
+.figure-index-result {
+  font-size: var(--step--1);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.figure-index-link:hover .figure-index-name {
+  color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .figure-index-link {
+    grid-template-columns: 2em 1fr;
+    row-gap: 2px;
+  }
+
+  .figure-index-leader {
+    display: none;
+  }
+
+  .figure-index-result {
+    grid-column: 2;
+  }
+}
+
+/* The first figure sits directly under the list; no top rule. */
+.figure-index + .section {
+  border-top: 0;
+}
+
+/* ---- Benchmark: a figure folded under the page title ---- */
+
+/* The whole section is a <details>; its summary is the figure head. The
+   native marker is replaced by a chevron drawn after the title, and the
+   head keeps the same centred stack as every other figure. */
+.benchmark {
+  padding-block: clamp(32px, 5vw, 56px) clamp(40px, 6vw, 72px);
+}
+
+/* Consecutive folded figures stack with a hairline between them rather than
+   the full section rule, so the four read as a list of figures; the rule
+   returns before the first unfolded section. Specificity beats .section. */
+.section.benchmark + .section.benchmark {
+  border-top: 1px solid var(--rule-soft);
+}
+
+.benchmark[open] {
+  padding-bottom: clamp(72px, 11vw, 132px);
+}
+
+.race-caption a {
+  color: inherit;
+  border-bottom: 1px solid var(--rule);
+  transition: color var(--dur-flip) var(--ease-snap), border-color var(--dur-flip) var(--ease-snap);
+}
+
+.race-caption a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.benchmark-summary {
+  list-style: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.benchmark-summary::-webkit-details-marker {
+  display: none;
+}
+
+.benchmark-summary:focus-visible {
+  outline: none;
+}
+
+.benchmark-summary:focus-visible .benchmark-title {
+  outline: 2px solid var(--accent);
+  outline-offset: 6px;
+}
+
+.benchmark-head {
+  margin-bottom: 0;
+  padding-bottom: 18px;
+  transition: border-color var(--dur-move) var(--ease-settle, var(--ease-snap));
+}
+
+.benchmark[open] .benchmark-head {
+  margin-bottom: 40px;
+}
+
+.benchmark-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: clamp(24px, 3.4vw, 38px);
+  line-height: 1.15;
+  color: var(--ink);
+  text-wrap: balance;
+  transition: color var(--dur-move) var(--ease-settle, var(--ease-snap));
+}
+
+.benchmark-summary:hover .benchmark-title {
+  color: var(--accent);
+}
+
+/* Chevron: a small rotated square, drawn with borders so it inherits the
+   title colour and turns on open. */
+.benchmark-chevron {
+  display: inline-block;
+  width: 0.38em;
+  height: 0.38em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.12em) rotate(45deg);
+  transition: transform var(--dur-move) var(--ease-settle, var(--ease-snap));
+  opacity: 0.7;
+}
+
+.benchmark[open] .benchmark-chevron {
+  transform: translateY(0.08em) rotate(225deg);
+}
+
+/* Under each folded title: the result in the spot colour (the figure's
+   conclusion, readable without opening it) and the action. The action
+   swaps wording on open instead of disappearing. */
+.benchmark-hint {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.benchmark-hint-result {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: var(--step--1);
+}
+
+.benchmark-hint-action {
+  display: inline-grid;
+}
+
+.benchmark-hint-action > span {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--dur-move) var(--ease-settle),
+    transform var(--dur-move) var(--ease-settle);
+}
+
+.benchmark-hint-open,
+.benchmark[open] .benchmark-hint-closed {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.benchmark[open] .benchmark-hint-open {
+  opacity: 1;
+  transform: none;
+}
+
+.benchmark-summary:hover .benchmark-hint-action {
+  color: var(--ink);
+}
+
+/* ---- Race: winning-lane leading-edge glow ---- */
+
+/* The leading edge is the playhead, so the halo lives on the needle: two
+   blur radii, tight core plus wide falloff, exactly C's lane-head recipe. */
+.race .lane-mine .lane-head {
+  box-shadow:
+    0 0 6px var(--glow-strong),
+    0 0 14px var(--glow);
+}
+
+/* When the lane finishes the needle cools: the stamped red time takes over
+   as the verification mark, so the halo goes out. */
+.race .lane-mine .lane-head[data-finished] {
+  box-shadow: none;
+}
+
+/* Dark only: the fill itself radiates, and the last stretch of the trace
+   brightens toward the leading edge — gold leaf catching the lamp.
+   Light mode keeps the quiet accent-soft wash from globals.css. */
+[data-theme='dark'] .race .lane-mine .lane-fill {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--accent) 80%, var(--paper)),
+    var(--accent) 86%,
+    color-mix(in srgb, var(--accent) 72%, #fff)
+  );
+  box-shadow:
+    0 0 12px var(--glow),
+    0 0 26px var(--glow);
+}
+
+/*
+ * No-JS fallback for the race caption: globals.css keeps it at opacity 0
+ * until the JS race sets data-done. This animation reaches the same final
+ * state on a pure-CSS timer. The delay here is the bare race length
+ * (RACE_MS, 2.4s); motion.css overrides it to RACE_DELAY_MS + RACE_MS so
+ * the caption still lands exactly when the JS race finishes.
+ */
+@keyframes caption-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.race .race-caption {
+  animation: caption-rise var(--dur-reveal) var(--ease-snap) 2.4s both;
+}
+
+
+}
