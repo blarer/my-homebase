@@ -1,583 +1,310 @@
 /**
- * Browser acceptance checks against a running server (default
- * http://localhost:3778/). Drives real Chrome via Playwright from the npx
- * cache. Covers both routes: the front page (title page, atlas, about) and
- * /work (benchmark race, treemap, languages), plus motion, theme, and a
- * reduced-motion pass.
+ * Browser acceptance checks for the Datasheet design, against a running
+ * server (default http://127.0.0.1:3778/). Drives Chromium via Playwright.
+ *
+ * Covers both pages of the sheet: the front page (header bar, title block,
+ * features, block diagram and its table, description, pinout, ordering) and
+ * /work (electrical characteristics, timing diagrams, floorplan,
+ * composition, revision history), plus the signature interaction, the
+ * motion grammar, theme, no-JS, reduced motion and mobile.
+ *
+ *   PLAYWRIGHT_PATH  any playwright install
+ *   CHROME_PATH      any Chromium build (default: installed Chrome channel)
+ *   URL              server origin
  */
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-// PLAYWRIGHT_PATH points at any playwright install; CHROME_PATH at any
-// Chromium build (default: the installed Chrome channel).
 const pwPath = process.env.PLAYWRIGHT_PATH ?? '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
-const base = (process.env.URL ?? 'http://localhost:3778/').replace(/\/?$/, '/');
+const base = (process.env.URL ?? 'http://127.0.0.1:3778/').replace(/\/?$/, '/');
 const WORK = new URL('work/', base).href;
 const results = [];
 const check = (name, ok, detail = '') => results.push({ name, ok: Boolean(ok), detail });
 
-const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } : { channel: 'chrome' });
+const browser = await chromium.launch(
+  process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH, args: ['--no-sandbox'] } : { channel: 'chrome' },
+);
 const errors = [];
 const watch = (page) => {
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
   page.on('pageerror', (e) => errors.push(String(e)));
 };
+const rgb = (p, sel, prop) => p.$eval(sel, (el, pr) => getComputedStyle(el)[pr], prop);
 
-// ---------------------------------------------------------------- front page
+// ---------------------------------------------------------------- page 1
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 watch(page);
 const res = await page.goto(base, { waitUntil: 'networkidle' });
 check('front: 200', res.status() === 200, String(res.status()));
 
-const fam = (p, sel) => p.$eval(sel, (el) => getComputedStyle(el).fontFamily);
 const fonts = await page.evaluate(async () => {
   await document.fonts.ready;
   return [...new Set([...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family))];
 });
-check('front: Old Standard loaded', fonts.some((f) => /Old Standard/.test(f)), fonts.join(', '));
-check('front: Courier Prime loaded', fonts.some((f) => /Courier Prime/.test(f)), fonts.join(', '));
-check('front: Headbang loaded', fonts.some((f) => /headbang/i.test(f)), fonts.join(', '));
-check('front: no legacy fonts', !fonts.some((f) => /Space|Instrument|Archivo|Plex/.test(f)), fonts.join(', '));
-check('front: h1 is JL', (await page.textContent('h1.hero-name'))?.replace(/\s+/g, '') === 'JL');
-check('front: h1 Headbang', /headbang/i.test(await fam(page, 'h1.hero-name')));
-check('front: .num typewriter', /Courier|typewriter/.test(await fam(page, '.num')));
-check('front: prose serif', /Old|old-serif/.test(await fam(page, '.about-body')));
+check('fonts: Hanken Grotesk loaded', fonts.some((f) => /Hanken/.test(f)), fonts.join(', '));
+check('fonts: Red Hat Mono loaded', fonts.some((f) => /Red Hat Mono/.test(f)), fonts.join(', '));
+check('fonts: no retired faces', !fonts.some((f) => /Old Standard|Courier|headbang|Space|Instrument|Plex/i.test(f)), fonts.join(', '));
+const fam = (sel) => page.$eval(sel, (el) => getComputedStyle(el).fontFamily);
+check('type: body is the grotesk', /Hanken/.test(await fam('.ds-desc p')));
+check('type: values are mono', /Red Hat Mono/.test(await fam('.ds-measured')));
+check('type: tabular figures on .num', (await page.$eval('.num', (el) => getComputedStyle(el).fontVariantNumeric)).includes('tabular-nums'));
 
-// Hero lighting. Each letter is lit by a gradient clipped to a copy of its
-// own glyph, and which pair you get is a coin flip per visit. The resting
-// state must be plain ink, so hover is the only thing that lights it.
-const lit = async (sel) => {
-  const before = (prop) => page.$eval(sel, (el, p) => getComputedStyle(el, '::before').getPropertyValue(p), prop);
-  const rest = { opacity: await before('opacity'), image: await before('background-image') };
-  await page.hover(sel);
-  await page.waitForTimeout(450);
-  const filter = await page.$eval(sel, (el) => getComputedStyle(el).filter);
-  const hovered = { opacity: await before('opacity'), image: await before('background-image') };
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(450);
-  return { rest, hovered, filter };
-};
-const pairNow = await page.$eval('.hero-name', (el) => el.dataset.pair);
-check('front: hero pair chosen', ['elemental', 'celestial'].includes(pairNow), String(pairNow));
-
-const litJ = await lit('.hero-letter-j');
-const litL = await lit('.hero-letter-l');
-check('front: J dark at rest', litJ.rest.opacity === '0', litJ.rest.opacity);
-check('front: L dark at rest', litL.rest.opacity === '0', litL.rest.opacity);
-check('front: J lights on hover', litJ.hovered.opacity === '1', litJ.hovered.opacity);
-check('front: L lights on hover', litL.hovered.opacity === '1', litL.hovered.opacity);
-check('front: J light is a gradient', /gradient/.test(litJ.hovered.image), litJ.hovered.image.slice(0, 48));
-check('front: L light is a gradient', /gradient/.test(litL.hovered.image), litL.hovered.image.slice(0, 48));
-check('front: J and L differ', litJ.hovered.image !== litL.hovered.image);
-check('front: J glows on hover', /drop-shadow/.test(litJ.filter), litJ.filter.slice(0, 48));
-check('front: L glows on hover', /drop-shadow/.test(litL.filter), litL.filter.slice(0, 48));
-// The glyph copy must cover the whole letter, overhangs included: the box is
-// grown half an em and pulled back by the same amount, so it starts above
-// and left of the letter and ends below and right of it.
-const cover = await page.evaluate(() => {
-  const el = document.querySelector('.hero-letter-j');
-  const b = el.getBoundingClientRect();
-  const o = getComputedStyle(el, '::before');
-  return { top: o.top, left: o.left, padding: o.padding, h: b.height };
-});
-check('front: lit copy overhangs the letter box',
-  parseFloat(cover.top) < 0 && parseFloat(cover.left) < 0 && parseFloat(cover.padding) > 0,
-  JSON.stringify(cover));
-
-// Both pairs are reachable and paint different colours for the same letter.
-const pairImage = async (pair, sel) => {
-  const p2 = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-  await p2.goto(new URL(`?hero=${pair}`, base).href, { waitUntil: 'domcontentloaded' });
-  await p2.waitForFunction(() => document.querySelector('.hero-name')?.dataset.pair);
-  const got = await p2.$eval('.hero-name', (el) => el.dataset.pair);
-  const image = await p2.$eval(sel, (el) => getComputedStyle(el, '::before').backgroundImage);
-  await p2.close();
-  return { got, image };
-};
-const elemJ = await pairImage('elemental', '.hero-letter-j');
-const celJ = await pairImage('celestial', '.hero-letter-j');
-const elemL = await pairImage('elemental', '.hero-letter-l');
-const celL = await pairImage('celestial', '.hero-letter-l');
-check('front: ?hero pins elemental', elemJ.got === 'elemental', elemJ.got);
-check('front: ?hero pins celestial', celJ.got === 'celestial', celJ.got);
-check('front: ice and void differ', elemJ.image !== celJ.image);
-check('front: fire and solar differ', elemL.image !== celL.image);
-check('front: all four lights are gradients',
-  [elemJ, celJ, elemL, celL].every((r) => /gradient/.test(r.image)));
-
-// No pale fringe around a lit letter. The copy of the glyph that carries
-// the gradient is anti-aliased, so any ink left underneath leaks out as a
-// bright rim. Worst case is Lamplight with the void J: cream ink under a
-// near-black letter.
-//
-// This has to be measured in pixels, not read off a rule, so: hover the J
-// for real, screenshot a band along its left edge, and decode the shot by
-// handing it back to the browser as a data URL and drawing it to a canvas.
-// A fringe shows up as pixels far brighter than both the letter and the
-// page behind it.
-const fringePeak = await (async () => {
-  const p2 = await browser.newPage({ viewport: { width: 1200, height: 620 }, colorScheme: 'dark' });
-  await p2.goto(new URL('?hero=celestial', base).href, { waitUntil: 'networkidle' });
-  await p2.waitForFunction(() => document.querySelector('.hero-name')?.dataset.pair);
-  const box = await p2.$eval('.hero-letter-j', (el) => {
-    const r = el.getBoundingClientRect();
-    return { x: r.x, y: r.y, w: r.width, h: r.height };
-  });
-  await p2.hover('.hero-letter-j');
-  await p2.waitForTimeout(700);
-  // A narrow strip straddling the left edge of the stem, below the head
-  // serif, where the rim was reported.
-  const shot = await p2.screenshot({
-    clip: { x: box.x - 6, y: box.y + box.h * 0.35, width: 26, height: 40 },
-  });
-  const peak = await p2.evaluate(async (b64) => {
-    const img = new Image();
-    img.src = `data:image/png;base64,${b64}`;
-    await img.decode();
-    const c = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
-    const ctx = c.getContext('2d');
-    ctx.drawImage(img, 0, 0);
-    const { data } = ctx.getImageData(0, 0, c.width, c.height);
-    let max = 0;
-    for (let i = 0; i < data.length; i += 4) {
-      max = Math.max(max, (data[i] + data[i + 1] + data[i + 2]) / 3);
-    }
-    return max;
-  }, shot.toString('base64'));
-  await p2.close();
-  return peak;
-})();
-// Lamplight paper is ~23/255 and the void letter is darker still; the cream
-// ink that used to leak is ~235. Anything under 90 means no rim.
-check('front: no pale fringe around the lit void J', fringePeak < 90, `peak luma ${fringePeak.toFixed(1)}`);
-
-// Layout: the front page is an introduction. No race, no treemap, no ring.
-const frontHas = await page.evaluate(() => ({
-  race: !!document.querySelector('.race'),
-  treemap: !!document.querySelector('.treemap'),
-  ring: !!document.querySelector('.ring'),
-  atlas: !!document.querySelector('canvas.atlas'),
-  about: !!document.querySelector('#about'),
-  workLinks: [...document.querySelectorAll('a[href="/work/"]')].length,
+// Header block on every page: bar, part, doc, rev, date.
+const head = await page.evaluate(() => ({
+  part: document.querySelector('.sheet-part')?.textContent.trim(),
+  doc: document.querySelector('.sheet-doc')?.textContent.replace(/\s+/g, ' ').trim(),
+  bar: getComputedStyle(document.querySelector('.sheet-bar')).backgroundColor,
 }));
-check('front: no race', !frontHas.race);
-check('front: no treemap', !frontHas.treemap);
-check('front: no ring', !frontHas.ring);
-check('front: atlas present', frontHas.atlas);
-check('front: about present', frontHas.about);
-check('front: links to /work/ (about + footer)', frontHas.workLinks >= 2, String(frontHas.workLinks));
+check('header: part number BLARE-1', head.part === 'BLARE-1', head.part);
+check('header: doc, REV and ISO date', /LOUDS-DS-001 · REV [A-Z]+ · \d{4}-\d{2}-\d{2}/.test(head.doc), head.doc);
+check('header: bar is the manufacturer colour', head.bar === 'rgb(0, 102, 112)', head.bar);
+check('palette: white paper', (await rgb(page, 'html', 'backgroundColor')) === 'rgb(255, 255, 255)');
+check('palette: black ink', (await rgb(page, 'body', 'color')) === 'rgb(17, 19, 20)');
 
-// Centred: hero name and thesis are horizontally centred in the shell.
-const centred = await page.evaluate(() => {
-  const mid = (el) => {
-    const r = el.getBoundingClientRect();
-    return r.left + r.width / 2;
-  };
-  const shell = document.querySelector('.hero .shell');
-  return {
-    shell: mid(shell),
-    name: mid(document.querySelector('.hero-name')),
-    thesis: mid(document.querySelector('.hero-thesis')),
-    caption: mid(document.querySelector('.atlas-caption')),
-    aboutTitle: mid(document.querySelector('.about-title')),
-    textAlign: getComputedStyle(document.querySelector('.hero-head')).textAlign,
-  };
-});
-const near = (a, b) => Math.abs(a - b) < 2;
-check('front: hero name centred', near(centred.name, centred.shell) && centred.textAlign === 'center', JSON.stringify(centred));
-check('front: thesis centred', near(centred.thesis, centred.shell));
-check('front: atlas caption centred', near(centred.caption, centred.shell));
-check('front: about title centred', near(centred.aboutTitle, centred.shell));
+// Numbered sections in datasheet order.
+const sections = await page.$$eval('.ds-section > .ds-h2', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+check('front: sections 1–5 in order',
+  ['1 Features', '2 Applications', '3 Description', '4 Pin Configuration and Functions', '5 Ordering Information'].every((s, i) => sections[i] === s),
+  sections.join(' | '));
+const captions = await page.$$eval('.ds-caption-n', (els) => els.map((e) => e.textContent.trim()));
+check('front: Figure 1–2 and Table 1–3 captions', ['Figure 1.', 'Table 1.', 'Figure 2.', 'Table 2.', 'Table 3.'].every((c) => captions.includes(c)), captions.join(' '));
 
-// Hero name clears the thesis (Headbang descenders).
-const hb = await page.evaluate(() => ({
-  nameBottom: document.querySelector('.hero-name').getBoundingClientRect().bottom,
-  thesisTop: document.querySelector('.hero-thesis').getBoundingClientRect().top,
+// Real content kept: about copy, avatar, links.
+const content = await page.evaluate(() => ({
+  about: document.querySelector('#about')?.textContent ?? '',
+  avatar: document.querySelector('#about img')?.getAttribute('alt'),
+  work: document.querySelectorAll('a[href="/work/"]').length,
+  gh: document.querySelectorAll('a[href="https://github.com/blarer"]').length,
+  mail: document.querySelectorAll('a[href="mailto:blare@louds.net"]').length,
+  atlas: !!document.querySelector('canvas'),
 }));
-check('front: hero name clears thesis', hb.nameBottom <= hb.thesisTop + 1, JSON.stringify(hb));
+check('front: about copy kept (four layer-below examples)',
+  ['syscall problem', 'stream-copy problem', 'transport problem', 'polling problem', 'machine learning'].every((s) => content.about.includes(s)));
+check('front: avatar', content.avatar === 'Blare');
+check('front: links to /work/, GitHub, email', content.work >= 2 && content.gh >= 2 && content.mail >= 2, JSON.stringify(content));
+check('front: no WebGL atlas', !content.atlas);
 
-// Palette: flat paper, no grid.
-check('front: no body grid', (await page.$eval('body', (el) => getComputedStyle(el).backgroundImage)) === 'none');
-check('front: light paper', (await page.$eval('html', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(243, 241, 236)');
-
-// ---- Atlas ----
-// Pixel reads must work on both renderers: getImageData on the 2D fallback,
-// readPixels on WebGL. The GL context no longer uses preserveDrawingBuffer
-// (it costs a copy per frame), so the backbuffer is undefined once a frame
-// is presented: redraw via the component's hook and read in the same task.
-// Registered as an init script so it survives reloads on this page.
-const ATLAS_PIXELS = () => {
-  window.__atlasPixels = (c, step = 1) => {
-    if (c.dataset.renderer === 'webgl') {
-      c.__atlasRedraw?.();
-      const gl = c.getContext('webgl');
-      const buf = new Uint8Array(c.width * c.height * 4);
-      gl.readPixels(0, 0, c.width, c.height, gl.RGBA, gl.UNSIGNED_BYTE, buf);
-      if (step === 1) return buf;
-      const out = new Uint8Array(Math.ceil(buf.length / 4 / step) * 4);
-      for (let i = 0, j = 0; i < buf.length; i += 4 * step, j += 4) { out[j] = buf[i]; out[j + 1] = buf[i + 1]; out[j + 2] = buf[i + 2]; out[j + 3] = 255; }
-      return out;
-    }
-    return c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-  };
-};
-await page.addInitScript(ATLAS_PIXELS);
-await page.evaluate(ATLAS_PIXELS);
-await page.waitForTimeout(1500);
-const atlas = await page.evaluate(async () => {
-  const c = document.querySelector('canvas.atlas');
-  const grab = () => window.__atlasPixels(c, 7); // subsample: GL buffer is ~1M px
-  const f0 = Number(c.dataset.frames);
-  const s0 = grab();
-  await new Promise((r) => setTimeout(r, 600));
-  const f1 = Number(c.dataset.frames);
-  const s1 = grab();
-  let diff = 0;
-  for (let i = 0; i < s0.length; i += 4) diff += Math.abs(s0[i] - s1[i]) + Math.abs(s0[i + 1] - s1[i + 1]) + Math.abs(s0[i + 2] - s1[i + 2]);
-  const colours = new Set();
-  for (let i = 0; i < s1.length; i += 4) colours.add((s1[i] << 16) | (s1[i + 1] << 8) | s1[i + 2]);
-  // Main-thread cost proxy: worst gap between consecutive rAF callbacks
-  // over a 30-frame window while the atlas is running.
-  const gaps = [];
-  let last = performance.now();
-  await new Promise((r) => {
-    let n = 0;
-    const tick = (t) => {
-      gaps.push(t - last);
-      last = t;
-      if (++n < 30) requestAnimationFrame(tick);
-      else r();
-    };
-    requestAnimationFrame(tick);
-  });
-  const worst = Math.max(...gaps.slice(1));
-  const rect = c.getBoundingClientRect();
-  return {
-    seed: c.dataset.seed,
-    renderer: c.dataset.renderer,
-    running: c.dataset.running,
-    frames: f1 - f0,
-    diff,
-    samples: s1.length / 4,
-    colours: colours.size,
-    worstGap: Math.round(worst),
-    w: c.width,
-    h: c.height,
-    cssW: Math.round(rect.width),
-    cssH: Math.round(rect.height),
-    dpr: window.devicePixelRatio,
-  };
+// First viewport contract: title, features and the block diagram all
+// visible above the fold at 1440x900.
+const fold = await page.evaluate(() => {
+  const top = (s) => document.querySelector(s)?.getBoundingClientRect().top ?? 1e9;
+  return { h1: top('.ds-h1'), features: top('#features'), fbd: top('.fbd-svg'), apps: top('#applications') };
 });
-check('atlas: seeded', /^\d+$/.test(atlas.seed), atlas.seed);
-check('atlas: WebGL renderer in Chrome', atlas.renderer === 'webgl', atlas.renderer);
-check('atlas: running', atlas.running === 'true');
-check('atlas: ~60fps on GL (>=25 frames in 600ms)', atlas.frames >= 25, String(atlas.frames));
-check('atlas: pixels change between frames', atlas.diff / atlas.samples > 1, `${(atlas.diff / atlas.samples).toFixed(2)} per sample`);
-check('atlas: rich field (>500 colours in subsample)', atlas.colours > 500, String(atlas.colours));
-check('atlas: no long frames (worst rAF gap < 60ms)', atlas.worstGap < 60, `${atlas.worstGap}ms`);
-check('atlas: GL buffer at native resolution (>= CSS px)', atlas.w >= atlas.cssW && atlas.h >= atlas.cssH && atlas.w > 128, `${atlas.w}x${atlas.h} buffer for ${atlas.cssW}x${atlas.cssH} css @${atlas.dpr}x`);
-
-// Pauses when scrolled offscreen; resumes when back.
-await page.evaluate(() => document.querySelector('.footer').scrollIntoView());
-await page.waitForTimeout(400);
-const paused = await page.evaluate(async () => {
-  const c = document.querySelector('canvas.atlas');
-  const f0 = Number(c.dataset.frames);
-  await new Promise((r) => setTimeout(r, 500));
-  return { running: c.dataset.running, frames: Number(c.dataset.frames) - f0 };
+check('first viewport: title, features, applications, block diagram above the fold',
+  fold.h1 < 900 && fold.features < 900 && fold.apps < 900 && fold.fbd < 900, JSON.stringify(fold));
+const cols = await page.evaluate(() => {
+  const a = document.querySelector('#features').getBoundingClientRect();
+  const b = document.querySelector('.fbd-figure').getBoundingClientRect();
+  return { featuresRight: a.right, diagramLeft: b.left };
 });
-check('atlas: pauses offscreen', paused.running === 'false' && paused.frames === 0, JSON.stringify(paused));
-await page.evaluate(() => window.scrollTo(0, 0));
-await page.waitForTimeout(400);
-check('atlas: resumes onscreen', (await page.$eval('canvas.atlas', (c) => c.dataset.running)) === 'true');
+check('desktop: two-column datasheet body', cols.featuresRight <= cols.diagramLeft, JSON.stringify(cols));
 
-// Re-inks on theme flip: the plate's mean colour must move once the palette
-// swaps (dark paper + cream ink read lighter on average than light paper +
-// iron-gall ink, so the direction is not fixed; only the change is).
-const meanRgb = (c) => {
-  const d = window.__atlasPixels(c, 7);
-  let r = 0, g = 0, b = 0;
-  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
-  const n = d.length / 4;
-  return [r / n, g / n, b / n];
-};
-const beforeFlip = await page.$eval('canvas.atlas', meanRgb);
-// Clicking the footer toggle scrolls the atlas offscreen, which pauses it;
-// the MutationObserver still repaints one re-inked frame on theme change.
-// Wait for that frame (frames counter advances by at least one).
-// The theme is applied inside a View Transition callback where supported,
-// which runs a frame after the click, so wait for the theme to land first
-// and then for the re-inked frame.
-const f0 = await page.$eval('canvas.atlas', (c) => Number(c.dataset.frames));
+// Signature interaction: hovering a block selects its table row, and back.
+const blocks = await page.$$eval('.fbd-block', (els) => els.map((e) => e.dataset.block));
+check('fbd: six blocks', blocks.join(',') === 'scan,dict,pwr,trim,cfg,site', blocks.join(','));
+await page.hover('.fbd-block[data-block="dict"] .fbd-box');
+const sel = await page.evaluate(() => ({
+  row: document.querySelector('.fbd-table tr[data-block="dict"]')?.hasAttribute('data-on'),
+  others: [...document.querySelectorAll('.fbd-table tr[data-on]')].length,
+  stroke: getComputedStyle(document.querySelector('.fbd-block[data-block="dict"] .fbd-box')).stroke,
+  rowBg: getComputedStyle(document.querySelector('.fbd-table tr[data-block="dict"]')).backgroundColor,
+  dim: getComputedStyle(document.querySelector('.fbd-block[data-block="scan"] .fbd-box')).stroke,
+}));
+check('signature: hover block lights its Table 1 row', sel.row && sel.others === 1, JSON.stringify(sel));
+check('signature: selected block takes the accent', sel.stroke === 'rgb(0, 102, 112)', sel.stroke);
+check('signature: other blocks recede', sel.dim !== 'rgb(17, 19, 20)', sel.dim);
+await page.hover('.fbd-table tr[data-block="trim"]');
+check('signature: hover row selects its block', await page.$eval('.fbd-block[data-block="trim"]', (el) => el.hasAttribute('data-on')));
+await page.mouse.move(0, 0);
+check('signature: selection clears on leave', (await page.$$('.fbd [data-on]')).length === 0);
+await page.focus('.fbd-block[data-block="pwr"]');
+check('signature: keyboard focus selects too', await page.$eval('.fbd-table tr[data-block="pwr"]', (el) => el.hasAttribute('data-on')));
+const hrefs = await page.$$eval('.fbd-block', (els) => els.map((e) => e.getAttribute('href')));
+check('fbd: measured blocks link to their timing figure', hrefs.slice(0, 4).join(',') === '/work/#benchmark,/work/#dictation,/work/#footprint,/work/#clip', hrefs.join(','));
+
+// Pins are links; pin table has ten rows.
+check('pins: ten pins, nine linked', (await page.$$('.pin-table tbody tr')).length === 10 && (await page.$$('.pkg-link')).length === 9);
+
+// Theme.
 await page.click('.theme-toggle');
 await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark', null, { timeout: 3000 });
-await page.waitForTimeout(800);
-await page.waitForFunction((n) => Number(document.querySelector('canvas.atlas').dataset.frames) > n, f0, { timeout: 3000 });
-const afterFlip = await page.$eval('canvas.atlas', meanRgb);
-const flipDist = Math.hypot(...beforeFlip.map((v, i) => v - afterFlip[i]));
-check('atlas: re-inks on theme flip (mean colour moves > 30)', flipDist > 30, `Δ=${flipDist.toFixed(0)} ${beforeFlip.map((v) => v.toFixed(0))} → ${afterFlip.map((v) => v.toFixed(0))}`);
-
-// Theme flip itself (the crossfade runs 480ms; wait it out before sampling).
-await page.waitForFunction(() => !document.documentElement.classList.contains('theme-flipping'), null, { timeout: 2000 });
-check('theme: dark after toggle', (await page.$eval('html', (el) => el.dataset.theme)) === 'dark');
-check('theme: label Lamplight', (await page.textContent('.theme-toggle-label'))?.trim() === 'Lamplight');
-check('theme: dark paper', (await page.$eval('html', (el) => getComputedStyle(el).backgroundColor)) === 'rgb(23, 20, 15)');
+check('theme: dark graphite paper', (await rgb(page, 'html', 'backgroundColor')) === 'rgb(29, 31, 33)');
+check('theme: label DARK', (await page.textContent('.theme-toggle-label'))?.trim() === 'DARK');
+check('theme: dark keeps one accent on the bar', (await rgb(page, '.sheet-bar', 'backgroundColor')) === 'rgb(82, 198, 207)');
 check('theme: persisted', (await page.evaluate(() => localStorage.getItem('theme'))) === 'dark');
 await page.reload({ waitUntil: 'domcontentloaded' });
 check('theme: survives reload', (await page.$eval('html', (el) => el.dataset.theme)) === 'dark');
+await page.evaluate(() => localStorage.removeItem('theme'));
 
-// Static assets + metadata.
+// Assets + metadata.
 const avatar = await page.request.get(new URL('avatar.png', base).href);
 const abuf = await avatar.body();
-check('avatar: 200 PNG 460px', avatar.status() === 200 && abuf.slice(1, 4).toString() === 'PNG' && abuf.readUInt32BE(16) === 460);
+check('avatar: 200 PNG', avatar.status() === 200 && abuf.slice(1, 4).toString() === 'PNG');
 const og = await page.request.get(new URL('opengraph-image', base).href);
 const obuf = await og.body();
 check('og: 200 PNG 1200x630', og.status() === 200 && obuf.slice(1, 4).toString() === 'PNG' && obuf.readUInt32BE(16) === 1200 && obuf.readUInt32BE(20) === 630);
 const metas = await page.$$eval('meta[name="theme-color"]', (els) => els.map((e) => e.content));
-check('meta: theme-color both', metas.includes('#f3f1ec') && metas.includes('#17140f'), metas.join(', '));
+check('meta: theme-color both', metas.includes('#ffffff') && metas.includes('#1d1f21'), metas.join(', '));
 const sitemap = await (await page.request.get(new URL('sitemap.xml', base).href)).text();
 check('sitemap: lists /work/', /\/work\//.test(sitemap));
 
-// Load sequence on the front page: name settles, atlas develops after.
-await page.evaluate(() => localStorage.removeItem('theme'));
-await page.goto(base, { waitUntil: 'commit' });
-await page.waitForTimeout(300);
-const early = await page.evaluate(() => ({
-  name: document.querySelector('.hero-name')?.getAnimations().map((a) => `${a.animationName}:${a.playState}`).join(',') ?? 'none',
-  plateOpacity: parseFloat(getComputedStyle(document.querySelector('.atlas-plate')).opacity),
-}));
-check('load: hero name settling at 300ms', /ink-settle:running/.test(early.name), early.name);
-check('load: atlas plate not yet developed at 300ms', early.plateOpacity < 0.5, String(early.plateOpacity));
-await page.waitForTimeout(2200);
-check('load: atlas plate developed by 2.5s', (await page.$eval('.atlas-plate', (el) => parseFloat(getComputedStyle(el).opacity))) > 0.99);
-
-// Idle on the front page: portrait drifts.
-await page.evaluate(() => document.querySelector('#about').scrollIntoView());
-await page.waitForTimeout(600);
-check('idle: portrait drifts', await page.$eval('.portrait img', (el) => el.getAnimations().some((a) => a.animationName === 'portrait-drift' && a.playState === 'running')));
-
-// CPU fallback: ?atlas=cpu takes the path a WebGL-less browser would. Same
-// network, 128px raster, 12fps, blur on.
-const cpu = await browser.newPage({ viewport: { width: 1440, height: 900 } });
-watch(cpu);
-await cpu.goto(new URL('?atlas=cpu', base).href, { waitUntil: 'networkidle' });
-await cpu.waitForTimeout(1200);
-const fallback = await cpu.evaluate(async () => {
-  const c = document.querySelector('canvas.atlas');
-  const ctx = c.getContext('2d');
-  const f0 = Number(c.dataset.frames);
-  const s0 = Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
-  await new Promise((r) => setTimeout(r, 600));
-  const s1 = Array.from(ctx.getImageData(0, 0, c.width, c.height).data);
-  let diff = 0;
-  for (let i = 0; i < s0.length; i += 4) diff += Math.abs(s0[i] - s1[i]);
-  return {
-    renderer: c.dataset.renderer,
-    running: c.dataset.running,
-    frames: Number(c.dataset.frames) - f0,
-    w: c.width,
-    h: c.height,
-    diff,
-    blur: getComputedStyle(c).filter,
-  };
-});
-check('atlas cpu: canvas2d renderer', fallback.renderer === 'canvas2d', fallback.renderer);
-check('atlas cpu: 128x128 buffer', fallback.w === 128 && fallback.h === 128, `${fallback.w}x${fallback.h}`);
-check('atlas cpu: running ~12fps', fallback.running === 'true' && fallback.frames >= 5, `${fallback.running} ${fallback.frames}`);
-check('atlas cpu: pixels change', fallback.diff > 5000, String(fallback.diff));
-check('atlas cpu: blur applied to hide raster', /blur/.test(fallback.blur), fallback.blur);
-check('atlas gl: no blur at native res', !/blur/.test(await page.$eval('canvas.atlas', (c) => getComputedStyle(c).filter)));
-
-// Mobile.
-const mob = await browser.newPage({ viewport: { width: 390, height: 844 } });
-watch(mob);
-await mob.goto(base, { waitUntil: 'networkidle' });
-check('mobile: no horizontal overflow', (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
-check('mobile: hero name fits', await mob.$eval('h1.hero-name', (el) => el.getBoundingClientRect().right <= window.innerWidth));
-check('mobile: atlas 4:3', await mob.$eval('canvas.atlas', (c) => { const r = c.getBoundingClientRect(); return Math.abs(r.width / r.height - 4 / 3) < 0.05; }));
-check('mobile: atlas GL buffer under pixel cap', await mob.$eval('canvas.atlas', (c) => c.dataset.renderer !== 'webgl' || c.width * c.height <= 2.2e6));
-
-// ---------------------------------------------------------------- /work
-// Client-side navigation first: this is the path a visitor takes from the
-// front page. The reveal must re-arm for the new route's sections, or the
-// whole page sits at opacity 0 (the inline-script version did exactly that).
+// ---------------------------------------------------------------- page 2
 const nav = await browser.newPage({ viewport: { width: 1200, height: 720 } });
 watch(nav);
 await nav.goto(base, { waitUntil: 'networkidle' });
-await nav.click('.footer a[href="/work/"]');
+await nav.click('.sheet-nav a[href="/work/"]');
 await nav.waitForURL(/\/work\//);
-await nav.waitForTimeout(1200);
-const afterNav = await nav.evaluate(() => ({
-  path: location.pathname,
-  visibleSections: [...document.querySelectorAll('.section')].filter((s) => s.getBoundingClientRect().top < innerHeight).map((s) => `${s.id}:${getComputedStyle(s).opacity}`),
-  anyInView: !!document.querySelector('.section.in-view'),
-}));
-check('nav: client-side / → /work lands on /work/', afterNav.path === '/work/', afterNav.path);
-check('nav: sections in viewport are visible after client nav', afterNav.visibleSections.length > 0 && afterNav.visibleSections.every((s) => s.endsWith(':1')), afterNav.visibleSections.join(' '));
-await nav.click('a.work-home');
-await nav.waitForURL((u) => u.pathname === '/');
-await nav.waitForTimeout(1200);
-const backHome = await nav.evaluate(() => ({
-  aboutOpacity: getComputedStyle(document.querySelector('#about')).opacity,
-  atlasRunning: document.querySelector('canvas.atlas')?.dataset.running,
-}));
-check('nav: back to / re-arms (about visible once scrolled)', await nav.evaluate(async () => { document.querySelector('#about').scrollIntoView(); await new Promise((r) => setTimeout(r, 1200)); return getComputedStyle(document.querySelector('#about')).opacity === '1'; }));
-check('nav: atlas restarts on return to /', backHome.atlasRunning === 'true' || (await nav.$eval('canvas.atlas', (c) => c.dataset.running)) === 'true');
+await nav.waitForTimeout(600);
+check('nav: client-side / → /work', await nav.evaluate(() => location.pathname === '/work/'));
+check('nav: header marks page 2 current', (await nav.$eval('.sheet-nav [aria-current="page"]', (el) => el.textContent)).includes('p.2'));
 await nav.close();
 
-const work = await browser.newPage({ viewport: { width: 1200, height: 720 } });
+const work = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 watch(work);
 const wres = await work.goto(WORK, { waitUntil: 'networkidle' });
 check('work: 200', wres.status() === 200, String(wres.status()));
-const workHas = await work.evaluate(() => ({
-  race: !!document.querySelector('.benchmark .race'),
-  treemap: !!document.querySelector('.treemap'),
-  ring: !!document.querySelector('.ring'),
-  atlas: !!document.querySelector('canvas.atlas'),
-  home: document.querySelector('a.work-home')?.getAttribute('href'),
-  tags: [...document.querySelectorAll('.section-head .tag')].map((e) => e.textContent.trim()),
-  title: document.title,
-}));
-check('work: race present', workHas.race);
-check('work: treemap present', workHas.treemap);
-check('work: ring present', workHas.ring);
-check('work: no atlas', !workHas.atlas);
-check('work: home link', workHas.home === '/', String(workHas.home));
-check('work: Fig. 1–6 order', workHas.tags.length === 6 && workHas.tags.every((t, i) => t.startsWith(`Fig. ${i + 1}`)), workHas.tags.join(' | '));
-check('work: title', /the work, measured/i.test(workHas.title), workHas.title);
+const wsec = await work.$$eval('.ds-section > .ds-h2', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+check('work: sections 6–10 continue the numbering',
+  ['6 Specifications', '7 Timing Characteristics', '8 Die Floorplan', '9 Composition', '10 Revision History'].every((s, i) => wsec[i] === s),
+  wsec.join(' | '));
+const wcap = await work.$$eval('.ds-caption-n', (els) => els.map((e) => e.textContent.trim()));
+check('work: Figures 3–8 and Tables 4–6',
+  ['Table 4.', 'Figure 3.', 'Figure 4.', 'Figure 5.', 'Figure 6.', 'Figure 7.', 'Table 5.', 'Figure 8.', 'Table 6.'].every((c) => wcap.includes(c)),
+  wcap.join(' '));
 
-// Four figures are folded under their titles: closed by default, races idle.
-const folded = await work.evaluate(() =>
-  [...document.querySelectorAll('details.benchmark')].map((d) => ({
-    id: d.id,
-    open: d.open,
-    summaryText: d.querySelector('summary')?.textContent.trim(),
-    raceVisible: d.querySelector('.race').checkVisibility(),
-    fill: d.querySelector('.lane-mine .lane-fill')?.style.width,
-    lanes: d.querySelectorAll('.lane').length,
-    repoLink: d.querySelector('.race-caption a')?.getAttribute('href'),
+// Electrical characteristics: MIN/TYP/MAX/UNIT header; real values; MIN/MAX
+// only where a real spread or limit exists.
+const spec = await work.evaluate(() => {
+  const head = [...document.querySelectorAll('.spec-table thead th')].map((t) => t.textContent.trim());
+  const rows = [...document.querySelectorAll('.spec-table tbody tr:not(.spec-group)')].map((tr) => [...tr.children].map((c) => c.textContent.trim()));
+  return { head, rows };
+});
+check('spec: columns Parameter / Test conditions / MIN / TYP / MAX / UNIT', spec.head.join('|') === 'Parameter|Test conditions|MIN|TYP|MAX|UNIT', spec.head.join('|'));
+const row = (p) => spec.rows.find((r) => r[0] === p);
+check('spec: scan 2.2 s TYP, no invented MIN/MAX', row('Scan time, getattrlistbulk')?.slice(2).join('|') === '|2.2||s', JSON.stringify(row('Scan time, getattrlistbulk')));
+check('spec: dictation 131 ms', row('Key release to text, edit-by-voice')?.[3] === '131');
+check('spec: wattsbar 12 MB', row('Resident memory, Swift + IOKit')?.[3] === '12');
+check('spec: free tier 9.4 under MAX 10', row('Output size, Free tier')?.slice(3, 5).join('|') === '9.4|10');
+const perRepo = row('Source per repository');
+check('spec: repo spread has MIN ≤ TYP ≤ MAX', perRepo && +perRepo[2] <= +perRepo[3] && +perRepo[3] <= +perRepo[4], JSON.stringify(perRepo));
+const singles = spec.rows.filter((r) => r[0] !== 'Source per repository' && !/Output size, (Free|Nitro)/.test(r[0]));
+check('spec: single measurements leave MIN and MAX empty', singles.every((r) => r[2] === '' && r[4] === ''));
+
+// Timing diagrams.
+const timing = await work.evaluate(() =>
+  [...document.querySelectorAll('.timing')].map((t) => ({
+    id: t.id,
+    lanes: t.querySelectorAll('.timing-lane').length,
+    mine: t.querySelectorAll('.timing-mine.timing-lane').length,
+    repo: t.querySelector('figcaption a')?.getAttribute('href'),
+    done: t.hasAttribute('data-done'),
   })),
 );
-check('work: four folded figures', folded.length === 4 && folded.map((f) => f.id).join(',') === 'benchmark,dictation,footprint,clip', folded.map((f) => f.id).join(','));
-check('work: all closed by default', folded.every((f) => f.open === false));
-check('work: summaries carry the figure heads', folded.every((f, i) => new RegExp(`Fig\\. ${i + 1}`).test(f.summaryText)), folded.map((f) => f.summaryText).join(' | '));
-check('work: races hidden while closed', folded.every((f) => f.raceVisible === false));
-check('work: races not started while closed', folded.every((f) => f.fill === '0%'), folded.map((f) => f.fill).join(','));
-check('work: lane counts 3/4/2/4', folded.map((f) => f.lanes).join(',') === '3,4,2,4', folded.map((f) => f.lanes).join(','));
-check('work: each figure links its repo', folded.every((f) => /github\.com\/blarer\//.test(f.repoLink ?? '')), folded.map((f) => f.repoLink).join(','));
+check('timing: four diagrams in order', timing.map((t) => t.id).join(',') === 'benchmark,dictation,footprint,clip', timing.map((t) => t.id).join(','));
+check('timing: lane counts 3/4/2/4', timing.map((t) => t.lanes).join(',') === '3,4,2,4');
+check('timing: one highlighted trace each', timing.every((t) => t.mine === 1));
+check('timing: each links its repo', timing.every((t) => /github\.com\/blarer\//.test(t.repo ?? '')));
 
-// Every head on /work sits on the same centre axis as the page title.
-const workCentred = await work.evaluate(() => {
-  const mid = (el) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
-  const axis = mid(document.querySelector('.work-title'));
-  return {
-    axis,
-    heads: [...document.querySelectorAll('.section-head h2, .benchmark-title')].map((h) => mid(h) - axis),
-    ledes: [...document.querySelectorAll('.section-lede')].filter((h) => h.checkVisibility()).map((h) => mid(h) - axis),
-  };
+// Motion grammar: a diagram below the fold arms empty and sweeps in whole
+// steps when scrolled to; it is never mid-sweep with a smooth fraction.
+const armed = await work.$eval('#clip', (el) => ({ armed: el.hasAttribute('data-armed'), done: el.hasAttribute('data-done') }));
+check('motion: below-fold diagram armed, not yet drawn', armed.armed && !armed.done, JSON.stringify(armed));
+await work.$eval('#clip', (el) => el.scrollIntoView({ block: 'center' }));
+const samples = [];
+for (let i = 0; i < 8; i++) {
+  await work.waitForTimeout(140);
+  samples.push(await work.$eval('#clip .timing-cursor', (c) => Number(c.getAttribute('x1'))).catch(() => null));
+}
+const xs = samples.filter((v) => v !== null);
+check('motion: cursor sweeps forward', xs.length >= 3 && xs.every((v, i) => i === 0 || v >= xs[i - 1]) && xs[xs.length - 1] > xs[0], xs.join(','));
+// Each cursor position is an integer number of ticks along the plot.
+const step = await work.evaluate(() => {
+  const plot = 640 - 204 - 78;
+  const x = Number(document.querySelector('#clip .timing-cursor')?.getAttribute('x1') ?? NaN);
+  return ((x - 204) / plot) * 24;
 });
-check('work: figure titles centred on page axis', workCentred.heads.every((d) => Math.abs(d) < 2), workCentred.heads.map((d) => d.toFixed(1)).join(','));
-check('work: ledes centred on page axis', workCentred.ledes.every((d) => Math.abs(d) < 2), workCentred.ledes.map((d) => d.toFixed(1)).join(','));
+check('motion: cursor lands on whole ticks', Number.isNaN(step) || Math.abs(step - Math.round(step)) < 1e-6, String(step));
+await work.waitForTimeout(3000);
+check('motion: sweep completes', await work.$eval('#clip', (el) => el.hasAttribute('data-done')));
+check('motion: final values printed', (await work.$$eval('#clip .timing-value', (els) => els.map((e) => e.textContent))).includes('9.4 MB'));
+check('motion: no running CSS animations at rest', (await work.evaluate(() => document.getAnimations().filter((a) => a.playState === 'running').length)) === 0);
 
-// Race sequence: open the first figure, then delayed start, run, finish, breathe.
-await work.goto(WORK, { waitUntil: 'networkidle' });
-await work.click('details#benchmark > summary');
-await work.waitForTimeout(300);
-check('work: benchmark opens on click', await work.$eval('details#benchmark', (d) => d.open));
-check('work: other figures stay closed', await work.evaluate(() => ['dictation', 'footprint', 'clip'].every((id) => !document.getElementById(id).open)));
-check('work: race visible once open', await work.$eval('details#benchmark .race', (el) => el.checkVisibility()));
-check('work: race not started at 300ms after open', (await work.$eval('details#benchmark .lane-mine .lane-fill', (el) => el.style.width)) === '0%');
-await work.waitForTimeout(1500);
-check('work: race running by 1.8s after open', (await work.$eval('details#benchmark .lane-mine .lane-fill', (el) => parseFloat(el.style.width))) > 0);
-await work.waitForTimeout(2800);
-const idle = await work.evaluate(() => {
-  const d = document.querySelector('details#benchmark');
-  const running = (el) => (el ? el.getAnimations().filter((a) => a.playState === 'running').map((a) => a.animationName) : []);
-  const pseudo = (el, ps) => (el ? el.getAnimations({ subtree: true }).filter((a) => a.effect?.pseudoElement === ps && a.playState === 'running').map((a) => a.animationName) : []);
-  return {
-    done: !!d.querySelector('.race-caption[data-done]'),
-    stamp: running(d.querySelector('.lane-mine .lane-time')),
-    cursor: pseudo(d.querySelector('.race-caption'), '::after'),
-    axisAligned: Math.abs(d.querySelector('.race-axis-track').getBoundingClientRect().left - d.querySelector('.lane-track').getBoundingClientRect().left) < 1,
-    finalTime: d.querySelector('.lane-mine .lane-time-live')?.textContent,
-  };
-});
-check('work: race finished', idle.done);
-check('work: winning time reads 2.2s', idle.finalTime === '2.2s', String(idle.finalTime));
-check('work: stamp breathes', idle.stamp.includes('stamp-breathe'), idle.stamp.join(','));
-check('work: caption cursor blinks', idle.cursor.includes('cursor-blink'), idle.cursor.join(','));
-check('work: axis aligned with lanes', idle.axisAligned);
+// Floorplan (treemap) and probe.
+const fp = await work.evaluate(() => ({
+  tiles: document.querySelectorAll('.treemap .tile').length,
+  frame: getComputedStyle(document.querySelector('.treemap')).borderTopWidth,
+}));
+check('floorplan: one tile per repository (21)', fp.tiles === 21, String(fp.tiles));
+check('floorplan: die outline drawn', fp.frame === '2px', fp.frame);
+await work.$eval('#work', (el) => el.scrollIntoView());
+const tile = await work.$('.tile:not([data-private])');
+const tb = await tile.boundingBox();
+await work.mouse.move(tb.x + tb.width / 2, tb.y + tb.height * 0.2);
+await work.waitForTimeout(200);
+check('floorplan: probe names a language', !!(await work.$('.probe')) && /\d+%/.test(await work.textContent('.probe')));
+check('floorplan: readout links the repo', /github\.com\/blarer\//.test((await work.$eval('.readout-name a', (a) => a.href).catch(() => '')) ?? ''));
 
-// The second figure runs its own race in its own unit when opened.
-await work.click('details#dictation > summary');
-await work.waitForTimeout(4300);
-const dict = await work.evaluate(() => {
-  const d = document.querySelector('details#dictation');
-  return {
-    done: !!d.querySelector('.race-caption[data-done]'),
-    unit: d.querySelector('.race-axis-label')?.textContent.trim(),
-    mine: d.querySelector('.lane-mine .lane-time-live')?.textContent,
-    slowest: d.querySelector('.lane[data-lane="0"] .lane-time-live')?.textContent,
-    firstStillOpen: document.querySelector('details#benchmark').open,
-  };
-});
-check('work: dictation race finishes independently', dict.done && dict.firstStillOpen, JSON.stringify(dict));
-check('work: dictation in milliseconds', /millisecond/.test(dict.unit) && dict.mine === '131ms' && dict.slowest === '450ms', JSON.stringify(dict));
+// Composition.
+check('composition: ring present', !!(await work.$('svg.ring')));
+const langRows = await work.$$eval('.lang-table tbody tr', (els) => els.length);
+check('composition: one row per language (21)', langRows === 21, String(langRows));
 
-// Reveal + idle further down. With the benchmark folded, #work sits near
-// the fold at 720px tall, so use a shorter viewport for this one so the
-// section genuinely starts offscreen and has to reveal.
-await work.setViewportSize({ width: 1200, height: 480 });
-await work.goto(WORK, { waitUntil: 'networkidle' });
-check('work: treemap starts dimmed below the fold', (await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity))) < 1);
-await work.evaluate(() => document.querySelector('#work').scrollIntoView({ block: 'start', behavior: 'instant' }));
-await work.waitForTimeout(80);
-const r0 = await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity));
-await work.waitForTimeout(1600);
-const r1 = await work.$eval('#work .treemap-frame', (el) => parseFloat(getComputedStyle(el).opacity));
-check('work: treemap frame fades in', r0 < 1 && r1 > 0.99, `${r0} → ${r1}`);
-await work.setViewportSize({ width: 1200, height: 720 });
-check('work: active tile bands pulse', await work.$eval('.tile[data-active] .tile-bands', (el) => el.getAnimations().some((a) => a.animationName === 'bands-pulse')));
-await work.evaluate(() => document.querySelector('#languages').scrollIntoView());
-await work.waitForTimeout(800);
-check('work: ring drifts', await work.$eval('.ring', (el) => el.getAnimations().some((a) => a.animationName === 'ring-drift' && a.playState === 'running')));
-check('work: ring no utility box-shadow', (await work.$eval('.ring', (el) => getComputedStyle(el).boxShadow)) === 'none');
+// Revision history from git log.
+const revs = await work.$$eval('.rev-table tbody tr', (els) => els.map((e) => e.querySelector('th').textContent.trim()));
+check('revisions: present, newest first', revs.length >= 10 && revs[revs.length - 1] === 'A', revs.join(','));
+const headRev = await work.$eval('.sheet-doc', (el) => el.textContent.match(/REV (\S+)/)?.[1]);
+check('revisions: header REV is the newest revision', headRev === revs[0], `${headRev} vs ${revs[0]}`);
 
-// Mobile /work.
-await mob.goto(WORK, { waitUntil: 'networkidle' });
-check('work mobile: no horizontal overflow', (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
+// ---------------------------------------------------------------- no JS
+const nojsCtx = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+const nojs = await nojsCtx.newPage();
+await nojs.goto(WORK, { waitUntil: 'load' });
+const nj = await nojs.evaluate(() => ({
+  timingDone: [...document.querySelectorAll('.timing')].every((t) => t.hasAttribute('data-done')),
+  values: document.querySelectorAll('.timing-value').length,
+  tiles: document.querySelectorAll('.treemap .tile').length,
+  spec: document.querySelectorAll('.spec-table tbody tr').length,
+}));
+check('no-JS: timing diagrams render finished', nj.timingDone && nj.values === 13, JSON.stringify(nj));
+check('no-JS: floorplan drawn', nj.tiles === 21, String(nj.tiles));
+check('no-JS: spec table present', nj.spec > 15, String(nj.spec));
+await nojs.goto(base, { waitUntil: 'load' });
+check('no-JS: front block diagram present', (await nojs.$$('.fbd-block')).length === 6);
+await nojsCtx.close();
 
 // ---------------------------------------------------------------- reduced motion
-const rm = await browser.newPage({ viewport: { width: 1200, height: 720 }, reducedMotion: 'reduce' });
+const rmCtx = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });
+const rm = await rmCtx.newPage();
 watch(rm);
-await rm.goto(base, { waitUntil: 'networkidle' });
-await rm.waitForTimeout(600);
-const reducedFront = await rm.evaluate(async () => {
-  const c = document.querySelector('canvas.atlas');
-  const f0 = Number(c.dataset.frames);
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    infinite: document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity).map((a) => a.animationName),
-    atlasFrames: Number(c.dataset.frames),
-    atlasGrew: Number(c.dataset.frames) - f0,
-    atlasRunning: c.dataset.running,
-    sections: [...document.querySelectorAll('.section')].map((s) => getComputedStyle(s).opacity),
-  };
-});
-check('reduced: no infinite animations on front', reducedFront.infinite.length === 0, reducedFront.infinite.join(','));
-check('reduced: atlas is a still (no frames after settle, not running)', reducedFront.atlasFrames <= 2 && reducedFront.atlasGrew === 0 && reducedFront.atlasRunning === 'false', JSON.stringify(reducedFront));
-check('reduced: no reveal dimming', reducedFront.sections.every((o) => o === '1'));
 await rm.goto(WORK, { waitUntil: 'networkidle' });
-await rm.click('details#benchmark > summary');
 await rm.waitForTimeout(400);
-const reducedWork = await rm.evaluate(() => ({
-  done: !!document.querySelector('details#benchmark .race-caption[data-done]'),
-  fill: document.querySelector('details#benchmark .lane-mine .lane-fill')?.style.width,
-  infinite: document.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getTiming().iterations === Infinity).length,
+const rmState = await rm.evaluate(() => ({
+  done: [...document.querySelectorAll('.timing')].every((t) => t.hasAttribute('data-done')),
+  armed: document.querySelectorAll('.timing[data-armed]').length,
+  cursors: document.querySelectorAll('.timing-cursor').length,
 }));
-check('reduced: race at final state', reducedWork.done && reducedWork.fill !== '0%', JSON.stringify(reducedWork));
-check('reduced: no infinite animations on /work', reducedWork.infinite === 0, String(reducedWork.infinite));
+check('reduced: every timing diagram static and complete', rmState.done && rmState.armed === 0 && rmState.cursors === 0, JSON.stringify(rmState));
+await rmCtx.close();
+
+// ---------------------------------------------------------------- mobile
+for (const url of [base, WORK]) {
+  const mob = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  watch(mob);
+  await mob.goto(url, { waitUntil: 'networkidle' });
+  const name = url === base ? 'front' : 'work';
+  check(`mobile ${name}: no horizontal overflow`, (await mob.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) <= 0);
+  check(`mobile ${name}: header bar and nav fit`, await mob.$eval('.sheet-nav', (el) => el.getBoundingClientRect().right <= innerWidth + 0.5));
+  if (name === 'front') {
+    const one = await mob.evaluate(() => {
+      const a = document.querySelector('#features').getBoundingClientRect();
+      const b = document.querySelector('.fbd-figure').getBoundingClientRect();
+      return b.top >= a.bottom;
+    });
+    check('mobile: single column', one);
+  }
+  await mob.close();
+}
 
 check('no console/page errors', errors.length === 0, errors.join(' | '));
 

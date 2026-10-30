@@ -1,3 +1,5 @@
+> **Superseded 2026-10-30.** This direction is retired. The authority for the visual system is now `design/DESIGN.md` ("Datasheet"). This file is kept as evidence of the previous look only; do not build from it.
+
 # Direction C — "Offprint"
 
 The site is a scientific monograph, printed. Not a metaphor for one: the

@@ -5,13 +5,11 @@ const require = createRequire(import.meta.url);
 const pwPath = process.env.PLAYWRIGHT_PATH ?? '/Users/blare/.npm/_npx/e41f203b7505f1fb/node_modules/playwright';
 const { chromium } = require(pwPath);
 
-const url = process.env.URL ?? 'http://localhost:3777/';
+const url = process.env.URL ?? 'http://127.0.0.1:3778/';
 const outDir = 'design/screens/review';
 
 const routes = [
-  // The hero pair is a coin flip per visit, so pin it here: review shots
-  // should differ because the design changed, not because of the flip.
-  { name: 'front', path: '?hero=elemental' },
+  { name: 'front', path: '' },
   { name: 'work', path: 'work/' },
 ];
 
@@ -29,8 +27,6 @@ for (const route of routes) {
       await page.evaluate((t) => {
         document.documentElement.dataset.theme = t;
         try { localStorage.setItem('theme', t); } catch {}
-        // Open any folded figures so the capture shows them.
-        document.querySelectorAll('details').forEach((d) => { d.open = true; });
       }, theme);
       // Walk the page once so every section's reveal fires, then return
       // to the top; a full-page capture does not scroll by itself.
@@ -41,7 +37,8 @@ for (const route of routes) {
         }
         scrollTo(0, 0);
       });
-      await page.waitForTimeout(4500);
+      // Timing diagrams sweep in 24 ticks of 100 ms once scrolled to.
+      await page.waitForTimeout(3000);
       const file = `${outDir}/${route.name}-${vp.name}-${theme}.png`;
       await page.screenshot({ path: file, fullPage: true });
       console.log('saved', file);

@@ -4,16 +4,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { squarify } from "@/lib/treemap";
 import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
-import Section from "@/components/ui/Section";
-import FigureHead from "@/components/ui/FigureHead";
+import { Caption } from "@/components/ui/Section";
 
 /**
- * Work as a treemap of the actual repositories, each tile sized by real source
- * bytes and split into language bands in the same proportion GitHub reports.
+ * Figure 7, the die floorplan: every repository as a block on one die, each
+ * block's area set by its real source bytes and split into language bands in
+ * the proportion GitHub reports. A squarified treemap, drawn the way a
+ * datasheet draws a die photo: hairline block outlines, block labels in the
+ * corner, bands as the layout layers.
  *
  * This is the same shape storage-manager-swift draws for a disk, applied to the
- * work itself: the section is a demonstration of the tool, not a description.
+ * work itself: the figure is a demonstration of the tool, not a description.
  */
+
+// The die's nominal aspect, used for the server render so the floorplan is
+// drawn with JavaScript off. Tiles are placed in percentages, so once the
+// real box is measured only rounding changes.
+const NOMINAL = { width: 1000, height: 560 };
 
 const NOTES = {
   "storage-manager-swift":
@@ -27,14 +34,14 @@ const NOTES = {
 
 function useMeasure() {
   const ref = useRef(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [size, setSize] = useState(NOMINAL);
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
     const observer = new ResizeObserver(([entry]) => {
       const box = entry.contentRect;
-      setSize({ width: box.width, height: box.height });
+      if (box.width > 0 && box.height > 0) setSize({ width: box.width, height: box.height });
     });
     observer.observe(node);
     return () => observer.disconnect();
@@ -117,10 +124,8 @@ export default function Treemap({ repos }) {
   };
 
   return (
-    <Section id="work" runningHead="Fig. 5 — Work">
-        <FigureHead figure="Fig. 5 — Work" title={`${items.length} repositories, drawn to scale`} />
-
-        <p className="section-lede">
+    <div id="floorplan" className="floorplan">
+        <p className="ds-p">
           Every tile is one repository, sized by its source bytes and split by
           language. <span className="num">{bytes(total)}</span> of code in
           total, measured from the GitHub API.
@@ -134,7 +139,7 @@ export default function Treemap({ repos }) {
           )}
         </p>
 
-        <div className="treemap-frame">
+        <figure className="ds-figure treemap-frame">
           <div
             className="treemap"
             ref={ref}
@@ -242,7 +247,14 @@ export default function Treemap({ repos }) {
               </span>
             )}
           </div>
-        </div>
+          <figcaption>
+            <Caption n={7} as="span">
+              Die floorplan. Block area is source bytes; bands are languages,
+              largest first. Point at a block to read it out below; point at a
+              band to name its language.
+            </Caption>
+          </figcaption>
+        </figure>
 
         {currentRepo && (
           <div className="readout" aria-live="polite">
@@ -307,6 +319,6 @@ export default function Treemap({ repos }) {
             </dl>
           </div>
         )}
-    </Section>
+    </div>
   );
 }

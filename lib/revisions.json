@@ -1,0 +1,223 @@
+{
+  "revisions": [
+    {
+      "rev": "A",
+      "date": "2025-06-17",
+      "commits": 6,
+      "subjects": [
+        "Initial commit from Create Next App",
+        "Initial commit: Dark OLED theme implementation",
+        "Create nextjs.yml",
+        "fix: add generateStaticParams for static export",
+        "Update components and styling: Add ScrollReveal, modify BlurText, remove Footer, update Layout and page structure",
+        "feat: add Silk background and refactor hero section to client component"
+      ],
+      "last": "d25457c"
+    },
+    {
+      "rev": "B",
+      "date": "2025-06-20",
+      "commits": 7,
+      "subjects": [
+        "feat: optimize codebase performance and fix theme consistency",
+        "fix: resolve GitHub Pages deployment issues",
+        "fix: resolve GitHub Pages asset loading issues",
+        " Add ultra-subtle dark SplashCursor effect - Customized WebGL fluid simulation with perfect dark theme integration - Reduced size and transparency for elegant, barely-visible effect - Matches site's sophisticated black/white aesthetic - Creates premium interactive experience without distraction",
+        "trigger: force deployment with SplashCursor",
+        "feat: add full-width Beams animation",
+        "Remove problematic demo URL from Project Three in portfolio"
+      ],
+      "last": "05b2595"
+    },
+    {
+      "rev": "C",
+      "date": "2025-06-23",
+      "commits": 1,
+      "subjects": [
+        "added github api"
+      ],
+      "last": "befe4c7"
+    },
+    {
+      "rev": "D",
+      "date": "2025-06-24",
+      "commits": 14,
+      "subjects": [
+        "github",
+        "Update to use PUBLIC_GITHUB_USERNAME for GitHub Pages compatibility",
+        "Fix Next.js config for GitHub Pages deployment (basePath and assetPrefix)",
+        "Update deploy script to include dotfiles for GitHub Pages (.nojekyll fix)",
+        "Remove basePath and assetPrefix for Vercel deployment",
+        "Remove GitHub Pages integration and clean up for Vercel deployment",
+        "Remove GitHub Pages workflow after migrating to Vercel",
+        "Test webhook: file change to trigger Vercel deploy",
+        "Optimize build: ISR, limit repos, update dependencies",
+        "Show only user-created (non-forked) GitHub repos in portfolio",
+        "Use local ScrollReveal component for portfolio cards animation",
+        "refactor: replace framer motion with ScrollReveal in BlogPostCard for blog animation consistency",
+        "fix: use alias import for ScrollReveal in BlogPostCard to ensure animation works",
+        "fix(blog): match BlogPostCard structure and animation to ProjectCard for consistent ScrollReveal effect"
+      ],
+      "last": "b55528d"
+    },
+    {
+      "rev": "E",
+      "date": "2026-02-26",
+      "commits": 7,
+      "subjects": [
+        "fix: resolve multiple bugs, remove blog section, clean up codebase",
+        "fix: fall back to unauthenticated GitHub API request on bad credentials",
+        "chore: trigger redeploy after switching repo to public",
+        "fix: update Next.js to 15.3.9 to patch CVE-2025-66478",
+        "feat: show all repos and fetch fresh data on every portfolio visit",
+        "feat: add README popup modal on portfolio project cards",
+        "feat: add React Bits animation components across entire site"
+      ],
+      "last": "982a4d9"
+    },
+    {
+      "rev": "F",
+      "date": "2026-04-09",
+      "commits": 8,
+      "subjects": [
+        "Optimize caching, security, and UI improvements",
+        "Minimal/clean UI revamp — strip all visual noise",
+        "Rebuild as visual showcase — full overhaul",
+        "Visual, interactivity, and technical improvements",
+        "Add canvas starfield background to all pages",
+        "Scroll-velocity parallax on starfield",
+        "Delta-time normalize starfield for 120/144Hz monitors",
+        "Update email to blare@louds.net, remove Twitter link"
+      ],
+      "last": "2dbbd9e"
+    },
+    {
+      "rev": "G",
+      "date": "2026-04-10",
+      "commits": 3,
+      "subjects": [
+        "redeploy",
+        "Add Cloudflare Pages deployment via OpenNext",
+        "Fix wrangler.toml — remove invalid pages block"
+      ],
+      "last": "14bcebc"
+    },
+    {
+      "rev": "H",
+      "date": "2026-04-11",
+      "commits": 1,
+      "subjects": [
+        "Fix Cloudflare Worker deployment config"
+      ],
+      "last": "098e60d"
+    },
+    {
+      "rev": "J",
+      "date": "2026-04-12",
+      "commits": 5,
+      "subjects": [
+        "fix: mobile starfield performance and scroll handling",
+        "fix: cap starfield to 60fps on mobile, keep full star count",
+        "fix: dampen scroll velocity accumulation on mobile",
+        "fix: optimize mobile performance for all animations",
+        "feat: graceful fallback for non-GPU-accelerated browsers"
+      ],
+      "last": "f704fec"
+    },
+    {
+      "rev": "K",
+      "date": "2026-07-27",
+      "commits": 13,
+      "subjects": [
+        "redesign: rebuild the site around measured work",
+        "fix: make treemap tiles reachable without a pointer",
+        "docs: describe the actual project and the repo-data workflow",
+        "feat: add a dark theme with a toggle",
+        "fix: point metadata at the real domain, add a portrait",
+        "Name the language under the cursor, chart the whole stack, count private work",
+        "Refresh the repository snapshot nightly instead of by hand",
+        "Deploy on merge, so a data refresh reaches visitors",
+        "Number redacted repos deterministically, not by response order",
+        "Order redacted placeholders by size, and let the privacy gate fail",
+        "Pin the placeholder ordering, and renumber the snapshot to match",
+        "Stop tile labels being cut, and lift them off the bands they sit on",
+        "Require the name check in the sync workflow too, not just the deploy"
+      ],
+      "last": "70a2f2f"
+    },
+    {
+      "rev": "L",
+      "date": "2026-08-04",
+      "commits": 1,
+      "subjects": [
+        "Add an offline smoke test"
+      ],
+      "last": "2603d40"
+    },
+    {
+      "rev": "M",
+      "date": "2026-09-23",
+      "commits": 11,
+      "subjects": [
+        "Skip byteless repos in the sync so the nightly refresh can pass again",
+        "Design A (Evolution): Vellum & Redline theme mockup",
+        "Design A: screenshot evidence (light/dark, hero/work/languages/about, hover state)",
+        "opengraph-image: apply Vellum & Redline palette",
+        "Replace view()-timeline reveals with IntersectionObserver; halve textures",
+        "Polish: shared hover flip for links/buttons, red hover underlines",
+        "Hero/Work/Stack polish: glow transplant, needle playheads, physical tiles",
+        "Remove retired lang-bar ::after needle from globals",
+        "Drop now-dead ::after override; globals' base needle rule was removed in c40287f",
+        "Bar-run settle: replace view() timeline with the IO reveal hook",
+        "Reveal skipped-past sections: inflate the observer root upward"
+      ],
+      "last": "97785c4"
+    },
+    {
+      "rev": "N",
+      "date": "2026-09-30",
+      "commits": 5,
+      "subjects": [
+        "Redesign: Strip Chart direction",
+        "Hero nameplate reads JL; refresh design screens",
+        "Redesign: Offprint direction",
+        "Add browser acceptance suite for the redesign",
+        "Motion pass and Headbang nameplate"
+      ],
+      "last": "0b577ea"
+    },
+    {
+      "rev": "P",
+      "date": "2026-10-01",
+      "commits": 8,
+      "subjects": [
+        "Front page as an introduction; the work moves to /work",
+        "Four measured figures on /work, one per repository",
+        "About: the four repositories, one problem each",
+        "Atlas renders on the GPU",
+        "Fix: /work blank after client-side navigation",
+        "Atlas: accurate 60fps pacing, cheaper context, measured",
+        "Light the title page letters on hover",
+        "Drop the ink under a lit letter, removing a pale fringe"
+      ],
+      "last": "b320e6f"
+    },
+    {
+      "rev": "R",
+      "date": "2026-10-30",
+      "commits": 9,
+      "subjects": [
+        "Refresh repository snapshot",
+        "design: baseline audit and proposed architecture",
+        "Revamp architecture: layered CSS, grouped components, figures as data",
+        "Verify revamp: list of figures is a section, acceptance waits for theme",
+        "Use Section and FigureHead for the treemap and languages figures",
+        "Add PRODUCT.md: product truth for the redesign (engineers and employers)",
+        "Datasheet redesign: replace Offprint with an IC datasheet",
+        "Datasheet: fix render issues found in review, rewrite acceptance suite",
+        "design: DESIGN.md for the Datasheet direction, audit, screens"
+      ],
+      "last": "94919c5"
+    }
+  ]
+}
