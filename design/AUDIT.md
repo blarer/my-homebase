@@ -132,3 +132,47 @@ applied inside a View Transition callback.
 | 4 | Responsive | 3 | 3 |
 | 5 | Integrity | 2 | 4 (layered cascade, grouped components, figures as data) |
 | **Total** | 13 | **17/20** |
+
+## Datasheet redesign
+
+Audited 2026-10-30 on branch `agent/impeccable-redesign` after the full
+visual replacement described in `design/DESIGN.md`. Tooling: impeccable
+detector (`impeccable detect --json`, rendered URL scans of `/` and
+`/work/` from `next start -H 127.0.0.1 -p 3778`), Node 22 (nix shell),
+Chromium 156 (nix).
+
+### Commands
+
+| Step | Result |
+|---|---|
+| `npm test` | pass (privacy name comparison UNVERIFIED as before: `gh` not authenticated on this host; structural checks pass) |
+| `npm run lint` | no warnings |
+| `npm run build` | ok. `/` 8.8 kB (114 kB first load), `/work` 5.2 kB (111 kB) |
+| `npm run test:acceptance` | 79 passed, 0 failed (suite rewritten for the new markup) |
+
+### Detector
+
+First scan (1280x800 and 390x844) found:
+
+| Rule | Where | Verdict |
+|---|---|---|
+| `line-length` x3 | Description paragraph 2, section 7 intro, floorplan lede | **Fixed.** `.ds-p` capped at 60ch; the two-column Description capped at 1000px so each column stays near 70 characters |
+| `body-text-viewport-edge` (mobile `/work`) | `article.timing` 146px past the right edge | **Fixed.** Real bug: grid items defaulted to `min-width: auto` and the 520px timing drawing pushed the column out. Grid tracks are now `minmax(0, 1fr)` and the drawing scrolls inside its figure |
+| `repeating-stripes-gradient` (advisory) | `/work`, private tiles in the floorplan | **Justified, kept.** The hatch is not decoration: it is the datasheet convention for a region that exists but is not shown, and it marks exactly the 14 private repositories whose size and languages are real but whose names are withheld. Removing it would make private and public blocks indistinguishable |
+
+Final scan: only the justified hatch advisory remains, on both viewports.
+
+### Review of the renders
+
+Screenshots: `design/screens/review/{front,work}-{desktop,mobile}-{light,dark}.png`.
+Fixed after looking: the axis unit label collided with the last tick
+(moved above the plot); "Direct sensor read" overflowed into the PWR
+result in Figure 1 (now "Sensor read"); block diagram and timing labels were
+illegible at 390px (drawings keep a minimum width and scroll inside their
+figure); the mobile grid overflowed (see above); SVG pin numbers inherited
+link underlines.
+
+### Removed, with reasons
+
+- WebGL Atlas: a generative field that plotted nothing measured. A datasheet figure must be a characteristic of the part; no honest reading of it existed, so it was removed with its acceptance checks and the shader benchmark script.
+- Title-page letters (JL, Headbang, hover lighting), masthead, reveal-on-scroll, race component and all idle motion: retired with the Offprint world. Content they carried (the thesis line, the benchmarks) is kept in the new markup.

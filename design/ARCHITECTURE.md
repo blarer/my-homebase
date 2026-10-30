@@ -1,3 +1,5 @@
+> **Superseded 2026-10-30** by the Datasheet redesign; see `design/DESIGN.md`. Kept as a record of the Offprint revamp.
+
 # Architecture: louds.net after the revamp
 
 Companion to `DIRECTION.md` (the visual world, unchanged in spirit) and
