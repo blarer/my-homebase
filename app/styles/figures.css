@@ -1,0 +1,674 @@
+/*
+ * Figures: block diagram, pinout, timing diagrams, floorplan, composition.
+ * SVG figures are drawn with strokes from the palette, hairline weights,
+ * and type from the sheet's own two faces.
+ */
+@layer figures {
+  svg text {
+    font-family: var(--font-mono);
+    fill: var(--ink);
+  }
+
+  /* ---- Figure 1: functional block diagram ---- */
+  .fbd-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .fbd-die {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .fbd-die-label {
+    font-size: 10px;
+    fill: var(--ink-3);
+    letter-spacing: 0.08em;
+  }
+
+  .fbd-die-label-r {
+    text-anchor: end;
+  }
+
+  .fbd-block {
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .fbd-block:focus {
+    outline: none;
+  }
+
+  .fbd-box {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1;
+  }
+
+  .fbd-wire {
+    stroke: var(--ink);
+    stroke-width: 1;
+  }
+
+  .fbd-arrow {
+    fill: var(--ink);
+  }
+
+  .fbd-pin {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1;
+  }
+
+  .fbd-sig {
+    font-size: 11px;
+    fill: var(--ink-2);
+  }
+
+  .fbd-name {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .fbd-layer {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    fill: var(--ink-2);
+  }
+
+  .fbd-measured {
+    font-size: 12px;
+    font-weight: 500;
+    fill: var(--accent);
+  }
+
+  /* Selection: the block, its wires and pins take the accent; the other
+     blocks drop to the secondary ink so the selection reads at a glance.
+     The swap is a single step, no easing. */
+  .fbd[data-active] .fbd-block:not([data-on]) :is(.fbd-box, .fbd-wire, .fbd-pin) {
+    stroke: var(--rule-2);
+  }
+
+  .fbd[data-active] .fbd-block:not([data-on]) :is(.fbd-name, .fbd-layer, .fbd-sig, .fbd-measured) {
+    fill: var(--ink-3);
+  }
+
+  .fbd[data-active] .fbd-block:not([data-on]) .fbd-arrow {
+    fill: var(--rule-2);
+  }
+
+  .fbd-block[data-on] .fbd-box {
+    fill: var(--accent-wash);
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+
+  .fbd-block[data-on] :is(.fbd-wire, .fbd-pin) {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+
+  .fbd-block[data-on] .fbd-pin {
+    fill: var(--accent);
+  }
+
+  .fbd-block[data-on] .fbd-arrow {
+    fill: var(--accent);
+  }
+
+  .fbd-block[data-on] :is(.fbd-name, .fbd-sig) {
+    fill: var(--ink);
+  }
+
+  .fbd-block:focus-visible .fbd-box {
+    stroke-dasharray: 4 2;
+  }
+
+  .fbd-table tbody tr {
+    cursor: default;
+  }
+
+  .fbd-table tbody tr[data-on] {
+    background: var(--accent-wash);
+  }
+
+  .fbd-table tbody tr[data-on] th {
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 -1px var(--accent);
+    padding-left: var(--sp-2);
+  }
+
+  .fbd-table tbody th {
+    padding-left: var(--sp-2);
+  }
+
+  /* ---- Figure 2: pinout ---- */
+  .pinout {
+    display: grid;
+    gap: var(--sp-5) var(--sp-7);
+  }
+
+  @media (min-width: 960px) {
+    .pinout {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      align-items: start;
+    }
+  }
+
+  .pinout-svg {
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+  }
+
+  .pkg-body {
+    fill: var(--paper-2);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .pkg-notch {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1.5;
+  }
+
+  .pkg-dot {
+    fill: var(--ink);
+  }
+
+  .pkg-label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .pkg-pin {
+    fill: var(--paper);
+    stroke: var(--ink);
+    stroke-width: 1;
+  }
+
+  .pkg-pin-n {
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+
+  .pkg-pin-name {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .pkg-link:hover .pkg-pin,
+  .pkg-link:focus-visible .pkg-pin {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+
+  .pkg-link:hover .pkg-pin-name,
+  .pkg-link:focus-visible .pkg-pin-name {
+    fill: var(--accent);
+  }
+
+  .pkg-nc .pkg-pin-name {
+    fill: var(--ink-3);
+  }
+
+  /* ---- Section 7: timing diagrams ---- */
+  .timing-grid-2 {
+    display: grid;
+    gap: var(--sp-6) var(--sp-7);
+  }
+
+  @media (min-width: 960px) {
+    .timing-grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .timing {
+    border-top: var(--hair) solid var(--rule);
+    padding-top: var(--sp-3);
+  }
+
+  .timing-headline {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .timing-lede {
+    font-size: var(--step--1);
+    color: var(--ink-2);
+    margin-bottom: var(--sp-3);
+    max-width: 70ch;
+  }
+
+  .timing-svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .timing-grid {
+    stroke: var(--rule-2);
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+  }
+
+  .timing-tick,
+  .timing-unit {
+    font-size: 10px;
+    fill: var(--ink-3);
+  }
+
+  .timing-label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    fill: var(--ink-2);
+  }
+
+  .timing-trace {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.5;
+    stroke-linejoin: miter;
+  }
+
+  .timing-mine .timing-trace {
+    stroke: var(--accent);
+    stroke-width: 2.5;
+  }
+
+  .timing-mine .timing-label {
+    fill: var(--ink);
+    font-weight: 700;
+  }
+
+  .timing-value {
+    font-size: 11px;
+    fill: var(--ink);
+  }
+
+  .timing-mine .timing-value {
+    fill: var(--accent);
+    font-weight: 500;
+  }
+
+  .timing-cursor {
+    stroke: var(--accent);
+    stroke-width: 1;
+  }
+
+  .timing-notes {
+    display: grid;
+    gap: 2px;
+    font-size: var(--step--1);
+    color: var(--ink-3);
+  }
+
+  .timing-notes-label {
+    color: var(--ink-2);
+    font-weight: 500;
+  }
+
+  .timing-notes .timing-mine .timing-notes-label {
+    color: var(--accent);
+  }
+
+  .ds-p-intro {
+    color: var(--ink-2);
+  }
+
+  /* ---- Table 4: specs ---- */
+  .spec-table .spec-group th {
+    padding-top: var(--sp-3);
+    font-weight: 700;
+    background: var(--paper-2);
+    padding-left: var(--sp-2);
+  }
+
+  .spec-table .spec-group a {
+    text-decoration: none;
+  }
+
+  .spec-table .spec-group a:hover {
+    text-decoration: underline;
+  }
+
+  .spec-cond {
+    color: var(--ink-2);
+  }
+
+  .spec-table tbody tr:not(.spec-group) th {
+    padding-left: var(--sp-2);
+  }
+
+  .spec-table tr[data-mine] .spec-typ {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* ---- Figure 7: die floorplan ---- */
+  .treemap {
+    position: relative;
+    aspect-ratio: 1000 / 560;
+    border: var(--rule-w) solid var(--ink);
+    background: var(--paper);
+  }
+
+  .tile {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    border: var(--hair) solid var(--ink);
+    margin: -0.5px;
+    text-align: left;
+    background: var(--paper);
+  }
+
+  .tile-bands {
+    position: absolute;
+    inset: 0;
+    opacity: var(--band-rest);
+  }
+
+  .tile[data-active] .tile-bands,
+  .tile:hover .tile-bands {
+    opacity: var(--band-active);
+  }
+
+  .tile-band {
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+
+  .tile-band[data-dimmed] {
+    opacity: 0.3;
+  }
+
+  .tile[data-private] {
+    background: repeating-linear-gradient(45deg, transparent 0 5px, var(--rule-2) 5px 6px), var(--paper);
+  }
+
+  .tile-body {
+    position: absolute;
+    left: 4px;
+    top: 3px;
+    right: 4px;
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    line-height: 1.2;
+    pointer-events: none;
+  }
+
+  .tile-name {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    background: var(--paper);
+    align-self: flex-start;
+    padding-inline: 2px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tile-size {
+    color: var(--ink-2);
+    background: var(--paper);
+    align-self: flex-start;
+    padding-inline: 2px;
+  }
+
+  .tile[data-active] {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    z-index: 1;
+  }
+
+  .tile[data-active] .tile-name {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .probe {
+    position: absolute;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 4px var(--sp-2);
+    background: var(--paper);
+    border: var(--hair) solid var(--ink);
+    font-size: var(--step--1);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .probe-share {
+    color: var(--accent);
+  }
+
+  .probe-bytes {
+    color: var(--ink-3);
+  }
+
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: var(--hair) solid var(--ink);
+    flex-shrink: 0;
+    margin-right: var(--sp-2);
+    vertical-align: -1px;
+  }
+
+  .probe .swatch {
+    margin-right: 0;
+  }
+
+  .readout {
+    display: grid;
+    gap: var(--sp-3) var(--sp-6);
+    padding: var(--sp-3) 0;
+    border-top: var(--hair) solid var(--rule);
+    border-bottom: var(--hair) solid var(--rule);
+    font-size: var(--step--1);
+  }
+
+  @media (min-width: 960px) {
+    .readout {
+      grid-template-columns: 9rem minmax(0, 1fr) 12rem;
+    }
+  }
+
+  .readout-key {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .readout-pct {
+    font-size: var(--step-2);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .tag {
+    color: var(--ink-3);
+    font-size: var(--step--1);
+  }
+
+  .readout-name {
+    font-size: var(--step-0);
+    margin-bottom: var(--sp-1);
+  }
+
+  .readout-name a {
+    font-family: var(--font-mono);
+  }
+
+  .readout-name-host,
+  .readout-private {
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+
+  .readout-note {
+    max-width: 70ch;
+    color: var(--ink-2);
+    margin-bottom: var(--sp-2);
+  }
+
+  .readout-langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-4);
+  }
+
+  .readout-langs li {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .readout-lang-size {
+    margin-left: var(--sp-2);
+    color: var(--ink-3);
+  }
+
+  .readout-meta {
+    display: grid;
+    gap: var(--sp-2);
+  }
+
+  /* ---- Figure 8 / Table 5: composition ---- */
+  .lang-split {
+    display: grid;
+    gap: var(--sp-5) var(--sp-7);
+  }
+
+  @media (min-width: 960px) {
+    .lang-split {
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      align-items: start;
+    }
+  }
+
+  .ring-wrap {
+    position: relative;
+    max-width: 300px;
+    margin-inline: auto;
+  }
+
+  .ring {
+    width: 100%;
+    height: auto;
+  }
+
+  .ring-seg {
+    cursor: pointer;
+  }
+
+  .ring-seg[data-dimmed] {
+    opacity: 0.25;
+  }
+
+  .ring-centre {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+    font-size: var(--step--1);
+  }
+
+  .ring-pct {
+    font-size: var(--step-2);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .ring-name {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ring-bytes {
+    color: var(--ink-3);
+  }
+
+  .lang-table .lang-name {
+    white-space: nowrap;
+  }
+
+  .lang-bar-col {
+    width: 40%;
+  }
+
+  .lang-bar {
+    vertical-align: middle !important;
+  }
+
+  .lang-bar-run {
+    display: block;
+    height: 8px;
+    min-width: 1px;
+    outline: var(--hair) solid var(--ink);
+    outline-offset: -1px;
+  }
+
+  .lang-rank {
+    color: var(--ink-3);
+    width: 2.5ch;
+  }
+
+  .lang-bytes {
+    color: var(--ink-2);
+  }
+
+  /* ---- Table 6: revision history ---- */
+  .rev-table th[scope='row'] {
+    font-weight: 700;
+    padding-left: var(--sp-2);
+  }
+
+  .rev-more summary {
+    cursor: pointer;
+    list-style-position: outside;
+  }
+
+  .rev-more summary::marker {
+    color: var(--ink-3);
+  }
+
+  .rev-more ul {
+    margin-top: var(--sp-1);
+    color: var(--ink-2);
+    display: grid;
+    gap: 2px;
+  }
+
+  .rev-table tbody tr:first-child th,
+  .rev-table tbody tr:first-child td:nth-child(2) {
+    color: var(--accent);
+  }
+
+  @media (max-width: 640px) {
+    .lang-bar-col,
+    .lang-bar {
+      display: none;
+    }
+
+    .spec-cond {
+      display: none;
+    }
+  }
+}

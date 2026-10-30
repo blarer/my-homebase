@@ -1,53 +1,38 @@
-import { Old_Standard_TT, Courier_Prime } from 'next/font/google';
-import localFont from 'next/font/local';
+import { Hanken_Grotesk, Red_Hat_Mono } from 'next/font/google';
 import './styles/index.css';
 import ThemeScript from '@/components/site/ThemeScript';
-import RevealScript from '@/components/site/RevealScript';
-import Masthead from '@/components/site/Masthead';
 import { SITE_URL } from '@/lib/site';
 
-// The title page's two letters are set in Headbang, the display face from
-// Discord's client. Self-hosted so the nameplate never depends on a
-// third-party CDN; used for the hero name only.
-const headbang = localFont({
-  src: '../public/fonts/headbang.woff2',
-  weight: '400',
-  style: 'normal',
-  variable: '--font-headbang',
+// Datasheets are set in a plain grotesk: the face has to disappear behind
+// the parameters. Hanken Grotesk is a sober neo-grotesk with real weights
+// and no display mannerisms, self-hosted by next/font at build time.
+const grotesk = Hanken_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-grotesk',
   display: 'swap',
 });
 
-// The voice of a turn-of-the-century scientific journal: Old Standard is a
-// revival of the modern-face serifs those journals were set in. It carries
-// the nameplate, the headings, and the running text.
-const oldSerif = Old_Standard_TT({
+// Values are set in a monospace so every column of MIN / TYP / MAX lines up
+// by construction. Used for figures, units, pin names and identifiers only,
+// never for running text.
+const figures = Red_Hat_Mono({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-old-serif',
+  weight: ['400', '500'],
+  variable: '--font-figures',
   display: 'swap',
 });
 
-// Every number, label, and identifier is typewritten: Courier Prime is
-// monospaced, so columns of figures align by construction, and it reads as
-// the lab report's own print rather than the journal's typesetting.
-const typewriter = Courier_Prime({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
-  variable: '--font-typewriter',
-  display: 'swap',
-});
+const description =
+  'Datasheet for BLARE-1, a systems-software engineer. Native tools made faster by removing work one layer below: syscalls, stream copy, transport, direct sensor reads. Every value measured.';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Blare — systems programming, measured',
-  description:
-    'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
+  title: 'BLARE-1 datasheet: systems-software engineer, measured',
+  description,
   openGraph: {
-    title: 'Blare — systems programming, measured',
-    description:
-      'I build native tools and measure what they cost. Rust disk scanners, stream-copy video tools, reproducible machine configs.',
+    title: 'BLARE-1 datasheet: systems-software engineer, measured',
+    description,
     url: SITE_URL,
     siteName: 'Blare',
     locale: 'en_US',
@@ -57,8 +42,8 @@ export const metadata = {
 
 export const viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f3f1ec' },
-    { media: '(prefers-color-scheme: dark)', color: '#17140f' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#1d1f21' },
   ],
 };
 
@@ -66,7 +51,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${oldSerif.variable} ${typewriter.variable} ${headbang.variable}`}
+      className={`${grotesk.variable} ${figures.variable}`}
       data-theme="light"
       suppressHydrationWarning
     >
@@ -77,11 +62,7 @@ export default function RootLayout({ children }) {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <Masthead />
         {children}
-        {/* Runs after the sections exist; see RevealScript for why it lives
-            at the end of <body> rather than in <head>. */}
-        <RevealScript />
       </body>
     </html>
   );

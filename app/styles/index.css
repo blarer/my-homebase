@@ -1,24 +1,17 @@
 /*
- * The only stylesheet entry point. Layer order is declared once, here, so
- * the cascade never depends on which chunk Next emits first.
+ * Stylesheet entry. Layer order is declared once so the cascade never
+ * depends on chunk order.
  *
- *   reset       element reset + reduced-motion clamp (wins over everything)
- *   tokens      palette, type scale, space, motion values, per theme
- *   base        elements and browser surfaces
- *   layout      shell, section, figure head, type roles
- *   components  one file per area of the site
- *   motion      load, idle, reveal and response motion; last so it applies
- *               over component defaults without specificity tricks
+ *   reset     element reset + reduced-motion clamp
+ *   tokens    palette, type, space, the tick
+ *   base      elements and browser surfaces
+ *   sheet     page header/footer, sections, captions, tables, columns
+ *   figures   block diagram, pinout, timing, floorplan, composition
  */
-@layer reset, tokens, base, layout, components, motion;
+@layer reset, tokens, base, sheet, figures;
 
 @import './reset.css';
 @import './tokens.css';
 @import './base.css';
-@import './layout.css';
-@import './site.css';
-@import './home.css';
-@import './race.css';
-@import './treemap.css';
-@import './languages.css';
-@import './motion.css';
+@import './sheet.css';
+@import './figures.css';

@@ -1,24 +1,16 @@
 import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
 import LanguageRing from "@/components/work/LanguageRing";
-import Section from "@/components/ui/Section";
-import FigureHead from "@/components/ui/FigureHead";
+import { Caption } from "@/components/ui/Section";
 
 /**
- * Languages, counted rather than claimed.
- *
- * The old marquee listed fifteen technologies including several that appear
- * nowhere in the work. This lists only what is actually in the repositories,
- * ordered by how much of it there is.
- *
- * The ring and the list are the same numbers twice on purpose: the ring shows
- * the shape of the whole, the list gives the exact figures. Neither is
- * decoration for the other.
+ * Composition: what the work is actually written in, counted rather than
+ * claimed. Figure 8 is the ring (the shape of the whole); Table 5 is the same
+ * numbers as a datasheet prints a material composition, with a bar in the
+ * table so the ranking can be read without the ring.
  */
-
 export default function Languages({ repos }) {
   const totals = new Map();
-
   for (const repo of repos) {
     for (const [name, value] of Object.entries(repo.languages)) {
       totals.set(name, (totals.get(name) ?? 0) + value);
@@ -30,50 +22,51 @@ export default function Languages({ repos }) {
   const largest = ranked[0]?.[1] ?? 1;
 
   return (
-    <Section id="languages" runningHead="Fig. 6 — Languages">
-        <FigureHead figure="Fig. 6 — Languages" title="What the work is actually written in" />
+    <div id="languages" className="lang-split">
+      <figure className="ds-figure lang-figure">
+        <LanguageRing repos={repos} />
+        <figcaption>
+          <Caption n={8} as="span">
+            Composition by language, all repositories. Point at a segment to
+            read it out.
+          </Caption>
+        </figcaption>
+      </figure>
 
-        <div className="lang-split">
-          <LanguageRing repos={repos} />
-
-          <ol className="lang-list">
+      <div className="ds-table-wrap">
+        <table className="ds-table lang-table">
+          <caption>
+            <Caption kind="Table" n={5} as="span">
+              Composition, source bytes by language
+            </Caption>
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col" className="ds-num">#</th>
+              <th scope="col">Language</th>
+              <th scope="col" className="lang-bar-col"><span className="sr-only">Share, drawn</span></th>
+              <th scope="col" className="ds-num">Share</th>
+              <th scope="col" className="ds-num">Bytes</th>
+            </tr>
+          </thead>
+          <tbody>
             {ranked.map(([name, value], index) => (
-              <li className="lang-row" key={name}>
-                <span className="num lang-rank">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className="lang-name">
-                  <span
-                    className="swatch"
-                    style={{ background: languageColor(name) }}
-                    aria-hidden="true"
-                  />
+              <tr className="lang-row" key={name}>
+                <td className="ds-num lang-rank">{index + 1}</td>
+                <th scope="row" className="lang-name">
+                  <span className="swatch" style={{ background: languageColor(name) }} aria-hidden="true" />
                   {name}
-                </span>
-                <span className="lang-bar">
-                  {/* The run (fill + needle) moves as one rigid unit, so the
-                      playhead always sits exactly on the leading edge. The
-                      width is server-rendered: the measurement is visible
-                      with JavaScript disabled. */}
-                  <span
-                    className="lang-bar-run"
-                    style={{ width: `${(value / largest) * 100}%` }}
-                  >
-                    <span
-                      className="lang-bar-fill"
-                      style={{ background: languageColor(name) }}
-                    />
-                    <span className="lang-needle" aria-hidden="true" />
-                  </span>
-                </span>
-                <span className="num lang-share">
-                  {((value / grand) * 100).toFixed(1)}%
-                </span>
-                <span className="num lang-bytes">{bytes(value)}</span>
-              </li>
+                </th>
+                <td className="lang-bar" aria-hidden="true">
+                  <span className="lang-bar-run" style={{ width: `${(value / largest) * 100}%`, background: languageColor(name) }} />
+                </td>
+                <td className="ds-num lang-share">{((value / grand) * 100).toFixed(1)}%</td>
+                <td className="ds-num lang-bytes">{bytes(value)}</td>
+              </tr>
             ))}
-          </ol>
-        </div>
-    </Section>
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

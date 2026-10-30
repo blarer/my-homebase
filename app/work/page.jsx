@@ -1,48 +1,74 @@
-import Link from 'next/link';
-import Race from '@/components/work/Race';
-import FigureIndex from '@/components/work/FigureIndex';
+import SheetHeader from '@/components/sheet/SheetHeader';
+import SheetFooter from '@/components/sheet/SheetFooter';
+import Section from '@/components/ui/Section';
+import SpecTable from '@/components/work/SpecTable';
+import Timing from '@/components/work/Timing';
 import Treemap from '@/components/work/Treemap';
 import Languages from '@/components/work/Languages';
-import Footer from '@/components/site/Footer';
+import RevisionHistory from '@/components/work/RevisionHistory';
 import { FIGURES } from '@/lib/figures';
+import { PART } from '@/lib/datasheet';
 import snapshot from '@/lib/repos.json';
 
 export const metadata = {
-  title: 'Blare — the work, measured',
+  title: 'BLARE-1 characterization: the work, measured',
   description:
-    'Benchmarks from four repositories run as races, every repository drawn to scale, and the languages they are written in, counted from the GitHub API.',
+    'Datasheet page 2: electrical characteristics, timing diagrams for four benchmarks, the repositories as a die floorplan, language composition, revision history.',
 };
 
 /**
- * The figures. The first four are measurements from individual
- * repositories, each folded under its own title; the last two are drawn
- * from the repositories themselves and change when the code does.
+ * Page 2 of the datasheet: the characterization data. Sections continue
+ * from page 1 (6 onward), figures from 3, tables from 4.
  */
 export default function WorkPage() {
   const { repos, syncedAt } = snapshot;
 
   return (
     <>
-      <main id="main" tabIndex={-1}>
-        <header className="shell work-head" data-running-head="The work, measured">
-          <h1 className="work-title">The work, measured</h1>
-          <p className="work-lede">
-            Six figures. The first four are measurements I took, one per
-            repository, folded under their titles. The last two are drawn from
-            the repositories themselves, so they change when the code does.
+      <SheetHeader page="2" />
+      <main id="main" tabIndex={-1} className="sheet">
+        <div className="ds-title ds-title-compact">
+          <h1 className="ds-h1">
+            <span className="ds-h1-part num">{PART}</span>
+            <span className="ds-h1-name">Characterization: the work, measured</span>
+          </h1>
+          <p className="ds-title-meta">
+            Four benchmarks I ran, one per repository, then the repositories
+            themselves, counted from the GitHub API. The last two change when
+            the code does.
           </p>
-          <Link href="/" className="work-home">
-            <span aria-hidden="true">← </span>Back to the introduction
-          </Link>
-        </header>
-        <FigureIndex />
-        {FIGURES.map((figure) => (
-          <Race key={figure.id} {...figure} />
-        ))}
-        <Treemap repos={repos} />
-        <Languages repos={repos} />
+        </div>
+
+        <Section id="specifications" n="6" title="Specifications">
+          <SpecTable repos={repos} />
+        </Section>
+
+        <Section id="timing" n="7" title="Timing Characteristics">
+          <p className="ds-p ds-p-intro">
+            Each run is drawn as a BUSY signal on one shared axis: it rises at
+            zero and falls when the run finishes. The spread of the falling
+            edges is the result. Highlighted traces are mine.
+          </p>
+          <div className="timing-grid-2">
+            {FIGURES.map((figure) => (
+              <Timing key={figure.id} {...figure} />
+            ))}
+          </div>
+        </Section>
+
+        <Section id="work" n="8" title="Die Floorplan">
+          <Treemap repos={repos} />
+        </Section>
+
+        <Section id="composition" n="9" title="Composition">
+          <Languages repos={repos} />
+        </Section>
+
+        <Section id="revisions" n="10" title="Revision History">
+          <RevisionHistory />
+        </Section>
       </main>
-      <Footer syncedAt={syncedAt} />
+      <SheetFooter page="2" syncedAt={syncedAt} />
     </>
   );
 }
