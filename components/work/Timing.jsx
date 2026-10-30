@@ -26,7 +26,7 @@ const W = 640;
 const LEFT = 204;
 const RIGHT = 78;
 const LANE = 34;
-const TOPPAD = 26;
+const TOPPAD = 34;
 
 const FORMAT = {
   seconds: (v) => `${v.toFixed(1)} s`,
@@ -99,7 +99,7 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
               </text>
             </g>
           ))}
-          <text className="timing-unit" x={W - 4} y={H - 10} textAnchor="end">
+          <text className="timing-unit" x={W - 4} y={TOPPAD - 14} textAnchor="end">
             {unit}
           </text>
 

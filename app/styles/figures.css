@@ -12,8 +12,14 @@
   /* ---- Figure 1: functional block diagram ---- */
   .fbd-svg {
     width: 100%;
+    min-width: 560px;
     height: auto;
     overflow: visible;
+  }
+
+  .fbd-figure,
+  .pinout-figure {
+    overflow-x: auto;
   }
 
   .fbd-die {
@@ -196,11 +202,16 @@
   .pkg-pin-n {
     font-size: 10px;
     fill: var(--ink-3);
+    text-decoration: none;
   }
 
   .pkg-pin-name {
     font-size: 12px;
     font-weight: 500;
+  }
+
+  .pkg-link {
+    text-decoration: none;
   }
 
   .pkg-link:hover .pkg-pin,
@@ -221,16 +232,18 @@
   /* ---- Section 7: timing diagrams ---- */
   .timing-grid-2 {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-6) var(--sp-7);
   }
 
   @media (min-width: 960px) {
     .timing-grid-2 {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   .timing {
+    min-width: 0;
     border-top: var(--hair) solid var(--rule);
     padding-top: var(--sp-3);
   }
@@ -249,8 +262,19 @@
 
   .timing-svg {
     width: 100%;
+    min-width: 520px;
     height: auto;
     overflow: visible;
+  }
+
+  .timing .ds-figure {
+    overflow-x: auto;
+  }
+
+  .fbd-figure > figcaption,
+  .timing .ds-figure > figcaption {
+    position: sticky;
+    left: 0;
   }
 
   .timing-grid {

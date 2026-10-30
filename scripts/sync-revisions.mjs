@@ -24,8 +24,10 @@ for (const line of log.trim().split('\n').reverse()) {
   days.get(date).push({ hash, subject });
 }
 
-// A, B, ... Z, AA, AB ...
-const letter = (i) => (i < 26 ? String.fromCharCode(65 + i) : letter(Math.floor(i / 26) - 1) + letter(i % 26));
+// Revision letters as datasheets assign them: A, B, ... skipping I, O, Q, S,
+// X and Z, which read as digits; then AA, AB ...
+const LETTERS = 'ABCDEFGHJKLMNPRTUVWY';
+const letter = (i) => (i < LETTERS.length ? LETTERS[i] : letter(Math.floor(i / LETTERS.length) - 1) + LETTERS[i % LETTERS.length]);
 
 const revisions = [...days.entries()].map(([date, commits], i) => ({
   rev: letter(i),

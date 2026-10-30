@@ -142,7 +142,12 @@
   /* ---- Columns ---- */
   .ds-cols {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-6) var(--sp-7);
+  }
+
+  .ds-col {
+    min-width: 0;
   }
 
   @media (min-width: 960px) {
@@ -193,7 +198,7 @@
   }
 
   .ds-p {
-    max-width: 72ch;
+    max-width: 60ch;
     margin-bottom: var(--sp-4);
   }
 
@@ -234,6 +239,7 @@
     columns: 2 300px;
     column-gap: var(--sp-7);
     column-rule: var(--hair) solid var(--rule-2);
+    max-width: 1000px;
   }
 
   .ds-desc p {

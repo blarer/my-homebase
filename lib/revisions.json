@@ -112,7 +112,7 @@
       "last": "098e60d"
     },
     {
-      "rev": "I",
+      "rev": "J",
       "date": "2026-04-12",
       "commits": 5,
       "subjects": [
@@ -125,7 +125,7 @@
       "last": "f704fec"
     },
     {
-      "rev": "J",
+      "rev": "K",
       "date": "2026-07-27",
       "commits": 13,
       "subjects": [
@@ -146,7 +146,7 @@
       "last": "70a2f2f"
     },
     {
-      "rev": "K",
+      "rev": "L",
       "date": "2026-08-04",
       "commits": 1,
       "subjects": [
@@ -155,7 +155,7 @@
       "last": "2603d40"
     },
     {
-      "rev": "L",
+      "rev": "M",
       "date": "2026-09-23",
       "commits": 11,
       "subjects": [
@@ -174,7 +174,7 @@
       "last": "97785c4"
     },
     {
-      "rev": "M",
+      "rev": "N",
       "date": "2026-09-30",
       "commits": 5,
       "subjects": [
@@ -187,7 +187,7 @@
       "last": "0b577ea"
     },
     {
-      "rev": "N",
+      "rev": "P",
       "date": "2026-10-01",
       "commits": 8,
       "subjects": [
@@ -203,18 +203,19 @@
       "last": "b320e6f"
     },
     {
-      "rev": "O",
+      "rev": "R",
       "date": "2026-10-30",
-      "commits": 6,
+      "commits": 7,
       "subjects": [
         "Refresh repository snapshot",
         "design: baseline audit and proposed architecture",
         "Revamp architecture: layered CSS, grouped components, figures as data",
         "Verify revamp: list of figures is a section, acceptance waits for theme",
         "Use Section and FigureHead for the treemap and languages figures",
-        "Add PRODUCT.md: product truth for the redesign (engineers and employers)"
+        "Add PRODUCT.md: product truth for the redesign (engineers and employers)",
+        "Datasheet redesign: replace Offprint with an IC datasheet"
       ],
-      "last": "14989ae"
+      "last": "aa44916"
     }
   ]
 }
