@@ -1,6 +1,6 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-10-30",
+  "syncedAt": "2026-11-04",
   "repos": [
     {
       "name": "outloud",
@@ -8,13 +8,13 @@
       "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
       "url": "https://github.com/blarer/outloud",
       "homepage": null,
-      "pushedAt": "2026-10-26",
+      "pushedAt": "2026-11-01",
       "createdAt": "2026-07-28",
       "stars": 0,
       "languages": {
-        "Rust": 2324559,
-        "Shell": 214446,
-        "Python": 53877,
+        "Rust": 2399867,
+        "Shell": 263415,
+        "Python": 65911,
         "PowerShell": 41951,
         "Nix": 16281,
         "Swift": 9790,
@@ -23,6 +23,25 @@
     },
     {
       "name": "private-01",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "Swift": 1464614,
+        "HTML": 24017,
+        "Shell": 19495,
+        "Python": 3250,
+        "Just": 1828,
+        "JavaScript": 1666,
+        "CSS": 528
+      }
+    },
+    {
+      "name": "private-02",
       "private": true,
       "description": "",
       "url": null,
@@ -42,27 +61,6 @@
       }
     },
     {
-      "name": "private-02",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Nix": 343709,
-        "Shell": 115777,
-        "TypeScript": 110133,
-        "Just": 90267,
-        "CSS": 81163,
-        "JavaScript": 58478,
-        "PowerShell": 50007,
-        "Python": 39428,
-        "Lua": 39393
-      }
-    },
-    {
       "name": "private-03",
       "private": true,
       "description": "",
@@ -72,12 +70,15 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
-        "Swift": 440741,
-        "HTML": 18415,
-        "Shell": 4791,
-        "Python": 3250,
-        "Just": 1115,
-        "CSS": 528
+        "Nix": 348185,
+        "Shell": 118662,
+        "TypeScript": 110133,
+        "Just": 90267,
+        "CSS": 81163,
+        "JavaScript": 58478,
+        "PowerShell": 50007,
+        "Python": 39428,
+        "Lua": 39393
       }
     },
     {
@@ -152,9 +153,9 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
-        "Nix": 186156,
-        "Just": 14959,
-        "Shell": 8790
+        "Nix": 193314,
+        "Shell": 19171,
+        "Just": 14959
       }
     },
     {
@@ -163,12 +164,12 @@
       "description": "",
       "url": "https://github.com/blarer/my-homebase",
       "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-10-29",
+      "pushedAt": "2026-11-03",
       "createdAt": "2025-06-17",
       "stars": 0,
       "languages": {
-        "JavaScript": 145248,
-        "CSS": 58359,
+        "JavaScript": 126651,
+        "CSS": 25749,
         "Shell": 2490,
         "TypeScript": 614
       }
@@ -189,6 +190,21 @@
       }
     },
     {
+      "name": "private-09",
+      "private": true,
+      "description": "",
+      "url": null,
+      "homepage": null,
+      "pushedAt": null,
+      "createdAt": null,
+      "stars": 0,
+      "languages": {
+        "JavaScript": 87201,
+        "Dockerfile": 1389,
+        "HTML": 427
+      }
+    },
+    {
       "name": "nix-windows-config",
       "private": false,
       "description": "Windows (WSL2 + home-manager) counterpart to nix-darwin-config",
@@ -205,7 +221,7 @@
       }
     },
     {
-      "name": "private-09",
+      "name": "private-10",
       "private": true,
       "description": "",
       "url": null,
@@ -235,7 +251,7 @@
       }
     },
     {
-      "name": "private-10",
+      "name": "private-11",
       "private": true,
       "description": "",
       "url": null,
@@ -251,7 +267,7 @@
       }
     },
     {
-      "name": "private-11",
+      "name": "private-12",
       "private": true,
       "description": "",
       "url": null,
@@ -278,7 +294,7 @@
       }
     },
     {
-      "name": "private-12",
+      "name": "private-13",
       "private": true,
       "description": "",
       "url": null,
@@ -292,20 +308,7 @@
       }
     },
     {
-      "name": "blarer",
-      "private": false,
-      "description": "Profile README",
-      "url": "https://github.com/blarer/blarer",
-      "homepage": null,
-      "pushedAt": "2026-10-30",
-      "createdAt": "2026-07-27",
-      "stars": 0,
-      "languages": {
-        "JavaScript": 17023
-      }
-    },
-    {
-      "name": "private-13",
+      "name": "private-14",
       "private": true,
       "description": "",
       "url": null,
@@ -314,11 +317,25 @@
       "createdAt": null,
       "stars": 0,
       "languages": {
-        "Python": 11332
+        "Python": 11332,
+        "Mermaid": 5997
       }
     },
     {
-      "name": "private-14",
+      "name": "blarer",
+      "private": false,
+      "description": "Profile README",
+      "url": "https://github.com/blarer/blarer",
+      "homepage": null,
+      "pushedAt": "2026-11-04",
+      "createdAt": "2026-07-27",
+      "stars": 0,
+      "languages": {
+        "JavaScript": 17023
+      }
+    },
+    {
+      "name": "private-15",
       "private": true,
       "description": "",
       "url": null,
