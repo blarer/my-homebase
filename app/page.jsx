@@ -165,7 +165,7 @@ export default function Home() {
                   </th>
                   <td>github.com/blarer</td>
                   <td>
-                    <span className="num">{t.publicRepos}</span> public repositories, source and method
+                    <span className="num">{t.repos}</span> public repositories, source and method
                   </td>
                 </tr>
                 <tr>
