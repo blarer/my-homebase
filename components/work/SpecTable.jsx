@@ -67,7 +67,7 @@ export default function SpecTable({ repos }) {
       ref: 'floorplan',
       rows: [
         { p: 'Source per repository', c: `${t.repos} repositories`, min: kb(t.min), typ: kb(t.median), max: kb(t.max), unit: 'KB' },
-        { p: 'Total source', c: `Snapshot, ${t.publicRepos} public + ${t.privateRepos} private`, typ: mb(t.bytes), unit: 'MB', mine: true },
+        { p: 'Total source', c: `Snapshot, ${t.repos} public repositories`, typ: mb(t.bytes), unit: 'MB', mine: true },
         { p: 'Languages', c: 'Distinct, as GitHub reports', typ: t.languages, unit: '' },
       ],
     },

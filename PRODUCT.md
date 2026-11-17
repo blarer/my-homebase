@@ -22,7 +22,7 @@ Each project got faster by removing work, not adding threads: the fix lives a la
 ## Operating Context
 
 - Next.js 15 App Router, static, deployed to Cloudflare Workers via OpenNext. A push to `main` deploys.
-- Repository data in `lib/repos.json`, refreshed by the `sync-repos` workflow from the GitHub API. Private repos appear anonymised; `scripts/test-privacy.mjs` guards that.
+- Repository data in `lib/repos.json`, refreshed by the `sync-repos` workflow from the GitHub API. Public repositories only; private repositories are left out entirely, and `scripts/test-privacy.mjs` guards that.
 - Routes: `/` (introduction) and `/work` (measured work).
 
 ## Capabilities and Constraints
