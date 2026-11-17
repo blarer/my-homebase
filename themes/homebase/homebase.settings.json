@@ -1,0 +1,65 @@
+{
+  "name": "homebase",
+  "like": "chocolate",
+  "mode": "both",
+  "settings": [
+    {
+      "thing": "corners",
+      "value": "small",
+      "source": "dial"
+    },
+    {
+      "thing": "accent",
+      "value": "#2b4fb3",
+      "source": "dial"
+    },
+    {
+      "thing": "neutral",
+      "value": "#6b6358",
+      "source": "dial"
+    },
+    {
+      "thing": "font",
+      "value": "serif",
+      "source": "dial",
+      "on": "heading"
+    },
+    {
+      "thing": "font",
+      "value": "mono",
+      "source": "dial",
+      "on": "code"
+    },
+    {
+      "thing": "headings",
+      "value": "semibold",
+      "source": "dial",
+      "axis": "weight"
+    },
+    {
+      "thing": "headings",
+      "value": "tight",
+      "source": "dial",
+      "axis": "tracking"
+    },
+    {
+      "thing": "color",
+      "value": "var(--color-text-secondary)",
+      "source": "property",
+      "on": "segmented-control-item",
+      "mode": "dark"
+    },
+    {
+      "thing": "danger",
+      "value": "#b3261e",
+      "source": "dial"
+    },
+    {
+      "thing": "success",
+      "value": "#3d7a3a",
+      "source": "dial"
+    }
+  ],
+  "lifted": [],
+  "palette": "3c9c1a6c22b8d695ed97be2e39e20758676622e0799b17141afe57ff47205c4b"
+}
