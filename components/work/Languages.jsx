@@ -1,13 +1,21 @@
-import { languageColor } from "@/lib/languageColors";
-import { bytes } from "@/lib/format";
-import LanguageRing from "@/components/work/LanguageRing";
-import { Caption } from "@/components/ui/Section";
+'use client';
+
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Text } from '@astryxdesign/core/Text';
+import { Figure, TableBlock } from '@/components/ui/Section';
+import { Table, proportional, pixel } from '@astryxdesign/core/Table';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { Icon } from '@astryxdesign/core/Icon';
+import { StopIcon } from '@heroicons/react/24/solid';
+import { languageColor } from '@/lib/languageColors';
+import { bytes } from '@/lib/format';
+import LanguageRing from '@/components/work/LanguageRing';
 
 /**
- * Composition: what the work is actually written in, counted rather than
- * claimed. Figure 8 is the ring (the shape of the whole); Table 5 is the same
- * numbers as a datasheet prints a material composition, with a bar in the
- * table so the ranking can be read without the ring.
+ * Languages, counted rather than claimed: only what is actually in the
+ * repositories, ordered by how much of it there is. The ring shows the
+ * shape of the whole; the table gives the exact figures.
  */
 export default function Languages({ repos }) {
   const totals = new Map();
@@ -16,57 +24,57 @@ export default function Languages({ repos }) {
       totals.set(name, (totals.get(name) ?? 0) + value);
     }
   }
-
   const ranked = [...totals.entries()].sort((a, b) => b[1] - a[1]);
   const grand = ranked.reduce((sum, [, value]) => sum + value, 0);
   const largest = ranked[0]?.[1] ?? 1;
 
-  return (
-    <div id="languages" className="lang-split">
-      <figure className="ds-figure lang-figure">
-        <LanguageRing repos={repos} />
-        <figcaption>
-          <Caption n={8} as="span">
-            Composition by language, all repositories. Point at a segment to
-            read it out.
-          </Caption>
-        </figcaption>
-      </figure>
+  const rows = ranked.map(([name, value], index) => ({
+    id: name,
+    rank: String(index + 1).padStart(2, '0'),
+    name,
+    value,
+    share: `${((value / grand) * 100).toFixed(1)}%`,
+    size: bytes(value),
+  }));
 
-      <div className="ds-table-wrap">
-        <table className="ds-table lang-table">
-          <caption>
-            <Caption kind="Table" n={5} as="span">
-              Composition, source bytes by language
-            </Caption>
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col" className="ds-num">#</th>
-              <th scope="col">Language</th>
-              <th scope="col" className="lang-bar-col"><span className="sr-only">Share, drawn</span></th>
-              <th scope="col" className="ds-num">Share</th>
-              <th scope="col" className="ds-num">Bytes</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ranked.map(([name, value], index) => (
-              <tr className="lang-row" key={name}>
-                <td className="ds-num lang-rank">{index + 1}</td>
-                <th scope="row" className="lang-name">
-                  <span className="swatch" style={{ background: languageColor(name) }} aria-hidden="true" />
-                  {name}
-                </th>
-                <td className="lang-bar" aria-hidden="true">
-                  <span className="lang-bar-run" style={{ width: `${(value / largest) * 100}%`, background: languageColor(name) }} />
-                </td>
-                <td className="ds-num lang-share">{((value / grand) * 100).toFixed(1)}%</td>
-                <td className="ds-num lang-bytes">{bytes(value)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+  const columns = [
+    { key: 'rank', header: '#', width: pixel(48), renderCell: (r) => <Text type="code" color="secondary">{r.rank}</Text> },
+    {
+      key: 'name',
+      header: 'Language',
+      width: pixel(160),
+      renderCell: (r) => (
+        <HStack gap={2} vAlign="center">
+          {/* The swatch is the language's Linguist colour: data, not decoration. */}
+          <Icon icon={StopIcon} size="xsm" style={{ color: languageColor(r.name) }} />
+          <Text>{r.name}</Text>
+        </HStack>
+      ),
+    },
+    {
+      key: 'value',
+      header: 'Volume',
+      width: proportional(1),
+      renderCell: (r) => (
+        <ProgressBar label={`${r.name} source bytes`} isLabelHidden value={r.value} max={largest} variant="neutral" />
+      ),
+    },
+    { key: 'share', header: 'Share', width: pixel(72), align: 'end', renderCell: (r) => <Text type="code" hasTabularNumbers>{r.share}</Text> },
+    { key: 'size', header: 'Bytes', width: pixel(88), align: 'end', renderCell: (r) => <Text type="code" hasTabularNumbers>{r.size}</Text> },
+  ];
+
+  return (
+    <Grid columns={{ minWidth: 300, repeat: 'fit' }} gap={4} align="start">
+      <Figure
+        n={8}
+        maxWidth={360}
+        caption="Composition by language, all repositories. Point at a segment to read it out."
+      >
+        <LanguageRing repos={repos} />
+      </Figure>
+      <TableBlock n={5} caption="Composition, source bytes by language">
+        <Table data={rows} columns={columns} idKey="id" density="compact" dividers="rows" hasHover />
+      </TableBlock>
+    </Grid>
   );
 }

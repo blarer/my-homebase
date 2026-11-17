@@ -1,55 +1,55 @@
+'use client';
+
+import { Text } from '@astryxdesign/core/Text';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Table, proportional, pixel } from '@astryxdesign/core/Table';
 import { allRevisions } from '@/lib/revision';
-import { Caption } from '@/components/ui/Section';
+import { TableBlock } from '@/components/ui/Section';
 
 /**
  * Table 6, the revision history, from git log (lib/revisions.json, written
  * by scripts/sync-revisions.mjs). One revision per working day, newest
- * first, as a datasheet prints its changes. The day's last commit subject
- * stands for the revision; the rest are folded under a disclosure so the
- * table stays a table.
+ * first, as a datasheet prints its changes: every change listed in full,
+ * newest first within the day. REV, date and count are narrow fixed
+ * columns; the changes take the rest of the width.
  */
-export default function RevisionHistory() {
-  const revs = allRevisions();
-  return (
-    <div className="ds-table-wrap">
-      <table className="ds-table rev-table">
-        <caption>
-          <Caption kind="Table" n={6} as="span">
-            Revision history, from the repository&apos;s git log
-          </Caption>
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">REV</th>
-            <th scope="col">Date</th>
-            <th scope="col" className="ds-num">Commits</th>
-            <th scope="col">Changes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {revs.map((r) => (
-            <tr key={r.rev}>
-              <th scope="row" className="num">{r.rev}</th>
-              <td className="num">{r.date}</td>
-              <td className="ds-num">{r.commits}</td>
-              <td>
-                {r.subjects.length === 1 ? (
-                  r.subjects[0]
-                ) : (
-                  <details className="rev-more">
-                    <summary>{r.subjects[r.subjects.length - 1]}</summary>
-                    <ul>
-                      {r.subjects.slice(0, -1).reverse().map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  </details>
-                )}
-              </td>
-            </tr>
+const columns = [
+  {
+    key: 'rev',
+    header: 'REV',
+    width: pixel(56),
+    renderCell: (r) => <Text type="code" color={r.latest ? 'accent' : 'primary'}>{r.rev}</Text>,
+  },
+  { key: 'date', header: 'Date', width: pixel(112), renderCell: (r) => <Text type="code">{r.date}</Text> },
+  {
+    key: 'commits',
+    header: 'Commits',
+    width: pixel(80),
+    align: 'end',
+    renderCell: (r) => <Text type="code" hasTabularNumbers>{r.commits}</Text>,
+  },
+  {
+    key: 'subjects',
+    header: 'Changes',
+    width: proportional(1, { minWidth: 360 }),
+    renderCell: (r) =>
+      r.subjects.length === 1 ? (
+        <Text>{r.subjects[0]}</Text>
+      ) : (
+        <List density="compact" listStyle="disc">
+          {[...r.subjects].reverse().map((s, j) => (
+            <ListItem key={j} label={<Text textWrap="pretty">{s}</Text>} align="first-line" />
           ))}
-        </tbody>
-      </table>
-    </div>
+        </List>
+      ),
+  },
+];
+
+export default function RevisionHistory() {
+  const rows = allRevisions().map((r, i) => ({ ...r, id: r.rev, latest: i === 0 }));
+  return (
+    <TableBlock n={6} minWidth={640} caption="Revision history, from the repository's git log">
+      <Table data={rows} columns={columns} idKey="id" density="compact" dividers="rows" verticalAlign="top" />
+    </TableBlock>
   );
 }

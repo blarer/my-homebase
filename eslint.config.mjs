@@ -9,6 +9,10 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [...compat.extends("next/core-web-vitals")];
+const eslintConfig = [
+  // Written by `astryx theme` / the theme editor; regenerated, never hand-edited.
+  { ignores: ["src/themes/**", "themes/**", "src/astryx-themes.js"] },
+  ...compat.extends("next/core-web-vitals"),
+];
 
 export default eslintConfig;

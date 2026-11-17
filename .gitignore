@@ -38,3 +38,5 @@ next-env.d.ts
 .open-next
 .wrangler
 .tpl/
+AGENTS.md
+GEMINI.md

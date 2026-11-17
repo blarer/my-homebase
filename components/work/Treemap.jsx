@@ -4,23 +4,25 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { squarify } from "@/lib/treemap";
 import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
-import { Caption } from "@/components/ui/Section";
+import { VStack, HStack } from "@astryxdesign/core/Stack";
+import { Grid } from "@astryxdesign/core/Grid";
+import { Card } from "@astryxdesign/core/Card";
+import { AspectRatio } from "@astryxdesign/core/AspectRatio";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { Figure } from "@/components/ui/Section";
+import { Code } from "@astryxdesign/core/Code";
+import { Link } from "@astryxdesign/core/Link";
+import { List, ListItem } from "@astryxdesign/core/List";
+import { Icon } from "@astryxdesign/core/Icon";
+import { StopIcon } from "@heroicons/react/24/solid";
 
 /**
- * Figure 7, the die floorplan: every repository as a block on one die, each
- * block's area set by its real source bytes and split into language bands in
- * the proportion GitHub reports. A squarified treemap, drawn the way a
- * datasheet draws a die photo: hairline block outlines, block labels in the
- * corner, bands as the layout layers.
+ * Work as a treemap of the actual repositories, each tile sized by real source
+ * bytes and split into language bands in the same proportion GitHub reports.
  *
  * This is the same shape storage-manager-swift draws for a disk, applied to the
- * work itself: the figure is a demonstration of the tool, not a description.
+ * work itself: the section is a demonstration of the tool, not a description.
  */
-
-// The die's nominal aspect, used for the server render so the floorplan is
-// drawn with JavaScript off. Tiles are placed in percentages, so once the
-// real box is measured only rounding changes.
-const NOMINAL = { width: 1000, height: 560 };
 
 const NOTES = {
   "storage-manager-swift":
@@ -34,14 +36,14 @@ const NOTES = {
 
 function useMeasure() {
   const ref = useRef(null);
-  const [size, setSize] = useState(NOMINAL);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
     const observer = new ResizeObserver(([entry]) => {
       const box = entry.contentRect;
-      if (box.width > 0 && box.height > 0) setSize({ width: box.width, height: box.height });
+      setSize({ width: box.width, height: box.height });
     });
     observer.observe(node);
     return () => observer.disconnect();
@@ -122,40 +124,47 @@ export default function Treemap({ repos }) {
     });
   };
 
+  const currentShare = currentRepo
+    ? ((items.find((i) => i.key === current).value / total) * 100).toFixed(1)
+    : null;
+
   return (
-    <div id="floorplan" className="floorplan">
-        <p className="ds-p">
-          Every tile is one repository, sized by its source bytes and split by
-          language. <span className="num">{bytes(total)}</span> of code in
-          total, measured from the GitHub API. Public repositories only.
-        </p>
+    <VStack gap={4} id="floorplan">
+      <Text as="p" textWrap="pretty">
+        Every tile is one repository, sized by its source bytes and split by
+        language. <Code size="inherit">{bytes(total)}</Code> of code in total,
+        measured from the GitHub API. Public repositories only.
+      </Text>
 
-        <figure className="ds-figure treemap-frame">
-          <div
-            className="treemap"
-            ref={ref}
-            onMouseLeave={() => setProbe(null)}
-          >
+      <Figure
+        n={7}
+        caption="Die floorplan. Block area is source bytes; bands are languages, largest first. Point at a block to read it out below; point at a band to name its language."
+      >
+        <AspectRatio ratio={16 / 9}>
+          {/* Tile geometry comes from the squarify layout at run time, so it
+              is the one place on the site that positions elements by hand:
+              percentages from lib/treemap.js, colours from the theme tokens
+              and the Linguist palette. */}
+          <VStack ref={ref} width="100%" height="100%" onMouseLeave={() => setProbe(null)} style={STYLES.frame}>
             {tiles.map((tile) => {
-              const langs = Object.entries(tile.repo.languages).sort(
-                (a, b) => b[1] - a[1],
-              );
-              const tileTotal = tile.value;
+              const langs = Object.entries(tile.repo.languages).sort((a, b) => b[1] - a[1]);
+              const probedTile = probe?.repo === tile.repo.name;
+              const selected = current === tile.key;
               let offset = 0;
-
               return (
                 <button
                   key={tile.key}
                   type="button"
-                  className="tile"
-                  aria-pressed={current === tile.key}
+                  aria-pressed={selected}
+                  aria-label={`${tile.repo.name}, ${bytes(tile.value)}`}
                   style={{
+                    ...STYLES.tile,
                     left: `${(tile.x / size.width) * 100}%`,
                     top: `${(tile.y / size.height) * 100}%`,
                     width: `${(tile.width / size.width) * 100}%`,
                     height: `${(tile.height / size.height) * 100}%`,
+                    outline: selected ? 'var(--border-width) solid var(--color-accent)' : undefined,
                   }}
-                  data-active={current === tile.key || undefined}
                   onClick={() => setActive(tile.key)}
                   onMouseEnter={(event) => {
                     setActive(tile.key);
@@ -168,138 +177,130 @@ export default function Treemap({ repos }) {
                   }}
                   onBlur={() => setProbe(null)}
                 >
-                  <span className="tile-bands" aria-hidden="true">
-                    {langs.map(([name, value]) => {
-                      const height = (value / tileTotal) * 100;
-                      // Dim every band except the one under the pointer, so
-                      // the tooltip and the colour it names are unambiguous.
-                      const probed =
-                        probe?.repo === tile.repo.name && probe.name === name;
-                      const band = (
-                        <span
-                          key={name}
-                          className="tile-band"
-                          data-probed={probed || undefined}
-                          data-dimmed={
-                            (probe?.repo === tile.repo.name && !probed) ||
-                            undefined
-                          }
-                          style={{
-                            top: `${offset}%`,
-                            height: `${height}%`,
-                            background: languageColor(name),
-                          }}
-                        />
-                      );
-                      offset += height;
-                      return band;
-                    })}
-                  </span>
-
-                  <span className="tile-body">
-                    <span className="tile-name">
+                  {langs.map(([name, value]) => {
+                    const height = (value / tile.value) * 100;
+                    const dimmed = probedTile && probe.name !== name;
+                    const band = (
+                      <VStack
+                        key={name}
+                        aria-hidden="true"
+                        style={{
+                          ...STYLES.band,
+                          top: `${offset}%`,
+                          height: `${height}%`,
+                          background: languageColor(name),
+                          opacity: dimmed ? 0.35 : 1,
+                        }}
+                      />
+                    );
+                    offset += height;
+                    return band;
+                  })}
+                  <VStack gap={0} padding={1} style={STYLES.label}>
+                    <Text type="label" maxLines={1} hasTruncateTooltip={false}>
                       {tile.repo.name}
-                    </span>
-                    <span className="num tile-size">{bytes(tile.value)}</span>
-                  </span>
+                    </Text>
+                    <Text type="code" size="xsm" color="secondary" hasTruncateTooltip={false}>{bytes(tile.value)}</Text>
+                  </VStack>
                 </button>
               );
             })}
 
             {probe && (
-              <span
-                className="probe"
-                // Positioned in the frame's own coordinates purely with
-                // transforms (left/top stay 0), so following the cursor
-                // composites instead of relayouting. Flipped to the other
-                // side of the cursor near the right or bottom edge so the
-                // label never leaves the treemap.
-                style={{
-                  left: 0,
-                  top: 0,
-                  transform: `translate3d(${probe.x}px, ${probe.y}px, 0) translate(${
-                    probe.x > size.width - 150 ? "-100%" : "0"
-                  }, ${probe.y > size.height - 60 ? "-100%" : "0"}) translate(${
-                    probe.x > size.width - 150 ? "-12px" : "12px"
-                  }, ${probe.y > size.height - 60 ? "-12px" : "12px"})`,
-                }}
+              <HStack
+                gap={1}
+                padding={1}
+                vAlign="center"
                 aria-hidden="true"
+                style={{
+                  ...STYLES.probe,
+                  transform: `translate3d(${probe.x}px, ${probe.y}px, 0) translate(${
+                    probe.x > size.width - 150 ? 'calc(-100% - var(--spacing-3))' : 'var(--spacing-3)'
+                  }, ${probe.y > size.height - 60 ? 'calc(-100% - var(--spacing-3))' : 'var(--spacing-3)'})`,
+                }}
               >
-                <span
-                  className="swatch"
-                  style={{ background: languageColor(probe.name) }}
-                />
-                {probe.name}
-                <span className="num probe-share">
-                  {(probe.share * 100).toFixed(0)}%
-                </span>
-                <span className="num probe-bytes">{bytes(probe.value)}</span>
-              </span>
+                <Icon icon={StopIcon} size="xsm" style={{ color: languageColor(probe.name) }} />
+                <Text type="label">{probe.name}</Text>
+                <Text type="code" color="secondary">{(probe.share * 100).toFixed(0)}%</Text>
+                <Text type="code" color="secondary">{bytes(probe.value)}</Text>
+              </HStack>
             )}
-          </div>
-          <figcaption>
-            <Caption n={7} as="span">
-              Die floorplan. Block area is source bytes; bands are languages,
-              largest first. Point at a block to read it out below; point at a
-              band to name its language.
-            </Caption>
-          </figcaption>
-        </figure>
+          </VStack>
+        </AspectRatio>
+      </Figure>
 
-        {currentRepo && (
-          <div className="readout" aria-live="polite">
-            <div className="readout-key" key={`key-${current}`}>
-              <span className="num readout-pct">
-                {(
-                  (items.find((i) => i.key === current).value / total) *
-                  100
-                ).toFixed(1)}
-                %
-              </span>
-              <span className="tag">of all source</span>
-            </div>
-
-            <div className="readout-main" key={`main-${current}`}>
-              <h3 className="readout-name">
-                <a href={currentRepo.url}>
-                  {currentRepo.name}
-                  <span className="readout-name-host"> on GitHub</span>
-                </a>
-              </h3>
-              <p className="readout-note">
+      {currentRepo && (
+        <Card aria-live="polite">
+          <Grid columns={{ minWidth: 220, repeat: 'fit' }} gap={6} align="start">
+            <VStack gap={0.5}>
+              <Heading level={3} color="accent">{currentShare}%</Heading>
+              <Text type="supporting">of all source</Text>
+            </VStack>
+            <VStack gap={2}>
+              <Heading level={3}>
+                <Link href={currentRepo.url} type="inherit">{currentRepo.name} on GitHub</Link>
+              </Heading>
+              <Text as="p" color="secondary" textWrap="pretty">
                 {NOTES[currentRepo.name] ?? currentRepo.description}
-              </p>
-              <ul className="readout-langs">
+              </Text>
+              <List density="compact">
                 {Object.entries(currentRepo.languages)
                   .sort((a, b) => b[1] - a[1])
                   .map(([name, value]) => (
-                    <li key={name}>
-                      <span
-                        className="swatch"
-                        style={{ background: languageColor(name) }}
-                        aria-hidden="true"
-                      />
-                      {name}
-                      <span className="num readout-lang-size">
-                        {bytes(value)}
-                      </span>
-                    </li>
+                    <ListItem
+                      key={name}
+                      label={name}
+                      startContent={<Icon icon={StopIcon} size="xsm" style={{ color: languageColor(name) }} />}
+                      endContent={<Text type="code" color="secondary">{bytes(value)}</Text>}
+                    />
                   ))}
-              </ul>
-            </div>
-
-            <dl className="readout-meta">
-              <div>
-                <dt className="tag">Last push</dt>
-                <dd className="num">{currentRepo.pushedAt ?? "—"}</dd>
-              </div>
-              <div>
-                <dt className="tag">Started</dt>
-                <dd className="num">{currentRepo.createdAt ?? "—"}</dd>
-              </div>
-            </dl>
-          </div>
-        )}
-    </div>
+              </List>
+            </VStack>
+            <VStack gap={2}>
+              <VStack gap={0}>
+                <Text type="supporting">Last push</Text>
+                <Text type="code">{currentRepo.pushedAt ?? '—'}</Text>
+              </VStack>
+              <VStack gap={0}>
+                <Text type="supporting">Started</Text>
+                <Text type="code">{currentRepo.createdAt ?? '—'}</Text>
+              </VStack>
+            </VStack>
+          </Grid>
+        </Card>
+      )}
+    </VStack>
   );
 }
+
+// Positioning only; every colour and length is a theme token.
+const STYLES = {
+  frame: { position: 'relative', overflow: 'hidden' },
+  tile: {
+    position: 'absolute',
+    padding: 0,
+    border: 'var(--border-width) solid var(--color-background-card)',
+    background: 'var(--color-background-muted)',
+    overflow: 'hidden',
+    cursor: 'pointer',
+    outlineOffset: 'calc(-2 * var(--border-width))',
+  },
+  band: { position: 'absolute', insetInline: 0 },
+  label: {
+    position: 'relative',
+    alignItems: 'flex-start',
+    background: 'var(--color-background-card)',
+    borderEndEndRadius: 'var(--radius-inner)',
+    maxWidth: '100%',
+  },
+  probe: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    pointerEvents: 'none',
+    background: 'var(--color-background-popover)',
+    borderRadius: 'var(--radius-element)',
+    boxShadow: 'var(--shadow-med)',
+    whiteSpace: 'nowrap',
+  },
+};

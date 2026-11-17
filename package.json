@@ -13,18 +13,24 @@
     "sync:repos": "node scripts/sync-repos.mjs",
     "test": "node scripts/test-treemap.mjs && node scripts/test-band-probe.mjs && node scripts/test-privacy.mjs",
     "test:acceptance": "node scripts/test-acceptance.mjs",
-    "screens": "node scripts/capture-screens.mjs"
+    "screens": "node scripts/capture-screens.mjs",
+    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
   },
   "dependencies": {
     "next": "^15.3.9",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "@astryxdesign/core": "^0.7.16",
+    "@astryxdesign/theme-chocolate": "^0.7.16",
+    "@heroicons/react": "^2.2.0",
+    "@stylexjs/stylex": "^0.19.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@opennextjs/cloudflare": "^1.19.0",
     "eslint": "^9",
     "eslint-config-next": "^15.3.9",
-    "wrangler": "^4.81.1"
+    "wrangler": "^4.81.1",
+    "@astryxdesign/cli": "0.7.16"
   }
 }
