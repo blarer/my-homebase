@@ -19,6 +19,7 @@
   "dependencies": {
     "@astryxdesign/core": "^0.7.16",
     "@astryxdesign/theme-chocolate": "^0.7.16",
+    "@heroicons/react": "^2.2.0",
     "@stylexjs/stylex": "^0.19.2",
     "next": "^15.3.9",
     "react": "^19.0.0",

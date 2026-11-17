@@ -14,6 +14,17 @@ const RUNS = [
 
 const SLOWEST = 22.7;
 
+// Satori renders this card outside the page, so it cannot read the theme's
+// CSS variables. These are the homebase theme's light-mode token values
+// (src/themes/homebase/homebase.css); update them if the theme changes.
+const TOKENS = {
+  background: '#FFFCF7', // --color-background-body
+  text: '#000000', // --color-text-primary
+  secondary: '#4a443b', // --color-text-secondary
+  accent: '#2b4fb3', // --color-accent
+  track: 'rgba(0,0,0,0.12)', // --color-border, raised for a bar on a card
+};
+
 export default function Image() {
   return new ImageResponse(
     (
@@ -25,9 +36,9 @@ export default function Image() {
           flexDirection: 'column',
           justifyContent: 'center',
           padding: 76,
-          background: '#f3f1ec',
+          background: TOKENS.background,
           fontFamily: 'serif',
-          color: '#1c1a17',
+          color: TOKENS.text,
         }}
       >
         <div
@@ -42,14 +53,14 @@ export default function Image() {
           JL
         </div>
 
-        <div style={{ fontSize: 23, color: '#4d4840', marginBottom: 46, maxWidth: 760 }}>
+        <div style={{ fontSize: 23, color: TOKENS.secondary, marginBottom: 46, maxWidth: 760 }}>
           I build native tools and measure what they cost.
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {RUNS.map((run) => (
             <div key={run.label} style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-              <div style={{ width: 300, fontSize: 18, color: run.mine ? '#23408e' : '#1c1a17' }}>
+              <div style={{ width: 300, fontSize: 18, color: run.mine ? TOKENS.accent : TOKENS.text }}>
                 {run.label}
               </div>
               <div
@@ -57,14 +68,14 @@ export default function Image() {
                   display: 'flex',
                   width: 560,
                   height: 12,
-                  borderBottom: '1px solid rgba(28,26,23,0.2)',
+                  borderBottom: `1px solid ${TOKENS.track}`,
                 }}
               >
                 <div
                   style={{
                     width: (run.seconds / SLOWEST) * 560,
                     height: 12,
-                    background: run.mine ? '#23408e' : 'rgba(28,26,23,0.28)',
+                    background: run.mine ? TOKENS.accent : TOKENS.track,
                   }}
                 />
               </div>
@@ -72,7 +83,7 @@ export default function Image() {
                 style={{
                   fontSize: 19,
                   fontWeight: 600,
-                  color: run.mine ? '#23408e' : '#1c1a17',
+                  color: run.mine ? TOKENS.accent : TOKENS.text,
                 }}
               >{`${run.seconds.toFixed(1)}s`}</div>
             </div>

@@ -92,7 +92,7 @@ export const homebaseTheme = {
     "--_astryx-pre-tempo-duration-slow": "700ms",
     "--_astryx-pre-tempo-duration-slow-max": "935ms",
     "--_astryx-motion-tempo": "1",
-    "--font-family-body": "\"Albert Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    "--font-family-body": "system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif",
     "--font-family-heading": "Georgia, \"Times New Roman\", serif",
     "--font-family-code": "ui-monospace, \"SF Mono\", Menlo, Consolas, monospace",
     "--color-syntax-keyword": "light-dark(#8C5927, #d4a06a)",
@@ -463,8 +463,8 @@ export const homebaseTheme = {
         "ratio": 1.2
       },
       "body": {
-        "family": "Albert Sans",
-        "fallbacks": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif"
+        "family": "system-ui",
+        "fallbacks": "-apple-system, \"Segoe UI\", Roboto, sans-serif"
       },
       "heading": {
         "family": "Georgia",

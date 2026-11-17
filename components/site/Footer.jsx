@@ -1,33 +1,31 @@
-import Link from 'next/link';
-import ThemeToggle from '@/components/site/ThemeToggle';
+import { HStack, VStack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@astryxdesign/core/Link';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Code } from '@astryxdesign/core/Code';
 
 /**
- * The colophon. A monograph closes by saying how it was made; this one says
- * what it was set in, where its numbers came from, and when they were last
- * counted, then closes the sheet with the same Oxford rule the title page
- * opened it with.
+ * The colophon: where the numbers came from and when they were counted,
+ * then the way out. Sits at the foot of every page's content column.
  */
 export default function Footer({ syncedAt }) {
   return (
-    <footer className="footer">
-      <div className="shell footer-inner">
-        <div className="colophon">
-          <p className="colophon-title">Colophon</p>
-          <p className="colophon-body">
-            Set in Old Standard and Courier Prime, the title in Headbang.
-            Repository figures counted from the GitHub API, last synced{' '}
-            <span className="num colophon-date">{syncedAt}</span>.
-          </p>
-        </div>
-        <div className="footer-end">
-          <nav className="footer-links" aria-label="Elsewhere">
-            <Link href="/work/">Work</Link>
-            <a href="https://github.com/blarer">GitHub</a>
-            <a href="mailto:blare@louds.net">Email</a>
-          </nav>
-          <ThemeToggle />
-        </div>
-      </div>
-    </footer>
+    <VStack gap={4} as="footer">
+      <Divider />
+      <HStack gap={4} hAlign="between" vAlign="start" wrap="wrap">
+        <VStack gap={1} maxWidth="60ch">
+          <Text type="label">Colophon</Text>
+          <Text type="supporting">
+            Built with the Astryx design system. Repository figures counted
+            from the GitHub API, last synced <Code size="inherit" color="inherit">{syncedAt}</Code>.
+          </Text>
+        </VStack>
+        <HStack gap={4} as="nav" aria-label="Elsewhere">
+          <Link href="/work/" type="supporting">Work</Link>
+          <Link href="https://github.com/blarer" type="supporting">GitHub</Link>
+          <Link href="mailto:blare@louds.net" type="supporting">Email</Link>
+        </HStack>
+      </HStack>
+    </VStack>
   );
 }

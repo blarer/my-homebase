@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { VStack } from '@astryxdesign/core/Stack';
+import { Card } from '@astryxdesign/core/Card';
+import { AspectRatio } from '@astryxdesign/core/AspectRatio';
+import { Text } from '@astryxdesign/core/Text';
 
 /**
  * A small neural network, drifting.
@@ -167,18 +171,20 @@ function parseRgb(s) {
 }
 
 function readPalette() {
-  const cs = getComputedStyle(document.documentElement);
+  // Resolved inside the themed subtree, so light-dark() tokens settle on the
+  // mode the visitor is actually seeing.
+  const host = document.querySelector('[data-astryx-theme]') ?? document.body;
   const probe = document.createElement('span');
   probe.style.display = 'none';
-  document.body.appendChild(probe);
+  host.appendChild(probe);
   const resolve = (v) => {
     probe.style.color = v;
     return parseRgb(getComputedStyle(probe).color);
   };
   const pal = [
-    resolve(cs.getPropertyValue('--paper').trim() || '#fff'),
-    resolve(cs.getPropertyValue('--ink-soft').trim() || '#444'),
-    resolve(cs.getPropertyValue('--accent').trim() || '#23408e'),
+    resolve('var(--color-background-body)'),
+    resolve('var(--color-text-secondary)'),
+    resolve('var(--color-accent)'),
   ];
   probe.remove();
   return pal;
@@ -608,36 +614,22 @@ export default function Atlas() {
   }, []);
 
   return (
-    <figure className="atlas-plate" data-running-head="Fig. 0 — Atlas">
-      <div className="atlas-frame">
-        <canvas
-          ref={canvasRef}
-          className="atlas"
-          width={CPU_W}
-          height={CPU_H}
-          aria-label="A small neural network painting a slowly changing field"
-          role="img"
-        />
-        <noscript>
-          <svg className="atlas atlas-static" viewBox="0 0 128 128" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <radialGradient id="atlas-g" cx="40%" cy="38%" r="70%">
-                <stop offset="0" stopColor="var(--accent)" stopOpacity="0.55" />
-                <stop offset="0.45" stopColor="var(--ink-soft)" stopOpacity="0.5" />
-                <stop offset="1" stopColor="var(--paper)" />
-              </radialGradient>
-            </defs>
-            <rect width="128" height="128" fill="url(#atlas-g)" />
-          </svg>
-        </noscript>
-      </div>
-      <figcaption className="atlas-caption">
-        <span className="tag">Fig. 0 — Atlas</span>
-        <span className="atlas-note">
-          A four-layer network, ~1,200 weights, seeded by the moment you
-          arrived. It drifts; it never repeats.
-        </span>
-      </figcaption>
-    </figure>
+    <VStack gap={2} as="figure" hAlign="center">
+      <Card padding={0} variant="muted" width="100%">
+        <AspectRatio ratio={21 / 9} fit="cover">
+          <canvas
+            ref={canvasRef}
+            width={CPU_W}
+            height={CPU_H}
+            aria-label="A small neural network painting a slowly changing field"
+            role="img"
+          />
+        </AspectRatio>
+      </Card>
+      <Text as="p" type="supporting" justify="center" textWrap="balance">
+        Fig. 0, Atlas. A four-layer network, ~1,200 weights, seeded by the
+        moment you arrived. It drifts; it never repeats.
+      </Text>
+    </VStack>
   );
 }

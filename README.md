@@ -8,33 +8,37 @@ The canonical origin used for metadata, the sitemap, and robots.txt lives in
 
 ## The idea
 
-The front page is an introduction: a title page, one living figure (a tiny
+The front page is an introduction: a centred hero, one living figure (a tiny
 neural network painting a field that drifts and never repeats), and a few
-paragraphs. The measured work lives at `/work`: the `storage-manager-swift`
-benchmark run as a race, folded under the page title; a squarified treemap
-of the real repositories, each tile sized by actual source bytes and split
-into language bands; and the languages, counted. One signal colour per theme
-(fountain-pen blue by daylight, old gold by lamplight) marks only what has
-been measured; every other saturated colour on the page is carrying data.
-The full design direction lives in `design/DIRECTION.md`.
+paragraphs. The measured work lives at `/work`: four benchmark results as
+headline tiles, a list of figures, each benchmark run as a race folded under
+its title, a squarified treemap of the real repositories sized by source bytes
+and split into language bands, and the languages, counted.
+
+The site is built with the [Astryx](https://github.com/meta/astryx) design
+system (`@astryxdesign/core` 0.7.16). Every page starts from an Astryx
+template and is composed from Astryx components; colours, type, spacing and
+corners come from the `homebase` theme. See `design/ASTRYX.md`.
 
 ## Running it
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # next dev; use `npx next dev -H 127.0.0.1` to stay off the LAN
 npm test           # treemap, band-probe, and privacy tests
 npm run build      # static production build
 ```
 
-Two browser-driven scripts need a server running and Chrome installed
-(they load Playwright from the npx cache, no install step):
+The screenshot script needs a server and a Playwright install (point
+`PLAYWRIGHT_PATH` at one):
 
 ```bash
-npx next start -p 3778 &
-npm run test:acceptance          # ~80 checks over / and /work: fonts, layout, atlas, motion, theme, reduced motion
-URL=http://localhost:3000/ npm run screens   # regenerate design/screens/review/
+npx next start -H 127.0.0.1 -p 3778 &
+PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run screens   # writes design/screens/review/
 ```
+
+`scripts/test-acceptance.mjs` asserts the previous (Offprint) markup and has
+not been ported to the Astryx pages.
 
 ## Repository data
 
@@ -55,20 +59,27 @@ in the readout, and a colour to `lib/languageColors.js` if the language is new.
 
 | Path | Purpose |
 |---|---|
-| `app/page.jsx` | Front page: title, atlas, about |
-| `app/work/page.jsx` | The figures: benchmark, treemap, languages |
-| `app/globals.css` | Design tokens and all component styles |
-| `app/motion.css` | Load sequence, idle motion, reveals, theme crossfade |
-| `components/Hero.jsx` | Title page |
-| `components/Atlas.jsx` | The drifting CPPN figure |
-| `components/Benchmark.jsx` | Benchmark race, as a disclosure |
-| `components/Work.jsx` | Repository treemap and readout |
-| `components/Stack.jsx` | Language ranking |
+| `app/layout.jsx` | Astryx base CSS, theme script, site shell |
+| `app/page.jsx` | Front page (template `centered-hero`) |
+| `app/work/page.jsx` | The figures (template `dashboard`) |
+| `app/not-found.jsx` | 404 inside the shell |
+| `components/site/SiteShell.jsx` | `Theme`, `AppShell`, `TopNav`, dark-mode `Switch` (template `shell-top-nav`) |
+| `components/site/ThemeScript.jsx` | Sets light/dark on `<html>` before first paint |
+| `components/home/` | `Hero`, `Atlas` (CPPN canvas), `About` |
+| `components/work/` | `MetricCard`, `FigureTable`, `Race`, `Treemap`, `Languages`, `LanguageRing` |
+| `themes/homebase/` | Theme editor source and previews (`astryx experimental theme editor`) |
+| `src/themes/homebase/`, `src/astryx-themes.js` | Built theme, generated; do not edit |
 | `lib/treemap.js` | Squarified treemap layout |
 | `scripts/sync-repos.mjs` | Writes `lib/repos.json` |
-| `scripts/test-treemap.mjs` | Property tests for the layout |
-| `scripts/test-acceptance.mjs` | Browser acceptance checks against a running server |
-| `scripts/capture-screens.mjs` | Full-page screenshots, both themes, desktop and mobile |
+| `scripts/test-*.mjs` | Treemap, band probe and privacy tests |
+
+## Changing the look
+
+```bash
+npm run astryx -- experimental theme editor set homebase <thing> <value>
+npm run astryx -- experimental theme editor show homebase --png   # look at it
+npm run astryx -- doctor
+```
 
 ## Deploying
 

@@ -5,7 +5,6 @@
 
 import {homebaseTheme as _astryxTheme0} from "./themes/homebase/homebase.js";
 import "./themes/homebase/homebase.css";
-import "./themes/homebase/homebase.fonts.css";
 
 export const themes = {
   "homebase": _astryxTheme0,
