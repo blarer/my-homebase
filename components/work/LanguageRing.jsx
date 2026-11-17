@@ -3,9 +3,14 @@
 import { useMemo, useState } from "react";
 import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
+import { VStack, HStack } from "@astryxdesign/core/Stack";
+import { AspectRatio } from "@astryxdesign/core/AspectRatio";
+import { Heading, Text } from "@astryxdesign/core/Text";
+import { Icon } from "@astryxdesign/core/Icon";
+import { StopIcon } from "@heroicons/react/24/solid";
 
 /**
- * Every language across every public repository, as one ring.
+ * Every language across every repository, public and private, as one ring.
  *
  * The ranked bars below answer "how much of each"; this answers "what is the
  * shape of the whole", which a list of eighteen rows cannot show at a glance.
@@ -13,8 +18,8 @@ import { bytes } from "@/lib/format";
  * because comparing arc lengths on a common radius is easier than comparing
  * wedge angles through a centre.
  *
- * Hovering a segment reads it out in the middle rather than in a tooltip, so
- * the number appears in one predictable place instead of chasing the cursor.
+ * Hovering a segment reads it out beneath the ring, so the number appears in
+ * one predictable place instead of chasing the cursor.
  */
 
 const SIZE = 260;
@@ -51,65 +56,57 @@ export default function LanguageRing({ repos }) {
   const current = segments.find((s) => s.name === active) ?? null;
 
   return (
-    <div className="ring-wrap">
-      <svg
-        className="ring"
-        viewBox={`0 0 ${SIZE} ${SIZE}`}
-        role="img"
-        aria-label={`Language distribution across ${repos.length} repositories, ${bytes(total, 2)} of source in total.`}
-        onMouseLeave={() => setActive(null)}
-      >
-        {/* Rotated so the largest language starts at twelve o'clock, which is
-            where the eye begins reading a dial. */}
-        <g transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}>
-          {segments.map((segment) => (
-            <circle
-              key={segment.name}
-              className="ring-seg"
-              cx={SIZE / 2}
-              cy={SIZE / 2}
-              r={RADIUS}
-              fill="none"
-              stroke={languageColor(segment.name)}
-              strokeWidth={STROKE}
-              // A dash as long as the share, then a gap covering the rest of
-              // the ring, offset to this segment's start.
-              strokeDasharray={`${segment.share * CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-              strokeDashoffset={-segment.offset * CIRCUMFERENCE}
-              data-active={active === segment.name || undefined}
-              data-dimmed={(active && active !== segment.name) || undefined}
-              onMouseEnter={() => setActive(segment.name)}
-            />
-          ))}
-        </g>
-      </svg>
+    <VStack gap={3} hAlign="center">
+      <VStack width="100%" maxWidth={SIZE}>
+      <AspectRatio ratio={1}>
+        <svg
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          role="img"
+          aria-label={`Language distribution across ${repos.length} repositories, ${bytes(total, 2)} of source in total.`}
+          onMouseLeave={() => setActive(null)}
+        >
+          {/* Rotated so the largest language starts at twelve o'clock. */}
+          <g transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}>
+            {segments.map((segment) => (
+              <circle
+                key={segment.name}
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                stroke={languageColor(segment.name)}
+                strokeWidth={STROKE}
+                strokeOpacity={active && active !== segment.name ? 0.25 : 1}
+                // A dash as long as the share, then a gap covering the rest
+                // of the ring, offset to this segment's start.
+                strokeDasharray={`${segment.share * CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                strokeDashoffset={-segment.offset * CIRCUMFERENCE}
+                onMouseEnter={() => setActive(segment.name)}
+              />
+            ))}
+          </g>
+        </svg>
+      </AspectRatio>
+      </VStack>
 
-      <div className="ring-centre" aria-live="polite" key={current ? current.name : 'total'}>
+      <VStack gap={0.5} hAlign="center" aria-live="polite">
         {current ? (
           <>
-            <span className="num ring-pct">
-              {(current.share * 100).toFixed(1)}%
-            </span>
-            <span className="ring-name">
-              <span
-                className="swatch"
-                style={{ background: languageColor(current.name) }}
-                aria-hidden="true"
-              />
-              {current.name}
-            </span>
-            <span className="num ring-bytes">{bytes(current.value, 2)}</span>
+            <Heading level={3}>{(current.share * 100).toFixed(1)}%</Heading>
+            <HStack gap={1} vAlign="center">
+              <Icon icon={StopIcon} size="xsm" style={{ color: languageColor(current.name) }} />
+              <Text>{current.name}</Text>
+            </HStack>
+            <Text type="code" color="secondary">{bytes(current.value, 2)}</Text>
           </>
         ) : (
           <>
-            <span className="num ring-pct">{bytes(total, 2)}</span>
-            <span className="ring-name">
-              across {segments.length} languages
-            </span>
-            <span className="num ring-bytes">{repos.length} repositories</span>
+            <Heading level={3}>{bytes(total, 2)}</Heading>
+            <Text>across {segments.length} languages</Text>
+            <Text type="code" color="secondary">{repos.length} repositories</Text>
           </>
         )}
-      </div>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

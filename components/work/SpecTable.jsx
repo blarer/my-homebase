@@ -2,6 +2,11 @@ import { FIGURES } from '@/lib/figures';
 import { totals } from '@/lib/datasheet';
 import { bytes } from '@/lib/format';
 import { Caption } from '@/components/ui/Section';
+import { VStack } from '@astryxdesign/core/Stack';
+import { Card } from '@astryxdesign/core/Card';
+import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@astryxdesign/core/Link';
+import { Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell } from '@astryxdesign/core/Table';
 
 /**
  * Table 4, Electrical Characteristics, in the form every datasheet prints:
@@ -73,49 +78,57 @@ export default function SpecTable({ repos }) {
     },
   ];
 
+  const num = (v, mine) => (
+    <Text type="code" hasTabularNumbers color={mine ? 'accent' : 'primary'} weight={mine ? 'semibold' : undefined}>
+      {v ?? ''}
+    </Text>
+  );
+
   return (
-    <div className="ds-table-wrap">
-      <table className="ds-table spec-table">
-        <caption>
-          <Caption kind="Table" n={4} as="span">
-            Electrical characteristics. Single measurements are listed as TYP;
-            MIN and MAX are given only where a real spread or limit exists.
-          </Caption>
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Parameter</th>
-            <th scope="col">Test conditions</th>
-            <th scope="col" className="ds-num">MIN</th>
-            <th scope="col" className="ds-num">TYP</th>
-            <th scope="col" className="ds-num">MAX</th>
-            <th scope="col">UNIT</th>
-          </tr>
-        </thead>
-        {groups.map((g) => (
-          <tbody key={g.title}>
-            <tr className="spec-group">
-              <th scope="rowgroup" colSpan={6}>
-                <a href={`#${g.ref}`}>{g.title}</a>
-              </th>
-            </tr>
-            {g.rows.map((r) => (
-              <tr key={r.p} data-mine={r.mine || undefined}>
-                <th scope="row">{r.p}</th>
-                <td className="spec-cond">{r.c}</td>
-                <td className="ds-num">{r.min ?? ''}</td>
-                <td className="ds-num spec-typ">{r.typ}</td>
-                <td className="ds-num">{r.max ?? ''}</td>
-                <td className="num">{r.unit}</td>
-              </tr>
-            ))}
-          </tbody>
-        ))}
-      </table>
-      <p className="ds-note">
+    <VStack gap={2}>
+      <Caption kind="Table" n={4}>
+        Electrical characteristics. Single measurements are listed as TYP; MIN
+        and MAX are given only where a real spread or limit exists.
+      </Caption>
+      <Card padding={0}>
+        <Table density="compact" dividers="rows">
+          <TableHeader>
+            <TableRow isHeaderRow>
+              <TableHeaderCell scope="col">Parameter</TableHeaderCell>
+              <TableHeaderCell scope="col">Test conditions</TableHeaderCell>
+              <TableHeaderCell scope="col">MIN</TableHeaderCell>
+              <TableHeaderCell scope="col">TYP</TableHeaderCell>
+              <TableHeaderCell scope="col">MAX</TableHeaderCell>
+              <TableHeaderCell scope="col">UNIT</TableHeaderCell>
+            </TableRow>
+          </TableHeader>
+          {groups.map((g) => (
+            <TableBody key={g.title}>
+              <TableRow>
+                <TableHeaderCell scope="rowgroup" colSpan={6}>
+                  <Link href={`#${g.ref}`} type="label">{g.title}</Link>
+                </TableHeaderCell>
+              </TableRow>
+              {g.rows.map((r) => (
+                <TableRow key={r.p}>
+                  <TableHeaderCell scope="row">
+                    <Text type="body" weight="normal">{r.p}</Text>
+                  </TableHeaderCell>
+                  <TableCell><Text type="supporting">{r.c}</Text></TableCell>
+                  <TableCell>{num(r.min)}</TableCell>
+                  <TableCell>{num(r.typ, r.mine)}</TableCell>
+                  <TableCell>{num(r.max)}</TableCell>
+                  <TableCell><Text type="code" color="secondary">{r.unit}</Text></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          ))}
+        </Table>
+      </Card>
+      <Text as="p" type="supporting">
         Total source {bytes(t.bytes, 2)}. Benchmark values are quoted from each
         repository&apos;s README, where the method is written up.
-      </p>
-    </div>
+      </Text>
+    </VStack>
   );
 }

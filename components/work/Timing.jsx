@@ -2,6 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Caption } from '@/components/ui/Section';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Card } from '@astryxdesign/core/Card';
+import { Heading, Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Code } from '@astryxdesign/core/Code';
+import { Link } from '@astryxdesign/core/Link';
+import { List, ListItem } from '@astryxdesign/core/List';
 
 /**
  * A benchmark drawn as a timing diagram.
@@ -82,24 +89,26 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
   const done = step >= TICKS;
 
   return (
-    <article id={id} className="timing" data-done={done || undefined} data-armed={armed || undefined} ref={ref}>
-      <h3 className="ds-h3">
-        <span className="num">7.{n}</span> {title}
-        <span className="timing-headline num">{headline}</span>
-      </h3>
-      <p className="timing-lede">{lede}</p>
-      <figure className="ds-figure">
-        <svg className="timing-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${title}: ${runs.map((r) => `${r.label} ${format(r.value)}`).join(', ')}.`}>
+    <VStack gap={3} as="article" id={id} ref={ref} data-armed={armed || undefined}>
+      <HStack gap={2} vAlign="center" wrap="wrap">
+        <Heading level={3}>
+          <Text type="inherit" color="secondary">7.{n}</Text> {title}
+        </Heading>
+        <Badge variant="info" label={headline} />
+      </HStack>
+      <Text as="p" color="secondary" textWrap="pretty">{lede}</Text>
+      <Card padding={2}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`${title}: ${runs.map((r) => `${r.label} ${format(r.value)}`).join(', ')}.`}>
           {/* Axis grid: one hairline per tick value. */}
           {ticks.map((t) => (
             <g key={t}>
-              <line className="timing-grid" x1={x(t)} x2={x(t)} y1={TOPPAD - 8} y2={H - 26} />
-              <text className="timing-tick" x={x(t)} y={H - 10} textAnchor="middle">
+              <line style={S.grid} x1={x(t)} x2={x(t)} y1={TOPPAD - 8} y2={H - 26} />
+              <text style={S.tick} x={x(t)} y={H - 10} textAnchor="middle">
                 {t}
               </text>
             </g>
           ))}
-          <text className="timing-unit" x={W - 4} y={TOPPAD - 14} textAnchor="end">
+          <text style={S.tick} x={W - 4} y={TOPPAD - 14} textAnchor="end">
             {unit}
           </text>
 
@@ -117,13 +126,13 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
               fell ? `V${base} H${x(cursor)}` : '',
             ].join(' ');
             return (
-              <g key={run.label} className={`timing-lane${run.mine ? ' timing-mine' : ''}`} data-lane={i}>
-                <text className="timing-label" x={LEFT - 18} y={base - 4} textAnchor="end">
+              <g key={run.label} data-lane={i}>
+                <text style={run.mine ? S.labelMine : S.label} x={LEFT - 18} y={base - 4} textAnchor="end">
                   {run.label}
                 </text>
-                <path className="timing-trace" d={d} />
+                <path style={run.mine ? S.traceMine : S.trace} d={d} />
                 {fell && (
-                  <text className="timing-value" x={Math.min(x(run.value) + 6, W - RIGHT + 6)} y={high + 2}>
+                  <text style={run.mine ? S.valueMine : S.value} x={Math.min(x(run.value) + 6, W - RIGHT + 6)} y={high + 2}>
                     {format(run.value)}
                   </text>
                 )}
@@ -131,22 +140,37 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
             );
           })}
 
-          {!done && <line className="timing-cursor" x1={x(cursor)} x2={x(cursor)} y1={TOPPAD - 10} y2={H - 26} />}
+          {!done && <line style={S.cursor} x1={x(cursor)} x2={x(cursor)} y1={TOPPAD - 10} y2={H - 26} />}
         </svg>
-        <figcaption>
-          <Caption n={n + 2} as="span">
-            <span className="num">{repoName}</span>. {caption}{' '}
-            {repo && <a href={repo}>Full method in the repo.</a>}
-          </Caption>
-        </figcaption>
-      </figure>
-      <ul className="timing-notes">
+      </Card>
+      <Caption n={n + 2}>
+        <Code size="inherit" color="inherit">{repoName}</Code>. {caption}{' '}
+        {repo && <Link href={repo} type="inherit">Full method in the repo.</Link>}
+      </Caption>
+      <List density="compact">
         {runs.map((run) => (
-          <li key={run.label} className={run.mine ? 'timing-mine' : undefined}>
-            <span className="timing-notes-label">{run.label}</span> {run.note}
-          </li>
+          <ListItem
+            key={run.label}
+            label={<Text type="label" color={run.mine ? 'accent' : 'primary'}>{run.label}</Text>}
+            description={run.note}
+            layout="inline"
+          />
         ))}
-      </ul>
-    </article>
+      </List>
+    </VStack>
   );
 }
+
+// SVG presentation from theme tokens only: the plot is drawn, not laid out.
+const mono = { fontFamily: 'var(--font-family-code)', fontSize: 'var(--text-supporting-size)' };
+const S = {
+  grid: { stroke: 'var(--color-border)', strokeWidth: 1 },
+  tick: { ...mono, fill: 'var(--color-text-secondary)' },
+  label: { ...mono, fill: 'var(--color-text-primary)' },
+  labelMine: { ...mono, fill: 'var(--color-text-accent)', fontWeight: 'var(--font-weight-semibold)' },
+  trace: { fill: 'none', stroke: 'var(--color-text-secondary)', strokeWidth: 1.5 },
+  traceMine: { fill: 'none', stroke: 'var(--color-accent)', strokeWidth: 2.5 },
+  value: { ...mono, fill: 'var(--color-text-primary)' },
+  valueMine: { ...mono, fill: 'var(--color-text-accent)', fontWeight: 'var(--font-weight-semibold)' },
+  cursor: { stroke: 'var(--color-accent)', strokeWidth: 1 },
+};
