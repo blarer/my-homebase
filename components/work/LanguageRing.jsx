@@ -5,7 +5,7 @@ import { languageColor } from "@/lib/languageColors";
 import { bytes } from "@/lib/format";
 
 /**
- * Every language across every repository, public and private, as one ring.
+ * Every language across every public repository, as one ring.
  *
  * The ranked bars below answer "how much of each"; this answers "what is the
  * shape of the whole", which a list of eighteen rows cannot show at a glance.

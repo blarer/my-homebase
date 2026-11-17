@@ -71,7 +71,6 @@ export default function Treemap({ repos }) {
   );
 
   const total = items.reduce((sum, item) => sum + item.value, 0);
-  const privateCount = repos.filter((repo) => repo.private).length;
 
   const tiles = useMemo(() => {
     if (size.width < 1 || size.height < 1) return [];
@@ -128,15 +127,7 @@ export default function Treemap({ repos }) {
         <p className="ds-p">
           Every tile is one repository, sized by its source bytes and split by
           language. <span className="num">{bytes(total)}</span> of code in
-          total, measured from the GitHub API.
-          {privateCount > 0 && (
-            <>
-              {" "}
-              {privateCount} of them are private and appear as shape only: the
-              language mix and volume are real, the names and contents are not
-              published.
-            </>
-          )}
+          total, measured from the GitHub API. Public repositories only.
         </p>
 
         <figure className="ds-figure treemap-frame">
@@ -165,7 +156,6 @@ export default function Treemap({ repos }) {
                     height: `${(tile.height / size.height) * 100}%`,
                   }}
                   data-active={current === tile.key || undefined}
-                  data-private={tile.repo.private || undefined}
                   onClick={() => setActive(tile.key)}
                   onMouseEnter={(event) => {
                     setActive(tile.key);
@@ -208,7 +198,7 @@ export default function Treemap({ repos }) {
 
                   <span className="tile-body">
                     <span className="tile-name">
-                      {tile.repo.private ? "private" : tile.repo.name}
+                      {tile.repo.name}
                     </span>
                     <span className="num tile-size">{bytes(tile.value)}</span>
                   </span>
@@ -271,22 +261,13 @@ export default function Treemap({ repos }) {
 
             <div className="readout-main" key={`main-${current}`}>
               <h3 className="readout-name">
-                {currentRepo.private ? (
-                  <span className="readout-private">
-                    private repository
-                    <span className="readout-name-host"> — not published</span>
-                  </span>
-                ) : (
-                  <a href={currentRepo.url}>
-                    {currentRepo.name}
-                    <span className="readout-name-host"> on GitHub</span>
-                  </a>
-                )}
+                <a href={currentRepo.url}>
+                  {currentRepo.name}
+                  <span className="readout-name-host"> on GitHub</span>
+                </a>
               </h3>
               <p className="readout-note">
-                {currentRepo.private
-                  ? "Counted, not shown. The language mix and volume are measured from the GitHub API like every other tile; the name and contents stay private."
-                  : (NOTES[currentRepo.name] ?? currentRepo.description)}
+                {NOTES[currentRepo.name] ?? currentRepo.description}
               </p>
               <ul className="readout-langs">
                 {Object.entries(currentRepo.languages)

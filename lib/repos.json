@@ -1,120 +1,9 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-10-30",
+  "syncedAt": "2026-11-17",
   "repos": [
     {
-      "name": "outloud",
-      "private": false,
-      "description": "OutLoud: fully local voice dictation and edit-by-voice. Works in any app, terminals, and headless over SSH.",
-      "url": "https://github.com/blarer/outloud",
-      "homepage": null,
-      "pushedAt": "2026-10-26",
-      "createdAt": "2026-07-28",
-      "stars": 0,
-      "languages": {
-        "Rust": 2324559,
-        "Shell": 214446,
-        "Python": 53877,
-        "PowerShell": 41951,
-        "Nix": 16281,
-        "Swift": 9790,
-        "Batchfile": 3302
-      }
-    },
-    {
-      "name": "private-01",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "TypeScript": 1318168,
-        "JavaScript": 21203,
-        "PLpgSQL": 11673,
-        "Python": 10581,
-        "Shell": 4812,
-        "Kotlin": 2431,
-        "Ruby": 2129,
-        "Swift": 1233
-      }
-    },
-    {
-      "name": "private-02",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Nix": 343709,
-        "Shell": 115777,
-        "TypeScript": 110133,
-        "Just": 90267,
-        "CSS": 81163,
-        "JavaScript": 58478,
-        "PowerShell": 50007,
-        "Python": 39428,
-        "Lua": 39393
-      }
-    },
-    {
-      "name": "private-03",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Swift": 440741,
-        "HTML": 18415,
-        "Shell": 4791,
-        "Python": 3250,
-        "Just": 1115,
-        "CSS": 528
-      }
-    },
-    {
-      "name": "private-04",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Go": 211094,
-        "Svelte": 94755,
-        "Shell": 49478,
-        "TypeScript": 15633,
-        "JavaScript": 375,
-        "HTML": 286
-      }
-    },
-    {
-      "name": "private-05",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "C#": 310513,
-        "PowerShell": 39675
-      }
-    },
-    {
       "name": "mp4trim",
-      "private": false,
       "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
       "url": "https://github.com/blarer/mp4trim",
       "homepage": null,
@@ -126,101 +15,22 @@
       }
     },
     {
-      "name": "private-06",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Nix": 202824,
-        "Lua": 33425,
-        "Python": 16825,
-        "Shell": 6674,
-        "Just": 3095
-      }
-    },
-    {
-      "name": "private-07",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Nix": 186156,
-        "Just": 14959,
-        "Shell": 8790
-      }
-    },
-    {
       "name": "my-homebase",
-      "private": false,
       "description": "",
       "url": "https://github.com/blarer/my-homebase",
       "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-10-29",
+      "pushedAt": "2026-11-17",
       "createdAt": "2025-06-17",
       "stars": 0,
       "languages": {
-        "JavaScript": 145248,
-        "CSS": 58359,
+        "JavaScript": 126651,
+        "CSS": 25749,
         "Shell": 2490,
         "TypeScript": 614
       }
     },
     {
-      "name": "private-08",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Python": 104293,
-        "PowerShell": 5771,
-        "Batchfile": 2725
-      }
-    },
-    {
-      "name": "nix-windows-config",
-      "private": false,
-      "description": "Windows (WSL2 + home-manager) counterpart to nix-darwin-config",
-      "url": "https://github.com/blarer/nix-windows-config",
-      "homepage": null,
-      "pushedAt": "2026-08-07",
-      "createdAt": "2026-04-11",
-      "stars": 0,
-      "languages": {
-        "PowerShell": 26278,
-        "Nix": 23588,
-        "Shell": 9918,
-        "Just": 6238
-      }
-    },
-    {
-      "name": "private-09",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "TypeScript": 50792,
-        "Dockerfile": 341
-      }
-    },
-    {
       "name": "storage-manager-swift",
-      "private": false,
       "description": "Fast native disk-usage treemap for Apple Silicon — Rust getattrlistbulk scanner + SwiftUI, WizTree-style",
       "url": "https://github.com/blarer/storage-manager-swift",
       "homepage": null,
@@ -235,37 +45,7 @@
       }
     },
     {
-      "name": "private-10",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "JavaScript": 24572,
-        "Python": 8916,
-        "CSS": 4416,
-        "HTML": 2792
-      }
-    },
-    {
-      "name": "private-11",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Rust": 36568
-      }
-    },
-    {
       "name": "wattsbar",
-      "private": false,
       "description": "macOS menu bar battery power meter: real-time watts via direct IOKit reads",
       "url": "https://github.com/blarer/wattsbar",
       "homepage": null,
@@ -278,56 +58,15 @@
       }
     },
     {
-      "name": "private-12",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Shell": 16590,
-        "CSS": 4219
-      }
-    },
-    {
       "name": "blarer",
-      "private": false,
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-10-30",
+      "pushedAt": "2026-11-04",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
         "JavaScript": 17023
-      }
-    },
-    {
-      "name": "private-13",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Python": 11332
-      }
-    },
-    {
-      "name": "private-14",
-      "private": true,
-      "description": "",
-      "url": null,
-      "homepage": null,
-      "pushedAt": null,
-      "createdAt": null,
-      "stars": 0,
-      "languages": {
-        "Python": 2725
       }
     }
   ]

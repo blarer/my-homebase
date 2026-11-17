@@ -6,11 +6,13 @@
  * time: no rate limits, no runtime network dependency on Cloudflare Workers,
  * and the page is deterministic. Run `npm run sync:repos` to update it.
  *
- * Private repositories are included as shape only. Because this snapshot is
- * committed to a public repository, their names, descriptions and URLs are
- * dropped here at sync time rather than hidden in the UI: anything that
- * reaches repos.json is published, so redaction has to happen before the file
- * is written. Only the language byte counts survive.
+ * Only public repositories are published. Private repositories are left out
+ * completely: no entry, no language bytes, no count. The listing comes from
+ * the public endpoint, so private data never reaches this process, and a
+ * check before the write refuses any entry GitHub marks private.
+ *
+ * GITHUB_TOKEN is optional and only raises the API rate limit; no scope is
+ * needed.
  */
 import { writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -23,8 +25,6 @@ const OUT = join(
   "lib",
   "repos.json",
 );
-const INCLUDE_PRIVATE = process.env.INCLUDE_PRIVATE !== "0";
-
 const headers = {
   Accept: "application/vnd.github+json",
   "User-Agent": `${USER}-homebase-sync`,
@@ -39,27 +39,12 @@ async function api(path) {
   return res.json();
 }
 
-// Listing private repos needs a token with `repo` scope. Falling back to
-// public-only would quietly rewrite the snapshot with a smaller picture, so
-// this stops instead and leaves the committed file alone.
-if (INCLUDE_PRIVATE && !process.env.GITHUB_TOKEN) {
-  console.error(
-    "Listing private repositories needs GITHUB_TOKEN with `repo` scope.\n" +
-      "Refusing to rewrite the snapshot without them; set INCLUDE_PRIVATE=0 to\n" +
-      "sync public repositories only. lib/repos.json left untouched.",
-  );
-  process.exit(1);
-}
+// The public listing for the user: never includes private repositories,
+// whatever token is used.
+const list = await api(`/users/${USER}/repos?per_page=100&type=owner&sort=pushed`);
 
-const list = INCLUDE_PRIVATE
-  ? await api("/user/repos?per_page=100&affiliation=owner&sort=pushed")
-  : await api(`/users/${USER}/repos?per_page=100&sort=pushed`);
+const active = list.filter((r) => !r.private && !r.fork && !r.archived);
 
-const active = list.filter((r) => !r.fork && !r.archived);
-
-// Fetch every language breakdown first, so the placeholder numbers can be
-// assigned from the completed data rather than from whichever response
-// happened to land first.
 const fetched = await Promise.all(
   active.map(async (r) => ({
     repo: r,
@@ -68,72 +53,20 @@ const fetched = await Promise.all(
 );
 
 // A repo whose language breakdown is empty (docs-only, or nothing linguist
-// counts) has no shape to publish: it would be a zero-area tile the treemap
-// cannot render, and for a private repo it would be an entry that reveals
-// "another private repo exists" while carrying none of the byte data that is
-// the entire point of including it. Skipping it here also keeps the invariant
-// the privacy test asserts, that every private entry carries language bytes.
-// This bit the nightly sync for weeks: one byteless private repo made the
-// privacy gate fail after every sync, so no refresh PR could ever open and
-// the committed snapshot silently went stale.
+// counts) would be a zero-area tile the treemap cannot render, so it is left
+// out.
 const measured = fetched.filter((m) => sum(m.languages) > 0);
 
-/**
- * Numbers the redacted entries by descending source bytes.
- *
- * The ordinal has to be derived from something already published, because
- * whatever orders it becomes readable through it. Two orderings that look
- * reasonable are not:
- *
- *   - Position in `list`, which is fetched with `sort=pushed`. That makes the
- *     number a recency rank, so `private-01` would announce the most recently
- *     active private repository. The entries null out `pushedAt` a few lines
- *     below precisely to withhold that.
- *   - Alphabetical by real name, which encodes the names' ordering.
- *
- * Byte total is safe because it is already in the file, visible as the size of
- * every tile, and it is the same key the snapshot is sorted by below. The
- * number therefore tells a reader nothing the shape did not already show.
- * Ties break on the language breakdown, also already published, so equal
- * totals cannot fall through to the push-ordered input.
- */
-const privateOrdinal = new Map(
-  measured
-    .filter((m) => m.repo.private)
-    .map((m) => ({ key: m.repo.full_name, total: sum(m.languages), langs: JSON.stringify(m.languages) }))
-    .sort((a, b) => b.total - a.total || a.langs.localeCompare(b.langs))
-    .map((m, i) => [m.key, i + 1]),
-);
-
-const repos = measured.map(({ repo: r, languages }) => {
-  // Redact before writing. A private repo becomes an anonymous shape: its
-  // language mix and volume are real, everything identifying is gone.
-  if (r.private) {
-    return {
-      name: `private-${String(privateOrdinal.get(r.full_name)).padStart(2, "0")}`,
-      private: true,
-      description: "",
-      url: null,
-      homepage: null,
-      pushedAt: null,
-      createdAt: null,
-      stars: 0,
-      languages,
-    };
-  }
-
-  return {
-    name: r.name,
-    private: false,
-    description: r.description ?? "",
-    url: r.html_url,
-    homepage: r.homepage || null,
-    pushedAt: r.pushed_at.slice(0, 10),
-    createdAt: r.created_at.slice(0, 10),
-    stars: r.stargazers_count,
-    languages,
-  };
-});
+const repos = measured.map(({ repo: r, languages }) => ({
+  name: r.name,
+  description: r.description ?? "",
+  url: r.html_url,
+  homepage: r.homepage || null,
+  pushedAt: r.pushed_at.slice(0, 10),
+  createdAt: r.created_at.slice(0, 10),
+  stars: r.stargazers_count,
+  languages,
+}));
 
 repos.sort((a, b) => sum(b.languages) - sum(a.languages));
 
@@ -149,27 +82,11 @@ const snapshot = {
 
 const serialised = `${JSON.stringify(snapshot, null, 2)}\n`;
 
-// Last line of defence: no private repo name may appear in what we emit for a
-// private repo. Scoped to the redacted entries on purpose. A private name can
-// legitimately appear in a *public* repo's own description (nix-windows-config
-// describes itself as the counterpart to the private nix-darwin-config), and
-// GitHub already publishes that text, so rejecting it would block a correct
-// sync over a string that is not ours to hide.
-if (INCLUDE_PRIVATE) {
-  const privateNames = list.filter((r) => r.private).map((r) => r.name);
-  const emitted = JSON.stringify(repos.filter((r) => r.private)).toLowerCase();
-  const leaked = privateNames.filter((name) =>
-    emitted.includes(name.toLowerCase()),
-  );
-  if (leaked.length > 0) {
-    throw new Error(
-      `Refusing to write: private repo names present in snapshot: ${leaked.join(", ")}`,
-    );
-  }
+// Last line of defence: the public endpoint should never return a private
+// repository, but if it ever did, nothing about it may be written.
+if (active.length !== list.filter((r) => !r.fork && !r.archived).length) {
+  throw new Error("Refusing to write: the listing contained a private repository.");
 }
 
 await writeFile(OUT, serialised);
-const privateCount = repos.filter((r) => r.private).length;
-console.log(
-  `Wrote ${repos.length} repos (${repos.length - privateCount} public, ${privateCount} private, redacted) to lib/repos.json`,
-);
+console.log(`Wrote ${repos.length} public repos to lib/repos.json`);

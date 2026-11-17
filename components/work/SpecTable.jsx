@@ -34,12 +34,12 @@ export default function SpecTable({ repos }) {
       ],
     },
     {
-      title: 'Dictation latency (outloud)',
+      title: 'Dictation latency (on-device, private)',
       ref: 'dictation',
       rows: [
-        { p: 'Key release to text, edit-by-voice', c: 'M4 Pro, selection rewritten in place', typ: run('dictation', 'outloud, edit-by-voice'), unit: 'ms', mine: true },
-        { p: 'Key release to text, dictation', c: 'Accessibility write, native field', typ: run('dictation', 'outloud, dictation'), unit: 'ms' },
-        { p: 'Key release to text, clipboard fallback', c: 'Unfocused app, paste', typ: run('dictation', 'outloud, clipboard fallback'), unit: 'ms' },
+        { p: 'Key release to text, edit-by-voice', c: 'M4 Pro, selection rewritten in place', typ: run('dictation', 'edit-by-voice'), unit: 'ms', mine: true },
+        { p: 'Key release to text, dictation', c: 'Accessibility write, native field', typ: run('dictation', 'dictation'), unit: 'ms' },
+        { p: 'Key release to text, clipboard fallback', c: 'Unfocused app, paste', typ: run('dictation', 'clipboard fallback'), unit: 'ms' },
         { p: 'Aqua Voice insert latency', c: 'Advertised, not measured here', typ: run('dictation', 'Aqua Voice'), unit: 'ms' },
       ],
     },
@@ -67,7 +67,7 @@ export default function SpecTable({ repos }) {
       ref: 'floorplan',
       rows: [
         { p: 'Source per repository', c: `${t.repos} repositories`, min: kb(t.min), typ: kb(t.median), max: kb(t.max), unit: 'KB' },
-        { p: 'Total source', c: `Snapshot, ${t.publicRepos} public + ${t.privateRepos} private`, typ: mb(t.bytes), unit: 'MB', mine: true },
+        { p: 'Total source', c: `Snapshot, ${t.repos} public repositories`, typ: mb(t.bytes), unit: 'MB', mine: true },
         { p: 'Languages', c: 'Distinct, as GitHub reports', typ: t.languages, unit: '' },
       ],
     },

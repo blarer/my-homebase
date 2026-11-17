@@ -33,21 +33,15 @@ jobs:
 
       - name: Sync snapshot
         env:
-          # Needs `repo` scope to see private repositories. Without REPOS_TOKEN
-          # the sync refuses to run rather than rewriting the snapshot without
-          # them, so a missing secret cannot silently shrink the picture.
-          GITHUB_TOKEN: ${{ secrets.REPOS_TOKEN }}
+          # Public repositories only, read from the public endpoint, so the
+          # built-in token is enough; it only raises the API rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/sync-repos.mjs
 
-      - name: Verify the snapshot publishes shape only
+      - name: Verify the snapshot is public-only and current
         env:
-          GH_TOKEN: ${{ secrets.REPOS_TOKEN }}
-          # This job rewrites the snapshot from private repository data and then
-          # pushes it to a public repository, so the name comparison is the one
-          # check standing between a redaction bug and a published leak. Without
-          # this, an expired or unscoped REPOS_TOKEN would make that comparison
-          # unrunnable and the step would still exit 0, and the pull request it
-          # opens claims "the privacy test ran green" on the strength of it.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fail rather than pass when the live comparison cannot run.
           REQUIRE_NAME_CHECK: '1'
         run: node scripts/test-privacy.mjs
 
@@ -75,6 +69,6 @@ jobs:
 
           gh pr create \
             --title "Refresh repository snapshot" \
-            --body "Automated refresh of \`lib/repos.json\` from the GitHub API. Private repositories are redacted to shape at sync time; the privacy test ran green before this was opened. Merge, then deploy to publish." \
+            --body "Automated refresh of \`lib/repos.json\` from the GitHub API. Public repositories only; the privacy test ran green before this was opened. Merging deploys." \
             --head "$BRANCH" \
             --base main 2>/dev/null || echo "A pull request for this branch already exists."

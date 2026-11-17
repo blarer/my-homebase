@@ -415,10 +415,6 @@
     opacity: 0.3;
   }
 
-  .tile[data-private] {
-    background: repeating-linear-gradient(45deg, transparent 0 5px, var(--rule-2) 5px 6px), var(--paper);
-  }
-
   .tile-body {
     position: absolute;
     left: 4px;
@@ -537,8 +533,7 @@
     font-family: var(--font-mono);
   }
 
-  .readout-name-host,
-  .readout-private {
+  .readout-name-host {
     color: var(--ink-3);
     font-weight: 400;
   }

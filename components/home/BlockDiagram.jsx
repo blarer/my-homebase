@@ -27,6 +27,7 @@ const DIE = { x: 132, y: 22, w: 376, h: TOP + ROW * BLOCKS.length - 6 };
 const BLOCK = { x: 176, w: 288, h: 40 };
 
 const href = (b) => (b.figure ? `/work/#${b.figure}` : repoUrl(b.repo));
+const source = (b) => b.repo ?? b.label;
 
 export default function BlockDiagram() {
   const [active, setActive] = useState(null);
@@ -65,7 +66,7 @@ export default function BlockDiagram() {
                 className="fbd-block"
                 data-block={b.id}
                 data-on={on || undefined}
-                aria-label={`${b.name}, ${b.repo}: ${b.layer}${b.measured ? `, ${b.measured}` : ''}`}
+                aria-label={`${b.name}, ${source(b)}: ${b.layer}${b.measured ? `, ${b.measured}` : ''}`}
                 {...bind(b.id)}
               >
                 {/* Input: signal name, then a line into the die with a pin. */}
@@ -129,9 +130,13 @@ export default function BlockDiagram() {
                   {b.name}
                 </th>
                 <td>
-                  <a href={repoUrl(b.repo)} className="num">
-                    {b.repo}
-                  </a>
+                  {b.repo ? (
+                    <a href={repoUrl(b.repo)} className="num">
+                      {b.repo}
+                    </a>
+                  ) : (
+                    b.label
+                  )}
                 </td>
                 <td>{b.mechanism}</td>
                 <td className="ds-num">

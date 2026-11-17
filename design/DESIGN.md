@@ -28,7 +28,7 @@ projects, contact button.
 | Data colour | GitHub Linguist colours inside the floorplan and composition figures only, because there colour is data |
 | Text face | Hanken Grotesk 400/500/700 (next/font, self-hosted). A sober neo-grotesk, no display mannerisms |
 | Value face | Red Hat Mono 400/500 with tabular figures, for values, units, part and pin names, identifiers. Never for running text |
-| Corners, shadows | None. Square boxes, hairlines, no shadows, no gradients except the private-repo hatch |
+| Corners, shadows | None. Square boxes, hairlines, no shadows, no gradients |
 
 Old fonts (Old Standard, Courier Prime, Headbang) and the WebGL Atlas are
 removed. The Atlas was a generative field, not a measurement; a datasheet
