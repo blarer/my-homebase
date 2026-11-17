@@ -13,7 +13,12 @@
  * run it says so, and REQUIRE_NAME_CHECK=1 turns that into a failure.
  */
 import { execFileSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import snapshot from '../lib/repos.json' with { type: 'json' };
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 const failures = [];
 const check = (name, ok, detail) => {
@@ -76,6 +81,35 @@ try {
   const published = JSON.stringify(snapshot.repos.map((r) => ({ name: r.name, url: r.url, homepage: r.homepage }))).toLowerCase();
   const leaked = privateNames.filter((name) => published.includes(`"${name.toLowerCase()}"`) || published.includes(`/${name.toLowerCase()}"`));
   check('no private repository is published by name or URL', leaked.length === 0, leaked.join(', '));
+
+  // The page is built from more than the snapshot: lib/ and components/ hold
+  // hand-written content (figures, blocks, pins, notes) that is published
+  // too. A repository that turns private must vanish from those by name.
+  // Matched as a whole word, case-insensitive, so a name is not "found"
+  // inside a longer unrelated word.
+  const sources = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (/\.(m?js|jsx|json|css)$/.test(entry.name)) sources.push(path);
+    }
+  };
+  for (const dir of ['app', 'components', 'lib']) walk(join(ROOT, dir));
+  const inSource = [];
+  for (const name of privateNames) {
+    const word = new RegExp(`(^|[^a-z0-9_-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z0-9_-])`, 'i');
+    for (const file of sources) {
+      if (word.test(readFileSync(file, 'utf8'))) inSource.push(`${name} in ${file.slice(ROOT.length + 1)}`);
+    }
+  }
+  check(
+    'no private repository name appears in app/, components/ or lib/',
+    inSource.length === 0,
+    // Counted, not listed: the failure output should not itself publish names.
+    `${inSource.length} occurrence(s); run locally to see where`,
+  );
+  if (inSource.length && process.env.SHOW_PRIVATE_HITS === '1') console.log(inSource.join('\n'));
   liveCheckRan = true;
 } catch (err) {
   const reason = String(err.stderr || err.message).trim().split('\n')[0];
