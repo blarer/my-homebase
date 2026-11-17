@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { BLOCKS, PART, repoUrl } from '@/lib/datasheet';
-import { Caption } from '@/components/ui/Section';
+import { Figure, TableBlock } from '@/components/ui/Section';
 import { VStack } from '@astryxdesign/core/Stack';
-import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
 import { Text } from '@astryxdesign/core/Text';
 import { Link } from '@astryxdesign/core/Link';
 import { Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell } from '@astryxdesign/core/Table';
@@ -34,7 +34,7 @@ const href = (b) => (b.figure ? `/work/#${b.figure}` : repoUrl(b.repo));
 // A private repository has no name or link on the page, only its label.
 const source = (b) => b.repo ?? b.label;
 
-export default function BlockDiagram() {
+export default function BlockDiagram({ children }) {
   const [active, setActive] = useState(null);
   const bind = (id) => ({
     onMouseEnter: () => setActive(id),
@@ -46,9 +46,14 @@ export default function BlockDiagram() {
   const st = (on) => (active === null ? S.idle : on ? S.on : S.off);
 
   return (
-    <VStack gap={4}>
-      <VStack gap={2} as="figure">
-        <Card padding={2}>
+    <VStack gap={8}>
+      <Grid columns={{ minWidth: 320, repeat: 'fit' }} gap={8} align="start">
+      {children}
+      <Figure
+        n={1}
+        maxWidth={W}
+        caption="Functional block diagram. One block per public project, named for the layer where the fix lived. Point at a block to find it in Table 1."
+      >
           <svg
             width="100%"
             viewBox={`0 0 ${W} ${DIE.y + DIE.h + 24}`}
@@ -104,16 +109,10 @@ export default function BlockDiagram() {
               );
             })}
           </svg>
-        </Card>
-        <Caption n={1}>
-          Functional block diagram. One block per public project, named for the
-          layer where the fix lived. Point at a block to find it in Table 1.
-        </Caption>
-      </VStack>
+      </Figure>
+      </Grid>
 
-      <VStack gap={2}>
-        <Caption kind="Table" n={1}>Block summary</Caption>
-        <Card padding={0}>
+      <TableBlock n={1} caption="Block summary">
           <Table density="compact" dividers="rows">
             <TableHeader>
               <TableRow isHeaderRow>
@@ -151,8 +150,7 @@ export default function BlockDiagram() {
               })}
             </TableBody>
           </Table>
-        </Card>
-      </VStack>
+      </TableBlock>
     </VStack>
   );
 }

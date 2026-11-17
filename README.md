@@ -62,8 +62,10 @@ in the readout, and a colour to `lib/languageColors.js` if the language is new.
 |---|---|
 | `app/page.jsx` | Page 1: features, block diagram, description, pins, ordering |
 | `app/work/page.jsx` | Page 2: specifications, timing, floorplan, composition, revisions |
-| `app/styles/` | `tokens.css`, `base.css`, `sheet.css` (chrome, sections, tables), `figures.css` |
-| `components/sheet/` | Page header block and footer |
+| `themes/homebase/`, `src/themes/homebase/` | The Astryx `homebase` theme: token source and its generated CSS (no other stylesheets) |
+| `components/site/` | `SiteShell` (Astryx AppShell + TopNav: part, document number, pages, dark switch), `ThemeScript` |
+| `components/sheet/` | Title block and page footer |
+| `components/ui/Section.jsx` | Numbered section, captions, borderless `Figure`, `TableBlock` |
 | `components/home/` | `BlockDiagram` (Figure 1 + Table 1), `Pinout` |
 | `components/work/` | `SpecTable`, `Timing`, `Treemap`, `Languages`, `LanguageRing`, `RevisionHistory` |
 | `lib/datasheet.js` | Part number, blocks, pins, snapshot totals |

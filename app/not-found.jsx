@@ -1,22 +1,19 @@
-import Link from 'next/link';
-import SheetHeader from '@/components/sheet/SheetHeader';
+import { VStack, HStack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { Link } from '@astryxdesign/core/Link';
+import TitleBlock from '@/components/sheet/TitleBlock';
 
 export default function NotFound() {
   return (
-    <>
-      <SheetHeader page="0" />
-      <main id="main" className="sheet notfound">
-        <h1 className="ds-h1">
-          <span className="ds-h1-part num">404</span>
-          <span className="ds-h1-name">No such page in this datasheet</span>
-        </h1>
-        <p className="ds-p">
-          Nothing is served at this address. The datasheet has two pages.
-        </p>
-        <p className="ds-p">
-          <Link href="/">Page 1, datasheet</Link> · <Link href="/work/">Page 2, characterization</Link>
-        </p>
-      </main>
-    </>
+    <VStack gap={6} as="main" id="main" tabIndex={-1} maxWidth={720}>
+      <TitleBlock part="404" title="No such page in this datasheet">
+        Nothing is served at this address. The datasheet has two pages.
+      </TitleBlock>
+      <HStack gap={4} wrap="wrap">
+        <Link href="/">Page 1, datasheet</Link>
+        <Text color="secondary" aria-hidden="true">·</Text>
+        <Link href="/work/">Page 2, characterization</Link>
+      </HStack>
+    </VStack>
   );
 }

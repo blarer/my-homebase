@@ -22,12 +22,13 @@ const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath
 for (const route of routes) {
   for (const vp of viewports) {
     for (const theme of ['light', 'dark']) {
-      const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height } });
-      await page.goto(new URL(route.path, url).href, { waitUntil: 'networkidle' });
-      await page.evaluate((t) => {
-        document.documentElement.dataset.theme = t;
+      const page = await browser.newPage({ viewport: { width: vp.width, height: vp.height }, colorScheme: theme });
+      // Store the choice before any script runs, the way a returning visitor
+      // arrives: ThemeScript and SiteShell both read it on load.
+      await page.addInitScript((t) => {
         try { localStorage.setItem('theme', t); } catch {}
       }, theme);
+      await page.goto(new URL(route.path, url).href, { waitUntil: 'networkidle' });
       // Walk the page once so every section's reveal fires, then return
       // to the top; a full-page capture does not scroll by itself.
       await page.evaluate(async () => {

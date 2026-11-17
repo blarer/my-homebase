@@ -9,7 +9,7 @@ import { Grid } from "@astryxdesign/core/Grid";
 import { Card } from "@astryxdesign/core/Card";
 import { AspectRatio } from "@astryxdesign/core/AspectRatio";
 import { Heading, Text } from "@astryxdesign/core/Text";
-import { Caption } from "@/components/ui/Section";
+import { Figure } from "@/components/ui/Section";
 import { Code } from "@astryxdesign/core/Code";
 import { Link } from "@astryxdesign/core/Link";
 import { List, ListItem } from "@astryxdesign/core/List";
@@ -136,7 +136,10 @@ export default function Treemap({ repos }) {
         measured from the GitHub API. Public repositories only.
       </Text>
 
-      <Card padding={0}>
+      <Figure
+        n={7}
+        caption="Die floorplan. Block area is source bytes; bands are languages, largest first. Point at a block to read it out below; point at a band to name its language."
+      >
         <AspectRatio ratio={16 / 9}>
           {/* Tile geometry comes from the squarify layout at run time, so it
               is the one place on the site that positions elements by hand:
@@ -224,12 +227,7 @@ export default function Treemap({ repos }) {
             )}
           </VStack>
         </AspectRatio>
-      </Card>
-      <Caption n={7}>
-        Die floorplan. Block area is source bytes; bands are languages,
-        largest first. Point at a block to read it out below; point at a band
-        to name its language.
-      </Caption>
+      </Figure>
 
       {currentRepo && (
         <Card aria-live="polite">

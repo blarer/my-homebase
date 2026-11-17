@@ -1,9 +1,8 @@
 import { FIGURES } from '@/lib/figures';
 import { totals } from '@/lib/datasheet';
 import { bytes } from '@/lib/format';
-import { Caption } from '@/components/ui/Section';
+import { TableBlock } from '@/components/ui/Section';
 import { VStack } from '@astryxdesign/core/Stack';
-import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
 import { Link } from '@astryxdesign/core/Link';
 import { Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell } from '@astryxdesign/core/Table';
@@ -86,11 +85,11 @@ export default function SpecTable({ repos }) {
 
   return (
     <VStack gap={2}>
-      <Caption kind="Table" n={4}>
-        Electrical characteristics. Single measurements are listed as TYP; MIN
-        and MAX are given only where a real spread or limit exists.
-      </Caption>
-      <Card padding={0}>
+      <TableBlock
+        n={4}
+        minWidth={720}
+        caption="Electrical characteristics. Single measurements are listed as TYP; MIN and MAX are given only where a real spread or limit exists."
+      >
         <Table density="compact" dividers="rows">
           <TableHeader>
             <TableRow isHeaderRow>
@@ -124,7 +123,7 @@ export default function SpecTable({ repos }) {
             </TableBody>
           ))}
         </Table>
-      </Card>
+      </TableBlock>
       <Text as="p" type="supporting">
         Total source {bytes(t.bytes, 2)}. Benchmark values are quoted from each
         repository&apos;s README, where the method is written up.

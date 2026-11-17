@@ -2,9 +2,8 @@
 
 import { VStack, HStack } from '@astryxdesign/core/Stack';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Card } from '@astryxdesign/core/Card';
 import { Text } from '@astryxdesign/core/Text';
-import { Caption } from '@/components/ui/Section';
+import { Figure, TableBlock } from '@/components/ui/Section';
 import { Table, proportional, pixel } from '@astryxdesign/core/Table';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -66,21 +65,16 @@ export default function Languages({ repos }) {
 
   return (
     <Grid columns={{ minWidth: 300, repeat: 'fit' }} gap={4} align="start">
-      <VStack gap={2}>
-        <Card>
-          <LanguageRing repos={repos} />
-        </Card>
-        <Caption n={8}>
-          Composition by language, all repositories. Point at a segment to
-          read it out.
-        </Caption>
-      </VStack>
-      <VStack gap={2}>
-        <Caption kind="Table" n={5}>Composition, source bytes by language</Caption>
-        <Card padding={2}>
-          <Table data={rows} columns={columns} idKey="id" density="compact" dividers="rows" hasHover />
-        </Card>
-      </VStack>
+      <Figure
+        n={8}
+        maxWidth={360}
+        caption="Composition by language, all repositories. Point at a segment to read it out."
+      >
+        <LanguageRing repos={repos} />
+      </Figure>
+      <TableBlock n={5} caption="Composition, source bytes by language">
+        <Table data={rows} columns={columns} idKey="id" density="compact" dividers="rows" hasHover />
+      </TableBlock>
     </Grid>
   );
 }

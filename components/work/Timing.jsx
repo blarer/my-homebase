@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Caption } from '@/components/ui/Section';
+import { Figure } from '@/components/ui/Section';
 import { VStack, HStack } from '@astryxdesign/core/Stack';
-import { Card } from '@astryxdesign/core/Card';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Code } from '@astryxdesign/core/Code';
@@ -97,7 +96,16 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
         <Badge variant="info" label={headline} />
       </HStack>
       <Text as="p" color="secondary" textWrap="pretty">{lede}</Text>
-      <Card padding={2}>
+      <Figure
+        n={n + 2}
+        maxWidth={W}
+        caption={
+          <>
+            <Code size="inherit" color="inherit">{repoName}</Code>. {caption}{' '}
+            {repo && <Link href={repo} type="inherit">Full method in the repo.</Link>}
+          </>
+        }
+      >
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label={`${title}: ${runs.map((r) => `${r.label} ${format(r.value)}`).join(', ')}.`}>
           {/* Axis grid: one hairline per tick value. */}
           {ticks.map((t) => (
@@ -142,11 +150,7 @@ export default function Timing({ id, n, repoName, title, lede, unit, kind, ticks
 
           {!done && <line style={S.cursor} x1={x(cursor)} x2={x(cursor)} y1={TOPPAD - 10} y2={H - 26} />}
         </svg>
-      </Card>
-      <Caption n={n + 2}>
-        <Code size="inherit" color="inherit">{repoName}</Code>. {caption}{' '}
-        {repo && <Link href={repo} type="inherit">Full method in the repo.</Link>}
-      </Caption>
+      </Figure>
       <List density="compact">
         {runs.map((run) => (
           <ListItem
