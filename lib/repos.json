@@ -1,7 +1,23 @@
 {
   "user": "blarer",
-  "syncedAt": "2026-11-17",
+  "syncedAt": "2026-11-19",
   "repos": [
+    {
+      "name": "my-homebase",
+      "description": "",
+      "url": "https://github.com/blarer/my-homebase",
+      "homepage": "https://my-homebase.vercel.app",
+      "pushedAt": "2026-11-18",
+      "createdAt": "2025-06-17",
+      "stars": 0,
+      "languages": {
+        "HTML": 1202261,
+        "JavaScript": 167506,
+        "CSS": 52824,
+        "TypeScript": 13533,
+        "Shell": 1873
+      }
+    },
     {
       "name": "mp4trim",
       "description": "Minimal MP4 trimmer - drag-handle timeline, playback, hybrid DV/HDR10-safe stream copy",
@@ -15,18 +31,20 @@
       }
     },
     {
-      "name": "my-homebase",
-      "description": "",
-      "url": "https://github.com/blarer/my-homebase",
-      "homepage": "https://my-homebase.vercel.app",
-      "pushedAt": "2026-11-17",
-      "createdAt": "2025-06-17",
+      "name": "obs-replay-buffer",
+      "description": "Always-on OBS replay buffer for Windows: one-key clips auto-sorted into Videos\\<game>\\, watchdog keeps OBS alive through reboots and crashes. One-script setup.",
+      "url": "https://github.com/blarer/obs-replay-buffer",
+      "homepage": null,
+      "pushedAt": "2026-11-19",
+      "createdAt": "2026-11-19",
       "stars": 0,
       "languages": {
-        "JavaScript": 126651,
-        "CSS": 25749,
-        "Shell": 2490,
-        "TypeScript": 614
+        "PowerShell": 60055,
+        "Python": 38562,
+        "Lua": 35592,
+        "VBScript": 5088,
+        "C#": 1905,
+        "Batchfile": 1636
       }
     },
     {
@@ -62,7 +80,7 @@
       "description": "Profile README",
       "url": "https://github.com/blarer/blarer",
       "homepage": null,
-      "pushedAt": "2026-11-04",
+      "pushedAt": "2026-11-19",
       "createdAt": "2026-07-27",
       "stars": 0,
       "languages": {
